@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BioAttend – Biometric Attendance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep:    #050a1a;
+      --bg-card:    #0d1530;
+      --bg-input:   #111d3a;
+      --bg-tab-act: #1a2a52;
+      --accent:     #4f6ef7;
+      --accent2:    #7c3aed;
+      --text:       #e8eaf6;
+      --muted:      #6b7db3;
+      --border:     #1e2f5a;
+      --danger:     #ef4444;
+      --success:    #22c55e;
+      --radius:     14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg-deep);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Background stars / grid */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(79,110,247,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(124,58,237,.14) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(79,110,247,.08);
+      z-index: 1;
+      animation: slideUp .5s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 32px 24px 22px;
+      background: linear-gradient(160deg, #0d1a40 0%, #080f2a 100%);
+      text-align: center;
+      position: relative;
+    }
+
+    .logo-ring {
+      width: 62px; height: 62px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 32px rgba(79,110,247,.5);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 20px rgba(79,110,247,.4); }
+      50%      { box-shadow: 0 0 40px rgba(79,110,247,.7); }
+    }
+    .logo-ring svg { width: 30px; height: 30px; fill: #fff; }
+
+    .brand { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -.3px; }
+    .tagline { font-size: 11.5px; color: var(--muted); margin-top: 3px; font-weight: 400; letter-spacing: .8px; text-transform: uppercase; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 14px 0;
+      background: transparent;
+      border: none; cursor: pointer;
+      font-family: 'Sora', sans-serif;
+      font-size: 13.5px; font-weight: 500;
+      color: var(--muted);
+      transition: color .2s, background .2s;
+      position: relative;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      background: var(--bg-tab-act);
+    }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute; bottom: 0; left: 16px; right: 16px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* ── Form ── */
+    .form-body { padding: 24px 24px 28px; }
+
+    .form-pane { display: none; }
+    .form-pane.active { display: block; animation: fadeIn .3s ease both; }
+    @keyframes fadeIn { from { opacity:0; transform: translateX(12px); } to { opacity:1; transform: translateX(0); } }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .field label span.req { color: var(--accent); }
+
+    .field input, .field select {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .field input::placeholder { color: var(--muted); font-size: 13px; }
+    .field input:focus, .field select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79,110,247,.15);
+    }
+    .field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.4); }
+
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 42px; }
+    .pw-eye {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: var(--muted);
+      display: flex; align-items: center;
+      transition: color .2s;
+    }
+    .pw-eye:hover { color: var(--text); }
+
+    /* toggle row */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 18px;
+    }
+    .toggle-row span { font-size: 13px; color: var(--text); }
+    .toggle { position: relative; width: 44px; height: 24px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      background: var(--border);
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background .3s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .3s;
+    }
+    .toggle input:checked + .slider { background: var(--accent); }
+    .toggle input:checked + .slider::before { transform: translateX(20px); }
+
+    /* CTA button */
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; border-radius: var(--radius);
+      color: #fff;
+      font-family: 'Sora', sans-serif;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity .2s, transform .1s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(79,110,247,.35);
+    }
+    .btn-primary:hover { opacity: .92; box-shadow: 0 6px 28px rgba(79,110,247,.5); }
+    .btn-primary:active { transform: scale(.98); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+    .divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 14px 0;
+      color: var(--muted); font-size: 11px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .btn-biometric {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-family: 'Sora', sans-serif;
+      font-size: 14px; font-weight: 500;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .btn-biometric:not(:disabled):hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(79,110,247,.07);
+    }
+    .btn-biometric:disabled { opacity: .45; cursor: not-allowed; }
+
+    .hint {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(60px);
+      background: #1a2a52;
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 11px 22px;
+      border-radius: 40px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { border-color: var(--danger); }
+    #toast.success { border-color: var(--success); }
+
+    /* Spinner */
+    .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-ring">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/>
+      </svg>
+    </div>
+    <div class="brand">BioAttend</div>
+    <div class="tagline">Biometric Attendance System</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+    <button class="tab-btn active" id="tab-register" onclick="switchTab('register')">Create Account</button>
+  </div>
+
+  <div class="form-body">
+
+    <!-- ── Sign In ── -->
+    <div class="form-pane" id="pane-signin">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="si-email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="si-password" placeholder="••••••••" />
+          <button class="pw-eye" onclick="togglePw('si-password',this)" type="button">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn-primary" id="btn-signin" onclick="handleSignIn()">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+        Sign In
+      </button>
+
+      <div class="divider">or use biometric</div>
+
+      <button class="btn-biometric" id="btn-bio-signin" onclick="handleBiometricSignIn()">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+        Sign in with Fingerprint / Face ID
+      </button>
+    </div>
+
+    <!-- ── Create Account ── -->
+    <div class="form-pane active" id="pane-register">
+      <div class="row-2">
+        <div class="field">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="r-name" placeholder="Jane Smith" />
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="r-dob" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" id="r-email" placeholder="jane@company.com" />
+      </div>
+
+      <div class="field">
+        <label>Mobile</label>
+        <input type="tel" id="r-mobile" placeholder="+91 98765 43210" />
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Institution</label>
+          <input type="text" id="r-institution" placeholder="Acme Corp" />
+        </div>
+        <div class="field">
+          <label>Department</label>
+          <input type="text" id="r-department" placeholder="Engineering" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Password <span class="req">*</span> <span style="font-weight:400;text-transform:none;letter-spacing:0">(min 8 chars)</span></label>
+        <div class="pw-wrap">
+          <input type="password" id="r-password" placeholder="••••••••" />
+          <button class="pw-eye" onclick="togglePw('r-password',this)" type="button">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <span>Mark attendance from anywhere</span>
+        <label class="toggle">
+          <input type="checkbox" id="r-anywhere" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <button class="btn-primary" id="btn-register" onclick="handleRegister()">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Create Account
+      </button>
+
+      <div class="divider">then register biometric</div>
+
+      <button class="btn-biometric" id="btn-bio-register" disabled onclick="handleBiometricRegister()">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+        Register Fingerprint / Face ID
+      </button>
+      <div class="hint" id="bio-hint">Create your account first, then register biometric</div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────
+  // Replace with your deployed Apps Script Web App URL
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMidoZcaGaQeyQzfXmjTIdibLPwFVj-0mzAXcB8-OybhKUL4BHsLQSpa-meFVNYLA5bQ/exec';
+  // ────────────────────────────────────────────────────
+
+  let registeredUserId = null; // set after successful registration
+
+  /* Tab switch */
+  function switchTab(tab) {
+    document.getElementById('pane-signin').classList.toggle('active', tab === 'signin');
+    document.getElementById('pane-register').classList.toggle('active', tab === 'register');
+    document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  }
+
+  /* Password visibility */
+  function togglePw(id, btn) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+
+  /* Toast helper */
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show ' + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.className = '', 3000);
+  }
+
+  /* Spinner on button */
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+      btn._orig = btn.innerHTML;
+      btn.innerHTML = '<span class="spin"></span> Please wait…';
+      btn.disabled = true;
+    } else {
+      btn.innerHTML = btn._orig || btn.innerHTML;
+      btn.disabled = false;
+    }
+  }
+
+  /* ── API call helper ── */
+  async function api(payload) {
+    const url = APPS_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
+    const res = await fetch(url, { redirect: 'follow' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch(e) { console.error('Non-JSON:', text); throw new Error('Server returned bad response'); }
+  }
+
+  /* ── Sign In ── */
+  async function handleSignIn() {
+    const email    = document.getElementById('si-email').value.trim();
+    const password = document.getElementById('si-password').value;
+    if (!email || !password) { showToast('Please fill in all fields', 'error'); return; }
+
+    setLoading('btn-signin', true);
+    try {
+      const data = await api({ action: 'signIn', email, password });
+      if (data.success) {
+        showToast('✓ Signed in! Marking attendance…', 'success');
+        // After sign-in, mark attendance
+        await api({ action: 'markAttendance', userId: data.userId });
+        showToast('✓ Attendance marked!', 'success');
+      } else {
+        showToast(data.message || 'Sign in failed', 'error');
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+    setLoading('btn-signin', false);
+  }
+
+  /* ── Register ── */
+  async function handleRegister() {
+    const name       = document.getElementById('r-name').value.trim();
+    const email      = document.getElementById('r-email').value.trim();
+    const password   = document.getElementById('r-password').value;
+    const dob        = document.getElementById('r-dob').value;
+    const mobile     = document.getElementById('r-mobile').value.trim();
+    const institution= document.getElementById('r-institution').value.trim();
+    const department = document.getElementById('r-department').value.trim();
+    const anywhere   = document.getElementById('r-anywhere').checked;
+
+    if (!name || !email || !password) { showToast('Name, email & password are required', 'error'); return; }
+    if (password.length < 8) { showToast('Password must be at least 8 characters', 'error'); return; }
+
+    setLoading('btn-register', true);
+    try {
+      const data = await api({ action: 'register', name, email, password, dob, mobile, institution, department, anywhere });
+      if (data.success) {
+        registeredUserId = data.userId;
+        showToast('✓ Account created!', 'success');
+        // Enable biometric registration
+        document.getElementById('btn-bio-register').disabled = false;
+        document.getElementById('bio-hint').textContent = 'Tap below to register your biometric';
+      } else {
+        showToast(data.message || 'Registration failed', 'error');
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+    setLoading('btn-register', false);
+  }
+
+  /* ── WebAuthn biometric registration ── */
+  async function handleBiometricRegister() {
+    if (!registeredUserId) { showToast('Create your account first', 'error'); return; }
+    if (!window.PublicKeyCredential) { showToast('WebAuthn not supported on this browser', 'error'); return; }
+
+    try {
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { name: 'BioAttend', id: location.hostname },
+          user: {
+            id: Uint8Array.from(registeredUserId, c => c.charCodeAt(0)),
+            name: document.getElementById('r-email').value,
+            displayName: document.getElementById('r-name').value
+          },
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+          authenticatorSelection: {
+            authenticatorAttachment: 'platform',
+            userVerification: 'required'
+          },
+          timeout: 60000
+        }
+      });
+
+      // Send credential id to backend for storage
+      const credId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+      const data = await api({ action: 'saveBiometric', userId: registeredUserId, credentialId: credId });
+      if (data.success) {
+        showToast('✓ Biometric registered!', 'success');
+        document.getElementById('bio-hint').textContent = '✓ Biometric registered successfully';
+      } else {
+        showToast(data.message || 'Could not save biometric', 'error');
+      }
+    } catch (err) {
+      showToast('Biometric cancelled or failed: ' + err.message, 'error');
+    }
+  }
+
+  /* ── WebAuthn biometric sign-in ── */
+  async function handleBiometricSignIn() {
+    if (!window.PublicKeyCredential) { showToast('WebAuthn not supported on this browser', 'error'); return; }
+
+    const email = document.getElementById('si-email').value.trim();
+    if (!email) { showToast('Enter your email first, then use biometric', 'error'); return; }
+
+    try {
+      // Fetch stored credential id from backend
+      const info = await api({ action: 'getBiometric', email });
+      if (!info.credentialId) { showToast('No biometric registered for this email', 'error'); return; }
+
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+
+      const rawId = Uint8Array.from(atob(info.credentialId), c => c.charCodeAt(0));
+
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          allowCredentials: [{ type: 'public-key', id: rawId }],
+          userVerification: 'required',
+          timeout: 60000
+        }
+      });
+
+      showToast('✓ Biometric verified! Marking attendance…', 'success');
+      await api({ action: 'markAttendance', userId: info.userId });
+      showToast('✓ Attendance marked!', 'success');
+    } catch (err) {
+      showToast('Biometric failed: ' + err.message, 'error');
+    }
+  }
+
+  // Default to sign in tab if hash says so
+  if (location.hash === '#signin') switchTab('signin');
+</script>
+</body>
+</html>
