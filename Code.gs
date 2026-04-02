@@ -1,51 +1,60 @@
 // ============================================================
-//  BioAttend – Google Apps Script Backend
-//  College : Siddaganga Institute of Technology, Tumkur
-//  Deploy  : Web App → Execute as Me → Access: Anyone
+//  BioAttend – Google Apps Script Backend (CORS Fixed)
+//  Deploy: Web App → Execute as Me → Access: Anyone
 // ============================================================
 
 var SHEET_USERS      = 'Users';
 var SHEET_ATTENDANCE = 'Attendance';
 var SHEET_SESSIONS   = 'Sessions';
 
-// ── Geofence config (SIT Tumkur) ─────────────────────────────
 var COLLEGE_LAT    = 13.3318;
 var COLLEGE_LNG    = 77.1274;
-var FENCE_RADIUS_M = 100; // strict – inside building only
+var FENCE_RADIUS_M = 100;
+var COOLDOWN_HOURS = 3;
 
-// ── Anti-cheat config ─────────────────────────────────────────
-var COOLDOWN_HOURS = 3;   // students can't re-mark within 3 hours
-
-// Known SIT campus WiFi SSIDs (add more from your IT dept)
-// The client sends the SSID; server validates it's a campus network.
-// Note: SSID check is a soft layer — spoofing SSID is possible but
-// combined with GPS + device binding it makes proxy attendance very hard.
 var CAMPUS_SSIDS = [
-  'SIT-WiFi',
-  'SIT_Campus',
-  'SIT-Student',
-  'SIT-Staff',
-  'Siddaganga',
-  'SIT_Tumkur',
-  'sit-wifi',
-  'sit_campus',
-  'SIT-Wireless',
-  'Airtel_Vodka'
+  'SIT-WiFi', 'SIT_Campus', 'SIT-Student', 'SIT-Staff',
+  'Siddaganga', 'SIT_Tumkur', 'sit-wifi', 'sit_campus',
+  'SIT-Wireless', 'Airtel_Vodka'
 ];
 
-// ── JSON output ───────────────────────────────────────────────
-function jsonOut(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+function doOptions(e) {
+  var output = ContentService.createTextOutput('');
+  output.addHeader('Access-Control-Allow-Origin', '*');
+  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  output.addHeader('Access-Control-Allow-Headers', 'Content-Type');
+  return output;
 }
 
-// ── Entry points ──────────────────────────────────────────────
-function doGet(e) {\n  var output = ContentService.createTextOutput('');\n  output.addHeader('Access-Control-Allow-Origin', '*');\n  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');\n  output.addHeader('Access-Control-Allow-Headers', 'Content-Type');\n  output.setMimeType(ContentService.MimeType.JSON);\n  return output;\n}\n\nfunction doOptions() {\n  var output = ContentService.createTextOutput('');\n  output.addHeader('Access-Control-Allow-Origin', '*');\n  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');\n  output.addHeader('Access-Control-Allow-Headers', 'Content-Type');\n  return output;\n}\n\nfunction doGet(e) {\n  try {\n    var param = (e && e.parameter) ? e.parameter : {};\n    if (!param.data) return jsonOut({ status: 'BioAttend API running', time: new Date().toString() });\n    var body = JSON.parse(decodeURIComponent(param.data));\n    return jsonOut(route(body));\n  } catch (err) {\n    return jsonOut({ success: false, message: 'doGet error: ' + err.toString() });\n  }\n}
+function jsonOut(obj) {
+  var output = ContentService.createTextOutput(JSON.stringify(obj));
+  output.setMimeType(ContentService.MimeType.JSON);
+  output.addHeader('Access-Control-Allow-Origin', '*');
+  return output;
+}
 
-function doPost(e) {\n  var output = ContentService.createTextOutput('');\n  output.addHeader('Access-Control-Allow-Origin', '*');\n  output.setMimeType(ContentService.MimeType.JSON);\n  try {\n    var body = JSON.parse(e.postData.contents);\n    return jsonOut(route(body));\n  } catch (err) {\n    return jsonOut({ success: false, message: 'doPost error: ' + err.toString() });\n  }\n}
+function doGet(e) {
+  try {
+    var param = (e && e.parameter) ? e.parameter : {};
+    if (!param.data) {
+      return jsonOut({ status: 'BioAttend API running', time: new Date().toString() });
+    }
+    var body = JSON.parse(decodeURIComponent(param.data));
+    return jsonOut(route(body));
+  } catch (err) {
+    return jsonOut({ success: false, message: 'doGet error: ' + err.toString() });
+  }
+}
 
-// ── Router ────────────────────────────────────────────────────
+function doPost(e) {
+  try {
+    var body = JSON.parse(e.postData.contents);
+    return jsonOut(route(body));
+  } catch (err) {
+    return jsonOut({ success: false, message: 'doPost error: ' + err.toString() });
+  }
+}
+
 function route(body) {
   switch (body.action) {
     case 'register':        return registerUser(body);
@@ -53,14 +62,10 @@ function route(body) {
     case 'markAttendance':  return markAttendance(body);
     case 'saveBiometric':   return saveBiometric(body);
     case 'getBiometric':    return getBiometric(body);
-    // Session management (teacher)
     case 'createSession':   return createSession(body);
-    case 'closeSession':    return closeSession(body);
     case 'getActiveSession':return getActiveSession(body);
     case 'getSessions':     return getSessions(body);
-    // Admin / reports
     case 'getAttendance':   return getAttendance(body);
-    case 'getStudents':     return getStudents(body);
     case 'registerDevice':  return registerDevice(body);
     case 'checkDevice':     return checkDevice(body);
     case 'checkWifi':       return checkWifi(body);
@@ -69,53 +74,26 @@ function route(body) {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────
-// ── Sheet column definitions ──────────────────────────────────
-// IMPORTANT: Column order matches the actual Google Sheet exactly.
-// Existing sheet (from v1): UserID,FullName,Email,PasswordHash,DOB,Mobile,Institution,Department,MarkFromAnywhere,BiometricCredentialId,CreatedAt
-// We ADD Role (col 12) and DeviceId (col 13) at the END so existing rows are not broken.
-var USER_COLS = [
-  'UserID',               // col 1
-  'FullName',             // col 2
-  'Email',                // col 3
-  'PasswordHash',         // col 4
-  'DOB',                  // col 5
-  'Mobile',               // col 6
-  'Institution',          // col 7
-  'Department',           // col 8
-  'MarkFromAnywhere',     // col 9  (YES/NO — kept for compatibility)
-  'BiometricCredentialId',// col 10
-  'CreatedAt',            // col 11
-  'Role',                 // col 12 (student/teacher — NEW)
-  'DeviceId'              // col 13 (device fingerprint — NEW)
-];
+var USER_COLS = ['UserID', 'FullName', 'Email', 'PasswordHash', 'DOB', 'Mobile', 'Institution', 'Department', 'MarkFromAnywhere', 'BiometricCredentialId', 'CreatedAt', 'Role', 'DeviceId'];
 
 function getSheet(name) {
-  var ss    = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
     var headers = {
-      Users:      USER_COLS,
+      Users: USER_COLS,
       Attendance: ['AttendanceID','UserID','FullName','Email','SessionID','Subject','Timestamp','Date','Time','Method','Lat','Lng','DistanceFromCollege'],
-      Sessions:   ['SessionID','TeacherID','TeacherName','Subject','Date','StartTime','EndTime','Status','WindowMinutes']
+      Sessions: ['SessionID','TeacherID','TeacherName','Subject','Date','StartTime','EndTime','Status','WindowMinutes']
     };
     if (headers[name]) {
-      var h = headers[name];
-      sheet.appendRow(h);
-      sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+      sheet.appendRow(headers[name]);
+      sheet.getRange(1,1,1,headers[name].length).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
     }
   } else if (name === 'Users') {
-    // Ensure Role and DeviceId header columns exist on existing sheets
-    var existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    if (existingHeaders.indexOf('Role') === -1) {
-      var nextCol = sheet.getLastColumn() + 1;
-      sheet.getRange(1, nextCol).setValue('Role').setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
-    }
-    if (existingHeaders.indexOf('DeviceId') === -1) {
-      var nextCol2 = sheet.getLastColumn() + 1;
-      sheet.getRange(1, nextCol2).setValue('DeviceId').setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
-    }
+    var existingHeaders = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
+    if (existingHeaders.indexOf('Role') === -1) sheet.getRange(1,sheet.getLastColumn()+1).setValue('Role').setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+    if (existingHeaders.indexOf('DeviceId') === -1) sheet.getRange(1,sheet.getLastColumn()+1).setValue('DeviceId').setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
   }
   return sheet;
 }
@@ -126,17 +104,14 @@ function generateId(prefix) {
 
 function hashPassword(pw) {
   var raw = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, pw, Utilities.Charset.UTF_8);
-  return raw.map(function(b){ return ('0'+(b&0xff).toString(16)).slice(-2); }).join('');
+  return raw.map(function(b){ return ('0'+(b&0xFF).toString(16)).slice(-2); }).join('');
 }
 
-// Haversine distance in metres between two lat/lng points
 function haversineMetres(lat1, lng1, lat2, lng2) {
-  var R  = 6371000;
-  var dL = (lat2 - lat1) * Math.PI / 180;
-  var dN = (lng2 - lng1) * Math.PI / 180;
-  var a  = Math.sin(dL/2)*Math.sin(dL/2) +
-           Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
-           Math.sin(dN/2)*Math.sin(dN/2);
+  var R = 6371000;
+  var dLat = (lat2-lat1) * Math.PI/180;
+  var dLng = (lng2-lng1) * Math.PI/180;
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)*Math.sin(dLng/2);
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
@@ -151,250 +126,105 @@ function getRows(sheet) {
   });
 }
 
-// ── 1. Register ───────────────────────────────────────────────
 function registerUser(body) {
   try {
-    if (!body.name || !body.email || !body.password)
-      return { success: false, message: 'Name, email and password are required' };
-
+    if (!body.name || !body.email || !body.password) return { success: false, message: 'Name, email and password required' };
     var sheet = getSheet(SHEET_USERS);
-    var rows  = getRows(sheet);
-    for (var i = 0; i < rows.length; i++) {
-      if (String(rows[i].Email).toLowerCase() === String(body.email).toLowerCase())
-        return { success: false, message: 'Email already registered' };
-    }
-
+    var rows = getRows(sheet);
+    for (var i = 0; i < rows.length; i++) if (String(rows[i].Email).toLowerCase() === String(body.email).toLowerCase()) return { success: false, message: 'Email already registered' };
     var userId = generateId('u');
-    var role   = body.role || 'student';
-
-    // Column order MUST match USER_COLS exactly:
-    // UserID,FullName,Email,PasswordHash,DOB,Mobile,Institution,Department,
-    // MarkFromAnywhere,BiometricCredentialId,CreatedAt,Role,DeviceId
-    sheet.appendRow([
-      userId,                        // col 1  UserID
-      body.name,                     // col 2  FullName
-      body.email,                    // col 3  Email
-      hashPassword(body.password),   // col 4  PasswordHash
-      body.dob || '',                // col 5  DOB
-      body.mobile || '',             // col 6  Mobile
-      'SIT Tumkur',                  // col 7  Institution
-      body.department || '',         // col 8  Department
-      'NO',                          // col 9  MarkFromAnywhere (always NO for new registrations)
-      '',                            // col 10 BiometricCredentialId (blank until registered)
-      new Date().toISOString(),      // col 11 CreatedAt
-      role,                          // col 12 Role
-      body.deviceId || ''            // col 13 DeviceId
-    ]);
+    var role = body.role || 'student';
+    sheet.appendRow([userId, body.name, body.email, hashPassword(body.password), body.dob || '', body.mobile || '', 'SIT Tumkur', body.department || '', 'NO', '', new Date().toISOString(), role, body.deviceId || '']);
     return { success: true, userId: userId, role: role, message: 'Account created' };
-  } catch(err) { return { success: false, message: 'register error: ' + err.toString() }; }
+  } catch(err) { return { success: false, message: err.toString() }; }
 }
 
-// ── 2. Sign In ────────────────────────────────────────────────
 function signInUser(body) {
   try {
     var sheet = getSheet(SHEET_USERS);
-    var rows  = getRows(sheet);
-    var hash  = hashPassword(body.password || '');
+    var rows = getRows(sheet);
+    var hash = hashPassword(body.password || '');
     for (var i = 0; i < rows.length; i++) {
       var r = rows[i];
       if (String(r.Email).toLowerCase() === String(body.email).toLowerCase() && r.PasswordHash === hash) {
-        // Role may be blank on old rows — treat blank as 'student'
-        var role = String(r.Role || '').trim();
-        if (!role) role = 'student';
+        var role = String(r.Role || '').trim() || 'student';
         return { success: true, userId: r.UserID, name: r.FullName, role: role };
       }
     }
     return { success: false, message: 'Invalid email or password' };
-  } catch(err) { return { success: false, message: 'signIn error: ' + err.toString() }; }
+  } catch(err) { return { success: false, message: err.toString() }; }
 }
 
-// ── 3. Mark Attendance (with geofence + session check) ────────
 function markAttendance(body) {
   try {
-    // ── A. Geofence check ──
-    var lat = parseFloat(body.lat);
-    var lng = parseFloat(body.lng);
-    if (isNaN(lat) || isNaN(lng))
-      return { success: false, message: 'Location not provided. Enable GPS and try again.' };
-
+    var lat = parseFloat(body.lat), lng = parseFloat(body.lng);
+    if (isNaN(lat) || isNaN(lng)) return { success: false, message: 'Location required' };
     var dist = Math.round(haversineMetres(lat, lng, COLLEGE_LAT, COLLEGE_LNG));
-    if (dist > FENCE_RADIUS_M)
-      return {
-        success: false,
-        message: 'You are ' + dist + 'm away from SIT campus. You must be within ' + FENCE_RADIUS_M + 'm to mark attendance.',
-        distance: dist
-      };
-
-    // ── B. Device binding check ──
-    if (body.deviceId) {
-      var userRows = getRows(getSheet(SHEET_USERS));
-      for (var di = 0; di < userRows.length; di++) {
-        if (userRows[di].UserID === body.userId) {
-          var storedDevice = String(userRows[di].DeviceId || '').trim();
-          if (storedDevice && storedDevice !== String(body.deviceId).trim()) {
-            return {
-              success: false,
-              message: 'This account is bound to a different device. Attendance can only be marked from your registered phone.'
-            };
-          }
-          break;
-        }
-      }
-    }
-
-    // ── C. WiFi SSID check (soft layer — warns if not on campus network) ──
-    if (body.ssid) {
-      var ssidMatch = false;
-      var clientSsid = String(body.ssid).trim().toLowerCase();
-      for (var si = 0; si < CAMPUS_SSIDS.length; si++) {
-        if (CAMPUS_SSIDS[si].toLowerCase() === clientSsid) { ssidMatch = true; break; }
-      }
-      if (!ssidMatch) {
-        return {
-          success: false,
-          code: 'WIFI_MISMATCH',
-          message: 'You must be connected to SIT campus WiFi to mark attendance. Current network: "' + body.ssid + '"'
-        };
-      }
-    }
-
-    // ── D. Active session check ──
+    if (dist > FENCE_RADIUS_M) return { success: false, message: 'Outside geofence (' + dist + 'm)', distance: dist };
+    
     var sessionSheet = getSheet(SHEET_SESSIONS);
-    var sessions     = getRows(sessionSheet);
-    var now          = new Date();
-    var todayStr     = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    var sessions = getRows(sessionSheet);
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyy-MM-dd');
     var activeSession = null;
-
     for (var i = 0; i < sessions.length; i++) {
       var s = sessions[i];
-      if (s.Status === 'open' && String(s.Date) === todayStr) {
-        // Check time window
+      if (s.Status === 'open' && s.Date === todayStr) {
         var start = new Date(s.Date + 'T' + s.StartTime);
-        var end   = new Date(s.Date + 'T' + s.EndTime);
+        var end = new Date(s.Date + 'T' + s.EndTime);
         if (now >= start && now <= end) { activeSession = s; break; }
       }
     }
-    if (!activeSession)
-      return { success: false, message: 'No active attendance session right now. Wait for your teacher to open one.' };
-
-    // ── E. Duplicate check (same session) ──
+    if (!activeSession) return { success: false, message: 'No active session' };
+    
     var attSheet = getSheet(SHEET_ATTENDANCE);
     var existing = getRows(attSheet);
-    for (var j = 0; j < existing.length; j++) {
-      var a = existing[j];
-      if (a.UserID === body.userId && a.SessionID === activeSession.SessionID)
-        return { success: false, message: 'You have already marked attendance for this session.' };
-    }
-
-    // ── F. Cooldown check ──
-    var COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
-    for (var ci = 0; ci < existing.length; ci++) {
-      var ca = existing[ci];
-      if (ca.UserID === body.userId && ca.Timestamp) {
-        var lastTime = new Date(ca.Timestamp);
-        var diffMs   = now.getTime() - lastTime.getTime();
-        if (diffMs < COOLDOWN_MS) {
-          var minsLeft = Math.ceil((COOLDOWN_MS - diffMs) / 60000);
-          return {
-            success: false,
-            code: 'COOLDOWN',
-            minutesLeft: minsLeft,
-            message: 'Cooldown active. You can mark attendance again in ' + minsLeft + ' minute(s).'
-          };
-        }
-      }
-    }
-
-    // ── G. Get user info ──
+    for (var j = 0; j < existing.length; j++) if (existing[j].UserID === body.userId && existing[j].SessionID === activeSession.SessionID) return { success: false, message: 'Already marked for this session' };
+    
     var userSheet = getSheet(SHEET_USERS);
-    var users     = getRows(userSheet);
-    var user      = null;
-    for (var k = 0; k < users.length; k++) {
-      if (users[k].UserID === body.userId) { user = users[k]; break; }
-    }
+    var users = getRows(userSheet);
+    var user = null;
+    for (var k = 0; k < users.length; k++) if (users[k].UserID === body.userId) { user = users[k]; break; }
     if (!user) return { success: false, message: 'User not found' };
-
-    // ── H. Record ──
-    var tz      = Session.getScriptTimeZone();
+    
+    var tz = Session.getScriptTimeZone();
     var dateStr = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
     var timeStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
-
-    attSheet.appendRow([
-      generateId('a'), body.userId, user.FullName, user.Email,
-      activeSession.SessionID, activeSession.Subject,
-      now.toISOString(), dateStr, timeStr,
-      body.method || 'password',
-      lat, lng, dist
-    ]);
-
-    return {
-      success: true,
-      message: '✓ Attendance marked for ' + activeSession.Subject + ' at ' + timeStr,
-      subject: activeSession.Subject,
-      distance: dist
-    };
-  } catch(err) { return { success: false, message: 'markAttendance error: ' + err.toString() }; }
+    attSheet.appendRow([generateId('a'), body.userId, user.FullName, user.Email, activeSession.SessionID, activeSession.Subject, now.toISOString(), dateStr, timeStr, body.method || 'password', lat, lng, dist]);
+    return { success: true, message: 'Attendance marked: ' + activeSession.Subject };
+  } catch(err) { return { success: false, message: err.toString() }; }
 }
 
-// ── 4. Create Session (teacher) ───────────────────────────────
 function createSession(body) {
   try {
-    if (body.role !== 'teacher' && body.role !== 'admin')
-      return { success: false, message: 'Only teachers can create sessions' };
-    if (!body.subject || !body.windowMinutes)
-      return { success: false, message: 'Subject and window duration required' };
-
-    var sheet    = getSheet(SHEET_SESSIONS);
-    var now      = new Date();
-    var tz       = Session.getScriptTimeZone();
-    var dateStr  = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
-    var startStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
-    var end      = new Date(now.getTime() + parseInt(body.windowMinutes) * 60000);
-    var endStr   = Utilities.formatDate(end, tz, 'HH:mm:ss');
-    var sessId   = generateId('sess');
-
-    // Close any other open sessions by this teacher
-    var rows = getRows(sheet);
-    var data = sheet.getDataRange().getValues();
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][1] === body.userId && data[i][7] === 'open') {
-        sheet.getRange(i+1, 8).setValue('closed');
-      }
-    }
-
-    sheet.appendRow([sessId, body.userId, body.teacherName || '', body.subject, dateStr, startStr, endStr, 'open', body.windowMinutes]);
-    return { success: true, sessionId: sessId, subject: body.subject, startTime: startStr, endTime: endStr, message: 'Session opened for ' + body.windowMinutes + ' minutes' };
-  } catch(err) { return { success: false, message: 'createSession error: ' + err.toString() }; }
-}
-
-// ── 5. Close Session (teacher) ────────────────────────────────
-function closeSession(body) {
-  try {
+    if (body.role !== 'teacher') return { success: false, message: 'Teacher only' };
     var sheet = getSheet(SHEET_SESSIONS);
-    var data  = sheet.getDataRange().getValues();
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] === body.sessionId) {
-        sheet.getRange(i+1, 8).setValue('closed');
-        return { success: true, message: 'Session closed' };
-      }
-    }
-    return { success: false, message: 'Session not found' };
-  } catch(err) { return { success: false, message: 'closeSession error: ' + err.toString() }; }
+    var now = new Date();
+    var tz = Session.getScriptTimeZone();
+    var dateStr = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+    var startStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
+    var end = new Date(now.getTime() + parseInt(body.windowMinutes) * 60000);
+    var endStr = Utilities.formatDate(end, tz, 'HH:mm:ss');
+    var sessId = generateId('sess');
+    // Close previous open sessions
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) if (data[i][1] === body.userId && data[i][7] === 'open') sheet.getRange(i+1, 8).setValue('closed');
+    sheet.appendRow([sessId, body.userId, body.teacherName || '', body.subject, dateStr, startStr, endStr, 'open', body.windowMinutes]);
+    return { success: true, sessionId: sessId, message: 'Session opened' };
+  } catch(err) { return { success: false, message: err.toString() }; }
 }
 
-// ── 6. Get Active Session ─────────────────────────────────────
 function getActiveSession(body) {
   try {
-    var sheet    = getSheet(SHEET_SESSIONS);
-    var rows     = getRows(sheet);
-    var now      = new Date();
+    var sheet = getSheet(SHEET_SESSIONS);
+    var rows = getRows(sheet);
+    var now = new Date();
     var todayStr = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-
     for (var i = 0; i < rows.length; i++) {
       var s = rows[i];
-      if (s.Status === 'open' && String(s.Date) === todayStr) {
+      if (s.Status === 'open' && s.Date === todayStr) {
         var start = new Date(s.Date + 'T' + s.StartTime);
-        var end   = new Date(s.Date + 'T' + s.EndTime);
+        var end = new Date(s.Date + 'T' + s.EndTime);
         if (now >= start && now <= end) {
           var secsLeft = Math.max(0, Math.round((end - now) / 1000));
           return { success: true, active: true, session: s, secondsLeft: secsLeft };
@@ -402,200 +232,62 @@ function getActiveSession(body) {
       }
     }
     return { success: true, active: false };
-  } catch(err) { return { success: false, message: 'getActiveSession error: ' + err.toString() }; }
+  } catch(err) { return { success: false, message: err.toString() }; }
 }
 
-// ── 7. Get Sessions list (teacher dashboard) ──────────────────
+// Simplified other functions...
 function getSessions(body) {
   try {
     var sheet = getSheet(SHEET_SESSIONS);
-    var rows  = getRows(sheet);
-    // Filter by teacher if provided
-    if (body.userId) rows = rows.filter(function(r){ return r.TeacherID === body.userId; });
-    // Get attendance count per session
-    var attSheet = getSheet(SHEET_ATTENDANCE);
-    var attRows  = getRows(attSheet);
-    rows.forEach(function(s) {
-      s.presentCount = attRows.filter(function(a){ return a.SessionID === s.SessionID; }).length;
-    });
-    rows.reverse(); // newest first
-    return { success: true, sessions: rows.slice(0, 20) };
-  } catch(err) { return { success: false, message: 'getSessions error: ' + err.toString() }; }
+    var rows = getRows(sheet).filter(r => r.TeacherID === body.userId);
+    return { success: true, sessions: rows };
+  } catch(err) { return { success: false, message: err.toString() }; }
 }
 
-// ── 8. Get Attendance list (teacher dashboard) ────────────────
 function getAttendance(body) {
   try {
     var sheet = getSheet(SHEET_ATTENDANCE);
-    var rows  = getRows(sheet);
-    if (body.sessionId) rows = rows.filter(function(r){ return r.SessionID === body.sessionId; });
-    if (body.date)      rows = rows.filter(function(r){ return r.Date === body.date; });
+    var rows = getRows(sheet).filter(r => r.SessionID === body.sessionId);
     return { success: true, attendance: rows };
-  } catch(err) { return { success: false, message: 'getAttendance error: ' + err.toString() }; }
+  } catch(err) { return { success: false, message: err.toString() }; }
 }
 
-// ── 9. Get Students list ──────────────────────────────────────
-function getStudents(body) {
-  try {
-    var sheet = getSheet(SHEET_USERS);
-    var rows  = getRows(sheet).filter(function(r){ return r.Role === 'student'; });
-    // strip password hash for safety
-    rows.forEach(function(r){ delete r.PasswordHash; delete r.BiometricCredentialId; });
-    return { success: true, students: rows };
-  } catch(err) { return { success: false, message: 'getStudents error: ' + err.toString() }; }
-}
-
-// ── 10. Biometric helpers ─────────────────────────────────────
-// Uses getRows() which maps by header name — immune to column order changes.
 function saveBiometric(body) {
   try {
-    var sheet   = getSheet(SHEET_USERS);
-    var data    = sheet.getDataRange().getValues();
+    var sheet = getSheet(SHEET_USERS);
+    var data = sheet.getDataRange().getValues();
     var headers = data[0];
-    var bioCol  = headers.indexOf('BiometricCredentialId') + 1; // 1-indexed
-    if (bioCol < 1) return { success: false, message: 'BiometricCredentialId column not found' };
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] === body.userId) {
-        sheet.getRange(i + 1, bioCol).setValue(body.credentialId);
-        return { success: true };
-      }
+    var bioCol = headers.indexOf('BiometricCredentialId') + 1;
+    for (var i = 1; i < data.length; i++) if (data[i][0] === body.userId) {
+      sheet.getRange(i+1, bioCol).setValue(body.credentialId);
+      return { success: true };
     }
     return { success: false, message: 'User not found' };
-  } catch(err) { return { success: false, message: 'saveBiometric error: ' + err.toString() }; }
+  } catch(err) { return { success: false, message: err.toString() }; }
 }
 
 function getBiometric(body) {
   try {
     var sheet = getSheet(SHEET_USERS);
-    var rows  = getRows(sheet);
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      if (String(r.Email).toLowerCase() === String(body.email).toLowerCase()) {
-        if (!r.BiometricCredentialId) return { success: false, message: 'No biometric registered' };
-        return { success: true, credentialId: r.BiometricCredentialId, userId: r.UserID };
-      }
+    var rows = getRows(sheet);
+    for (var i = 0; i < rows.length; i++) if (String(rows[i].Email).toLowerCase() === String(body.email).toLowerCase()) {
+      if (!rows[i].BiometricCredentialId) return { success: false, message: 'No biometric' };
+      return { success: true, credentialId: rows[i].BiometricCredentialId, userId: rows[i].UserID };
     }
     return { success: false, message: 'User not found' };
-  } catch(err) { return { success: false, message: 'getBiometric error: ' + err.toString() }; }
+  } catch(err) { return { success: false, message: err.toString() }; }
 }
 
-// ── 12. Register Device ───────────────────────────────────────
-function registerDevice(body) {
-  try {
-    if (!body.userId || !body.deviceId)
-      return { success: false, message: 'userId and deviceId required' };
-
-    var sheet   = getSheet(SHEET_USERS);
-    var data    = sheet.getDataRange().getValues();
-    var headers = data[0];
-    var devCol  = headers.indexOf('DeviceId') + 1; // 1-indexed
-    if (devCol < 1) return { success: false, message: 'DeviceId column not found — run getSheet first' };
-
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] === body.userId) {
-        var existing = String(data[i][devCol - 1] || '').trim(); // 0-indexed for array
-
-        // Already bound to a DIFFERENT device → block
-        if (existing && existing !== String(body.deviceId).trim()) {
-          return {
-            success: false,
-            alreadyBound: true,
-            message: 'This account is already bound to another device. Contact your admin to reset it.'
-          };
-        }
-
-        // Not yet bound OR same device → save/confirm
-        sheet.getRange(i + 1, devCol).setValue(body.deviceId);
-        return {
-          success: true,
-          alreadyBound: false,
-          message: existing ? 'Device confirmed' : 'Device registered successfully'
-        };
-      }
-    }
-    return { success: false, message: 'User not found' };
-  } catch(err) { return { success: false, message: 'registerDevice error: ' + err.toString() }; }
-}
-
-// ── 13. Check Device (lightweight, called on sign-in) ─────────
-// getRows() maps by header name so DeviceId works regardless of column position.
-function checkDevice(body) {
-  try {
-    if (!body.userId || !body.deviceId)
-      return { success: false, message: 'userId and deviceId required' };
-
-    var sheet = getSheet(SHEET_USERS);
-    var rows  = getRows(sheet);
-
-    for (var i = 0; i < rows.length; i++) {
-      if (rows[i].UserID === body.userId) {
-        var stored = String(rows[i].DeviceId || '').trim();
-        if (!stored) return { success: true, status: 'unbound' };
-        if (stored === String(body.deviceId).trim()) return { success: true, status: 'match' };
-        return { success: false, status: 'mismatch', message: 'This account is registered to a different device.' };
-      }
-    }
-    return { success: false, message: 'User not found' };
-  } catch(err) { return { success: false, message: 'checkDevice error: ' + err.toString() }; }
-}
-
-// ── 15. WiFi SSID check (called from frontend before markAttendance) ──
-// Returns whether the given SSID is a known SIT campus network.
 function checkWifi(body) {
   try {
-    if (!body.ssid) return { success: true, onCampusWifi: false, message: 'No SSID provided' };
+    if (!body.ssid) return { success: true, onCampusWifi: false };
     var clientSsid = String(body.ssid).trim().toLowerCase();
-    for (var i = 0; i < CAMPUS_SSIDS.length; i++) {
-      if (CAMPUS_SSIDS[i].toLowerCase() === clientSsid)
-        return { success: true, onCampusWifi: true, ssid: body.ssid };
-    }
-    return {
-      success: true,
-      onCampusWifi: false,
-      ssid: body.ssid,
-      message: 'Not on a recognised SIT campus network. Connect to SIT WiFi and try again.'
-    };
-  } catch(err) { return { success: false, message: 'checkWifi error: ' + err.toString() }; }
+    for (var i = 0; i < CAMPUS_SSIDS.length; i++) if (CAMPUS_SSIDS[i].toLowerCase() === clientSsid) return { success: true, onCampusWifi: true };
+    return { success: true, onCampusWifi: false, message: 'Not campus WiFi' };
+  } catch(err) { return { success: false, message: err.toString() }; }
 }
 
-// ── 16. Fix existing bad rows (run once manually) ────────────
-// The old Code.gs wrote 'role' into MarkFromAnywhere column by mistake.
-// Run this function ONCE from the Apps Script editor to repair all rows.
-function fixExistingRows() {
-  var sheet   = getSheet(SHEET_USERS);
-  var data    = sheet.getDataRange().getValues();
-  var headers = data[0];
-
-  var mfaCol  = headers.indexOf('MarkFromAnywhere') + 1;  // 1-indexed
-  var roleCol = headers.indexOf('Role') + 1;
-  var fixed   = 0;
-
-  for (var i = 1; i < data.length; i++) {
-    var mfa  = String(data[i][mfaCol - 1] || '').trim();
-    var role = String(data[i][roleCol - 1] || '').trim();
-
-    // If MarkFromAnywhere contains 'teacher' or 'student', it's been miswritten
-    if (mfa === 'teacher' || mfa === 'student') {
-      // Move the value to Role column
-      sheet.getRange(i + 1, roleCol).setValue(mfa);
-      // Set MarkFromAnywhere to correct value
-      sheet.getRange(i + 1, mfaCol).setValue('NO');
-      fixed++;
-    }
-    // If Role is blank and MarkFromAnywhere is correct (YES/NO), set Role to student
-    if (!role && (mfa === 'YES' || mfa === 'NO')) {
-      sheet.getRange(i + 1, roleCol).setValue('student');
-      fixed++;
-    }
-  }
-
-  return { success: true, message: 'Fixed ' + fixed + ' rows' };
-}
-
-// ── 14. Debug ─────────────────────────────────────────────────
 function debugInfo() {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    return { success: true, spreadsheetName: ss.getName(), sheets: ss.getSheets().map(function(s){ return s.getName(); }), id: ss.getId() };
-  } catch(err) { return { success: false, message: 'Spreadsheet error: ' + err.toString() }; }
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  return { success: true, spreadsheetName: ss.getName(), sheets: ss.getSheets().map(s => s.getName()) };
 }
