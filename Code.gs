@@ -41,25 +41,9 @@ function jsonOut(obj) {
 }
 
 // ── Entry points ──────────────────────────────────────────────
-function doGet(e) {
-  try {
-    var param = (e && e.parameter) ? e.parameter : {};
-    if (!param.data) return jsonOut({ status: 'BioAttend API running', time: new Date().toString() });
-    var body = JSON.parse(decodeURIComponent(param.data));
-    return jsonOut(route(body));
-  } catch (err) {
-    return jsonOut({ success: false, message: 'doGet error: ' + err.toString() });
-  }
-}
+function doGet(e) {\n  var output = ContentService.createTextOutput('');\n  output.addHeader('Access-Control-Allow-Origin', '*');\n  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');\n  output.addHeader('Access-Control-Allow-Headers', 'Content-Type');\n  output.setMimeType(ContentService.MimeType.JSON);\n  return output;\n}\n\nfunction doOptions() {\n  var output = ContentService.createTextOutput('');\n  output.addHeader('Access-Control-Allow-Origin', '*');\n  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');\n  output.addHeader('Access-Control-Allow-Headers', 'Content-Type');\n  return output;\n}\n\nfunction doGet(e) {\n  try {\n    var param = (e && e.parameter) ? e.parameter : {};\n    if (!param.data) return jsonOut({ status: 'BioAttend API running', time: new Date().toString() });\n    var body = JSON.parse(decodeURIComponent(param.data));\n    return jsonOut(route(body));\n  } catch (err) {\n    return jsonOut({ success: false, message: 'doGet error: ' + err.toString() });\n  }\n}
 
-function doPost(e) {
-  try {
-    var body = JSON.parse(e.postData.contents);
-    return jsonOut(route(body));
-  } catch (err) {
-    return jsonOut({ success: false, message: 'doPost error: ' + err.toString() });
-  }
-}
+function doPost(e) {\n  var output = ContentService.createTextOutput('');\n  output.addHeader('Access-Control-Allow-Origin', '*');\n  output.setMimeType(ContentService.MimeType.JSON);\n  try {\n    var body = JSON.parse(e.postData.contents);\n    return jsonOut(route(body));\n  } catch (err) {\n    return jsonOut({ success: false, message: 'doPost error: ' + err.toString() });\n  }\n}
 
 // ── Router ────────────────────────────────────────────────────
 function route(body) {
