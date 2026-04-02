@@ -28,7 +28,8 @@ var CAMPUS_SSIDS = [
   'Siddaganga',
   'SIT_Tumkur',
   'sit-wifi',
-  'sit_campus'
+  'sit_campus',
+  'SIT-Wireless'
 ];
 
 // ── JSON output ───────────────────────────────────────────────
@@ -84,13 +85,33 @@ function route(body) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────
+// ── Sheet column definitions ──────────────────────────────────
+// IMPORTANT: Column order matches the actual Google Sheet exactly.
+// Existing sheet (from v1): UserID,FullName,Email,PasswordHash,DOB,Mobile,Institution,Department,MarkFromAnywhere,BiometricCredentialId,CreatedAt
+// We ADD Role (col 12) and DeviceId (col 13) at the END so existing rows are not broken.
+var USER_COLS = [
+  'UserID',               // col 1
+  'FullName',             // col 2
+  'Email',                // col 3
+  'PasswordHash',         // col 4
+  'DOB',                  // col 5
+  'Mobile',               // col 6
+  'Institution',          // col 7
+  'Department',           // col 8
+  'MarkFromAnywhere',     // col 9  (YES/NO — kept for compatibility)
+  'BiometricCredentialId',// col 10
+  'CreatedAt',            // col 11
+  'Role',                 // col 12 (student/teacher — NEW)
+  'DeviceId'              // col 13 (device fingerprint — NEW)
+];
+
 function getSheet(name) {
   var ss    = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
     var headers = {
-      Users:      ['UserID','FullName','Email','PasswordHash','DOB','Mobile','Institution','Department','Role','BiometricCredentialId','DeviceId','CreatedAt'],
+      Users:      USER_COLS,
       Attendance: ['AttendanceID','UserID','FullName','Email','SessionID','Subject','Timestamp','Date','Time','Method','Lat','Lng','DistanceFromCollege'],
       Sessions:   ['SessionID','TeacherID','TeacherName','Subject','Date','StartTime','EndTime','Status','WindowMinutes']
     };
@@ -98,6 +119,17 @@ function getSheet(name) {
       var h = headers[name];
       sheet.appendRow(h);
       sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+    }
+  } else if (name === 'Users') {
+    // Ensure Role and DeviceId header columns exist on existing sheets
+    var existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    if (existingHeaders.indexOf('Role') === -1) {
+      var nextCol = sheet.getLastColumn() + 1;
+      sheet.getRange(1, nextCol).setValue('Role').setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+    }
+    if (existingHeaders.indexOf('DeviceId') === -1) {
+      var nextCol2 = sheet.getLastColumn() + 1;
+      sheet.getRange(1, nextCol2).setValue('DeviceId').setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
     }
   }
   return sheet;
@@ -148,12 +180,25 @@ function registerUser(body) {
     }
 
     var userId = generateId('u');
-    var role   = body.role || 'student'; // 'student' or 'teacher'
+    var role   = body.role || 'student';
+
+    // Column order MUST match USER_COLS exactly:
+    // UserID,FullName,Email,PasswordHash,DOB,Mobile,Institution,Department,
+    // MarkFromAnywhere,BiometricCredentialId,CreatedAt,Role,DeviceId
     sheet.appendRow([
-      userId, body.name, body.email, hashPassword(body.password),
-      body.dob || '', body.mobile || '', 'SIT Tumkur',
-      body.department || '', role, '', body.deviceId || '',
-      new Date().toISOString()
+      userId,                        // col 1  UserID
+      body.name,                     // col 2  FullName
+      body.email,                    // col 3  Email
+      hashPassword(body.password),   // col 4  PasswordHash
+      body.dob || '',                // col 5  DOB
+      body.mobile || '',             // col 6  Mobile
+      'SIT Tumkur',                  // col 7  Institution
+      body.department || '',         // col 8  Department
+      'NO',                          // col 9  MarkFromAnywhere (always NO for new registrations)
+      '',                            // col 10 BiometricCredentialId (blank until registered)
+      new Date().toISOString(),      // col 11 CreatedAt
+      role,                          // col 12 Role
+      body.deviceId || ''            // col 13 DeviceId
     ]);
     return { success: true, userId: userId, role: role, message: 'Account created' };
   } catch(err) { return { success: false, message: 'register error: ' + err.toString() }; }
@@ -168,7 +213,10 @@ function signInUser(body) {
     for (var i = 0; i < rows.length; i++) {
       var r = rows[i];
       if (String(r.Email).toLowerCase() === String(body.email).toLowerCase() && r.PasswordHash === hash) {
-        return { success: true, userId: r.UserID, name: r.FullName, role: r.Role || 'student' };
+        // Role may be blank on old rows — treat blank as 'student'
+        var role = String(r.Role || '').trim();
+        if (!role) role = 'student';
+        return { success: true, userId: r.UserID, name: r.FullName, role: role };
       }
     }
     return { success: false, message: 'Invalid email or password' };
@@ -194,11 +242,10 @@ function markAttendance(body) {
 
     // ── B. Device binding check ──
     if (body.deviceId) {
-      var userSheet2 = getSheet(SHEET_USERS);
-      var users2     = getRows(userSheet2);
-      for (var di = 0; di < users2.length; di++) {
-        if (users2[di].UserID === body.userId) {
-          var storedDevice = String(users2[di].DeviceId || '').trim();
+      var userRows = getRows(getSheet(SHEET_USERS));
+      for (var di = 0; di < userRows.length; di++) {
+        if (userRows[di].UserID === body.userId) {
+          var storedDevice = String(userRows[di].DeviceId || '').trim();
           if (storedDevice && storedDevice !== String(body.deviceId).trim()) {
             return {
               success: false,
@@ -414,13 +461,17 @@ function getStudents(body) {
 }
 
 // ── 10. Biometric helpers ─────────────────────────────────────
+// Uses getRows() which maps by header name — immune to column order changes.
 function saveBiometric(body) {
   try {
-    var sheet = getSheet(SHEET_USERS);
-    var data  = sheet.getDataRange().getValues();
+    var sheet   = getSheet(SHEET_USERS);
+    var data    = sheet.getDataRange().getValues();
+    var headers = data[0];
+    var bioCol  = headers.indexOf('BiometricCredentialId') + 1; // 1-indexed
+    if (bioCol < 1) return { success: false, message: 'BiometricCredentialId column not found' };
     for (var i = 1; i < data.length; i++) {
       if (data[i][0] === body.userId) {
-        sheet.getRange(i+1, 10).setValue(body.credentialId);
+        sheet.getRange(i + 1, bioCol).setValue(body.credentialId);
         return { success: true };
       }
     }
@@ -444,19 +495,20 @@ function getBiometric(body) {
 }
 
 // ── 12. Register Device ───────────────────────────────────────
-// Called after account creation. Saves the device fingerprint to col 11.
-// If already bound to a different device, blocks the change.
 function registerDevice(body) {
   try {
     if (!body.userId || !body.deviceId)
       return { success: false, message: 'userId and deviceId required' };
 
-    var sheet = getSheet(SHEET_USERS);
-    var data  = sheet.getDataRange().getValues();
+    var sheet   = getSheet(SHEET_USERS);
+    var data    = sheet.getDataRange().getValues();
+    var headers = data[0];
+    var devCol  = headers.indexOf('DeviceId') + 1; // 1-indexed
+    if (devCol < 1) return { success: false, message: 'DeviceId column not found — run getSheet first' };
 
     for (var i = 1; i < data.length; i++) {
       if (data[i][0] === body.userId) {
-        var existing = String(data[i][10] || '').trim(); // col 11 = DeviceId (0-indexed: 10)
+        var existing = String(data[i][devCol - 1] || '').trim(); // 0-indexed for array
 
         // Already bound to a DIFFERENT device → block
         if (existing && existing !== String(body.deviceId).trim()) {
@@ -468,7 +520,7 @@ function registerDevice(body) {
         }
 
         // Not yet bound OR same device → save/confirm
-        sheet.getRange(i + 1, 11).setValue(body.deviceId);
+        sheet.getRange(i + 1, devCol).setValue(body.deviceId);
         return {
           success: true,
           alreadyBound: false,
@@ -481,6 +533,7 @@ function registerDevice(body) {
 }
 
 // ── 13. Check Device (lightweight, called on sign-in) ─────────
+// getRows() maps by header name so DeviceId works regardless of column position.
 function checkDevice(body) {
   try {
     if (!body.userId || !body.deviceId)
@@ -518,6 +571,40 @@ function checkWifi(body) {
       message: 'Not on a recognised SIT campus network. Connect to SIT WiFi and try again.'
     };
   } catch(err) { return { success: false, message: 'checkWifi error: ' + err.toString() }; }
+}
+
+// ── 16. Fix existing bad rows (run once manually) ────────────
+// The old Code.gs wrote 'role' into MarkFromAnywhere column by mistake.
+// Run this function ONCE from the Apps Script editor to repair all rows.
+function fixExistingRows() {
+  var sheet   = getSheet(SHEET_USERS);
+  var data    = sheet.getDataRange().getValues();
+  var headers = data[0];
+
+  var mfaCol  = headers.indexOf('MarkFromAnywhere') + 1;  // 1-indexed
+  var roleCol = headers.indexOf('Role') + 1;
+  var fixed   = 0;
+
+  for (var i = 1; i < data.length; i++) {
+    var mfa  = String(data[i][mfaCol - 1] || '').trim();
+    var role = String(data[i][roleCol - 1] || '').trim();
+
+    // If MarkFromAnywhere contains 'teacher' or 'student', it's been miswritten
+    if (mfa === 'teacher' || mfa === 'student') {
+      // Move the value to Role column
+      sheet.getRange(i + 1, roleCol).setValue(mfa);
+      // Set MarkFromAnywhere to correct value
+      sheet.getRange(i + 1, mfaCol).setValue('NO');
+      fixed++;
+    }
+    // If Role is blank and MarkFromAnywhere is correct (YES/NO), set Role to student
+    if (!role && (mfa === 'YES' || mfa === 'NO')) {
+      sheet.getRange(i + 1, roleCol).setValue('student');
+      fixed++;
+    }
+  }
+
+  return { success: true, message: 'Fixed ' + fixed + ' rows' };
 }
 
 // ── 14. Debug ─────────────────────────────────────────────────
