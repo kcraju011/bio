@@ -29,7 +29,8 @@ var CAMPUS_SSIDS = [
   'SIT_Tumkur',
   'sit-wifi',
   'sit_campus',
-  'SIT-Wireless'
+  'SIT-Wireless',
+  'Airtel_Vodka'
 ];
 
 // ── JSON output ───────────────────────────────────────────────
