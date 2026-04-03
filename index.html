@@ -128,6 +128,47 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── Teacher dashboard layout ── */
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.dash-name{font-size:14px;font-weight:600;color:var(--text)}
+.dash-sub{font-size:10.5px;color:var(--muted);margin-top:2px}
+.dash-logout{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;transition:color .2s,border-color .2s}
+.dash-logout:hover{color:var(--danger);border-color:var(--danger)}
+
+/* ── Sub-tabs ── */
+.sub-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--inp);border-radius:10px;padding:3px;margin-bottom:14px;gap:2px}
+.sub-tab{padding:7px 0;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:11px;font-weight:500;color:var(--muted);border-radius:8px;transition:all .2s}
+.sub-tab.active{background:var(--tab-act);color:var(--acc)}
+.sub-pane{display:none}
+.sub-pane.active{display:block;animation:fadeIn .25s ease both}
+
+/* ── Stats row ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat-card{border-radius:12px;padding:10px 6px;text-align:center;border:1px solid}
+.stat-card.green{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25)}
+.stat-card.red{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25)}
+.stat-card.blue{background:rgba(79,110,247,.08);border-color:rgba(79,110,247,.25)}
+.stat-card.purple{background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.25)}
+.stat-num{font-size:18px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.stat-lbl{font-size:9.5px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.6px}
+
+/* ── Segment control ── */
+.seg-control{display:inline-flex;background:var(--inp);border-radius:8px;padding:2px;gap:2px}
+.seg{padding:5px 14px;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:11.5px;font-weight:500;color:var(--muted);border-radius:6px;transition:all .2s}
+.seg.active{background:var(--tab-act);color:var(--acc)}
+
+/* ── Export button ── */
+.export-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.3);border-radius:8px;color:var(--acc);font-size:11.5px;font-family:'Sora',sans-serif;cursor:pointer;float:right;transition:background .2s}
+.export-btn:hover{background:rgba(79,110,247,.2)}
+
+/* ── Live toggle row ── */
+#live-toggle-row{display:flex;align-items:center;justify-content:space-between}
+
+/* ── Student search ── */
+#student-search{background:var(--inp);border:1px solid var(--border);border-radius:var(--rad);color:var(--text);font-family:'Sora',sans-serif;font-size:13px;padding:9px 13px;width:100%;outline:none;transition:border-color .2s}
+#student-search:focus{border-color:var(--acc)}
+#student-search::placeholder{color:var(--muted)}
+
 /* ── Location pill ── */
 .loc-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;margin-bottom:6px}
 .loc-pill.ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--success)}
@@ -259,15 +300,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
 
     <!-- ══════════════════════════════════════════
-         TEACHER PANE
+         TEACHER PANE — Full Admin Panel
     ══════════════════════════════════════════ -->
     <div class="pane" id="pane-teacher">
 
-      <!-- Not logged in as teacher -->
+      <!-- ── Login ── -->
       <div id="teacher-login-section">
         <div class="info-box blue">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-          <span>Sign in with your teacher account to open attendance sessions.</span>
+          <span>Sign in with your teacher account to manage attendance.</span>
         </div>
         <div class="field"><label>Email</label><input type="email" id="t-email" placeholder="teacher@sit.ac.in"/></div>
         <div class="field"><label>Password</label>
@@ -284,51 +325,118 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </button>
       </div>
 
-      <!-- Teacher dashboard (shown after login) -->
+      <!-- ── Dashboard (after login) ── -->
       <div id="teacher-dashboard" style="display:none">
 
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <!-- Header row -->
+        <div class="dash-header">
           <div>
-            <div style="font-size:14px;font-weight:600;color:var(--text)" id="t-welcome"></div>
-            <div style="font-size:11px;color:var(--muted)">Teacher Dashboard</div>
+            <div class="dash-name" id="t-welcome"></div>
+            <div class="dash-sub">Teacher Dashboard · SIT Tumkur</div>
           </div>
-          <button onclick="teacherLogout()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif">Logout</button>
+          <button class="dash-logout" onclick="teacherLogout()">Logout</button>
         </div>
 
-        <!-- Active session display -->
-        <div id="active-session-display"></div>
+        <!-- Sub-tabs -->
+        <div class="sub-tabs">
+          <button class="sub-tab active" id="stab-session" onclick="switchSubTab('session')">Session</button>
+          <button class="sub-tab" id="stab-live"    onclick="switchSubTab('live')">Live</button>
+          <button class="sub-tab" id="stab-history" onclick="switchSubTab('history')">History</button>
+          <button class="sub-tab" id="stab-students" onclick="switchSubTab('students')">Students</button>
+        </div>
 
-        <!-- Open new session -->
-        <div id="open-session-form">
-          <div class="field"><label>Subject / Class</label>
-            <input type="text" id="t-subject" placeholder="e.g. Data Structures – 3B"/>
+        <!-- ── Sub-pane: Session ── -->
+        <div class="sub-pane active" id="sp-session">
+          <div id="active-session-display"></div>
+          <div id="open-session-form">
+            <div class="field"><label>Subject / Class <span class="req">*</span></label>
+              <input type="text" id="t-subject" placeholder="e.g. Data Structures – 3CSE-B"/>
+            </div>
+            <div class="field"><label>Attendance Window</label>
+              <select id="t-window">
+                <option value="5">5 minutes</option>
+                <option value="10" selected>10 minutes</option>
+                <option value="15">15 minutes</option>
+                <option value="20">20 minutes</option>
+                <option value="30">30 minutes</option>
+              </select>
+            </div>
+            <button class="btn btn-success" id="btn-open-session" onclick="openSession()">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              Open Attendance Session
+            </button>
           </div>
-          <div class="field"><label>Attendance Window</label>
-            <select id="t-window">
-              <option value="5">5 minutes</option>
-              <option value="10" selected>10 minutes</option>
-              <option value="15">15 minutes</option>
-              <option value="20">20 minutes</option>
-            </select>
+        </div>
+
+        <!-- ── Sub-pane: Live Dashboard ── -->
+        <div class="sub-pane" id="sp-live">
+          <div id="live-session-info" class="no-session" style="margin-bottom:12px">No active session</div>
+
+          <!-- Stats row -->
+          <div class="stats-row" id="live-stats" style="display:none">
+            <div class="stat-card green">
+              <div class="stat-num" id="stat-present">0</div>
+              <div class="stat-lbl">Present</div>
+            </div>
+            <div class="stat-card red">
+              <div class="stat-num" id="stat-absent">0</div>
+              <div class="stat-lbl">Absent</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-num" id="stat-total">0</div>
+              <div class="stat-lbl">Total</div>
+            </div>
+            <div class="stat-card purple">
+              <div class="stat-num" id="stat-pct">0%</div>
+              <div class="stat-lbl">Attendance</div>
+            </div>
           </div>
-          <button class="btn btn-success" id="btn-open-session" onclick="openSession()">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            Open Attendance Session
-          </button>
+
+          <!-- Live toggle: present / absent -->
+          <div id="live-toggle-row" style="display:none;margin-bottom:10px">
+            <div class="seg-control">
+              <button class="seg active" id="seg-present" onclick="showLiveTab('present')">Present</button>
+              <button class="seg" id="seg-absent" onclick="showLiveTab('absent')">Absent</button>
+            </div>
+            <button class="export-btn" onclick="exportCurrentSession()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export CSV
+            </button>
+          </div>
+
+          <div id="live-list" class="att-list"></div>
+
+          <div id="live-refresh-row" style="display:none;text-align:center;margin-top:10px">
+            <button onclick="refreshLive()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↻ Refresh</button>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px" id="live-updated"></div>
+          </div>
         </div>
 
-        <!-- Recent sessions -->
-        <div style="margin-top:18px">
-          <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px">Recent Sessions</div>
-          <div id="sessions-list" class="att-list"></div>
+        <!-- ── Sub-pane: History ── -->
+        <div class="sub-pane" id="sp-history">
+          <div class="field" style="margin-bottom:10px">
+            <label>Filter by date</label>
+            <input type="date" id="hist-date" onchange="loadHistory()"/>
+          </div>
+          <div id="history-list" class="att-list"></div>
+          <div style="text-align:center;margin-top:10px;display:none" id="hist-export-row">
+            <button class="export-btn" onclick="exportHistory()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export CSV
+            </button>
+          </div>
         </div>
 
-        <!-- Present students for selected session -->
-        <div id="present-panel" style="display:none;margin-top:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px">Present Students — <span id="present-subject"></span></div>
-          <div id="present-list" class="att-list"></div>
+        <!-- ── Sub-pane: Students ── -->
+        <div class="sub-pane" id="sp-students">
+          <div class="field" style="margin-bottom:10px">
+            <input type="text" id="student-search" placeholder="Search by name or email…" oninput="filterStudents()"/>
+          </div>
+          <div id="student-count" style="font-size:11px;color:var(--muted);margin-bottom:8px"></div>
+          <div id="students-list" class="att-list"></div>
         </div>
-      </div>
+
+      </div><!-- /teacher-dashboard -->
     </div>
 
   </div><!-- /form-body -->
@@ -797,9 +905,16 @@ async function handleBiometricSignIn() {
 }
 
 // ══════════════════════════════════════════
-// TEACHER FUNCTIONS
+// TEACHER ADMIN PANEL — Phase 2
 // ══════════════════════════════════════════
 
+let liveData      = null;
+let liveTab       = 'present';
+let liveSessionId = null;
+let allStudents   = [];
+let historyData   = [];
+
+// ── Login ─────────────────────────────────
 async function handleTeacherLogin() {
   const email    = document.getElementById('t-email').value.trim();
   const password = document.getElementById('t-password').value;
@@ -808,7 +923,10 @@ async function handleTeacherLogin() {
   try {
     const d = await api({ action:'signIn', email, password });
     if (!d.success) { toast(d.message, 'error'); setLoading('btn-teacher-login', false); return; }
-    if (d.role !== 'teacher' && d.role !== 'admin') { toast('This account is not a teacher account', 'error'); setLoading('btn-teacher-login', false); return; }
+    if (d.role !== 'teacher' && d.role !== 'admin') {
+      toast('This account is not a teacher account', 'error');
+      setLoading('btn-teacher-login', false); return;
+    }
     teacherData = d;
     showTeacherDashboard();
   } catch(e) { toast('Error: ' + e.message, 'error'); }
@@ -819,42 +937,58 @@ function showTeacherDashboard() {
   document.getElementById('teacher-login-section').style.display = 'none';
   document.getElementById('teacher-dashboard').style.display = 'block';
   document.getElementById('t-welcome').textContent = 'Hello, ' + teacherData.name;
-  loadTeacherSessions();
+  switchSubTab('session');
   checkActiveForTeacher();
 }
 
 function teacherLogout() {
   teacherData = null;
+  clearInterval(sessionTimer);
+  liveSessionId = null;
   document.getElementById('teacher-login-section').style.display = 'block';
   document.getElementById('teacher-dashboard').style.display = 'none';
   document.getElementById('t-email').value = '';
   document.getElementById('t-password').value = '';
 }
 
+// ── Sub-tabs ──────────────────────────────
+function switchSubTab(tab) {
+  ['session','live','history','students'].forEach(t => {
+    document.getElementById('sp-'+t).classList.toggle('active', t===tab);
+    document.getElementById('stab-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab === 'live')     refreshLive();
+  if (tab === 'history')  { document.getElementById('hist-date').value = new Date().toISOString().slice(0,10); loadHistory(); }
+  if (tab === 'students') loadStudents();
+}
+
+// ── Session ───────────────────────────────
 async function checkActiveForTeacher() {
   try {
-    const d = await api({ action:'getActiveSession' });
-    const el = document.getElementById('active-session-display');
+    const d    = await api({ action:'getActiveSession' });
+    const el   = document.getElementById('active-session-display');
     const form = document.getElementById('open-session-form');
-    if (d.active && d.session.TeacherID === teacherData.userId) {
+    if (d.active) {
       let secs = d.secondsLeft;
+      liveSessionId   = d.session.SessionID;
       activeSessionId = d.session.SessionID;
       el.innerHTML = `
-        <div class="session-card">
-          <div class="subj">🟢 ${d.session.Subject} — LIVE</div>
-          <div class="meta">Window closes in: <span id="t-timer" style="font-weight:600;color:var(--success)">${fmtTime(secs)}</span></div>
+        <div class="session-card" style="margin-bottom:12px">
+          <div class="subj" style="font-size:14px">🟢 ${d.session.Subject} — LIVE</div>
+          <div class="meta">Closes in <span id="t-timer" style="font-weight:700;color:var(--success)">${fmtTime(secs)}</span></div>
+          <button onclick="closeCurrentSession('${d.session.SessionID}')" class="btn btn-danger" style="margin-top:10px;padding:8px">Stop Session Early</button>
         </div>`;
       form.style.display = 'none';
       clearInterval(sessionTimer);
       sessionTimer = setInterval(() => {
         secs--;
-        const el2 = document.getElementById('t-timer');
-        if (el2) el2.textContent = fmtTime(secs);
-        if (secs <= 0) { clearInterval(sessionTimer); checkActiveForTeacher(); loadTeacherSessions(); }
+        const t = document.getElementById('t-timer');
+        if (t) t.textContent = fmtTime(secs);
+        if (secs <= 0) { clearInterval(sessionTimer); checkActiveForTeacher(); }
       }, 1000);
     } else {
-      el.innerHTML = '';
-      form.style.display = 'block';
+      liveSessionId = null; activeSessionId = null;
+      el.innerHTML  = ''; form.style.display = 'block';
     }
   } catch(e) {}
 }
@@ -865,71 +999,210 @@ async function openSession() {
   if (!subject) { toast('Enter a subject name', 'error'); return; }
   setLoading('btn-open-session', true);
   try {
-    const d = await api({ action:'createSession', userId: teacherData.userId, teacherName: teacherData.name, role: teacherData.role, subject, windowMinutes: minutes });
+    const d = await api({ action:'createSession', userId:teacherData.userId, teacherName:teacherData.name, role:teacherData.role, subject, windowMinutes:minutes });
     if (d.success) {
-      toast('✓ Session opened for ' + minutes + ' minutes', 'success');
+      toast('✓ Session opened — students can mark now', 'success');
+      document.getElementById('t-subject').value = '';
       checkActiveForTeacher();
-      loadTeacherSessions();
     } else toast(d.message, 'error');
   } catch(e) { toast('Error: ' + e.message, 'error'); }
   setLoading('btn-open-session', false);
 }
 
-async function loadTeacherSessions() {
+async function closeCurrentSession(sessionId) {
   try {
-    const d = await api({ action:'getSessions', userId: teacherData.userId });
-    const el = document.getElementById('sessions-list');
-    if (!d.sessions || d.sessions.length === 0) { el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No sessions yet</div>'; return; }
-    el.innerHTML = d.sessions.map(s => `
-      <div class="att-item" style="cursor:pointer" onclick="loadPresent('${s.SessionID}','${s.Subject}')">
-        <div>
-          <div class="name">${s.Subject}</div>
-          <div class="meta">${s.Date} · ${s.StartTime}–${s.EndTime}</div>
-        </div>
-        <div style="text-align:right">
-          <span class="att-badge">${s.presentCount || 0} present</span>
-          <div style="font-size:10px;color:${s.Status==='open'?'var(--success)':'var(--muted)'};margin-top:3px">${s.Status}</div>
-        </div>
-      </div>`).join('');
+    await api({ action:'closeSession', sessionId });
+    toast('Session closed', 'success');
+    clearInterval(sessionTimer);
+    liveSessionId = null; activeSessionId = null;
+    checkActiveForTeacher();
+  } catch(e) { toast('Error closing session', 'error'); }
+}
+
+// ── Live Dashboard ────────────────────────
+async function refreshLive() {
+  const listEl  = document.getElementById('live-list');
+  const infoEl  = document.getElementById('live-session-info');
+  const statsEl = document.getElementById('live-stats');
+  const togEl   = document.getElementById('live-toggle-row');
+  const refEl   = document.getElementById('live-refresh-row');
+
+  try {
+    const chk = await api({ action:'getActiveSession' });
+    if (chk.active) liveSessionId = chk.session.SessionID;
   } catch(e) {}
-}
 
-async function loadPresent(sessionId, subject) {
+  if (!liveSessionId) {
+    infoEl.className='no-session'; infoEl.style.display='block';
+    infoEl.textContent='No active session — open one from Session tab';
+    statsEl.style.display='none'; togEl.style.display='none';
+    refEl.style.display='none'; listEl.innerHTML=''; return;
+  }
+
   try {
-    const d = await api({ action:'getAttendance', sessionId });
-    const panel = document.getElementById('present-panel');
-    const list  = document.getElementById('present-list');
-    document.getElementById('present-subject').textContent = subject;
-    panel.style.display = 'block';
-    if (!d.attendance || d.attendance.length === 0) {
-      list.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No one marked yet</div>';
-      return;
-    }
-    list.innerHTML = d.attendance.map((a,i) => `
-      <div class="att-item">
-        <div>
-          <div class="name">${i+1}. ${a.FullName}</div>
-          <div class="meta">${a.Email} · ${a.Time} · ${a.DistanceFromCollege}m from campus</div>
-        </div>
-        <span class="att-badge">${a.Method}</span>
-      </div>`).join('');
-  } catch(e) { toast('Error loading attendance', 'error'); }
+    const d = await api({ action:'getDashboard', sessionId:liveSessionId });
+    if (!d.success) { toast(d.message,'error'); return; }
+    liveData = d;
+    infoEl.style.display='none'; statsEl.style.display='grid';
+    togEl.style.display='flex'; refEl.style.display='block';
+    document.getElementById('stat-present').textContent = d.presentCount;
+    document.getElementById('stat-absent').textContent  = d.absentCount;
+    document.getElementById('stat-total').textContent   = d.total;
+    const pct = d.total ? Math.round(d.presentCount/d.total*100) : 0;
+    document.getElementById('stat-pct').textContent     = pct+'%';
+    document.getElementById('live-updated').textContent = 'Updated '+new Date().toLocaleTimeString();
+    renderLiveList();
+  } catch(e) { toast('Error: '+e.message,'error'); }
 }
 
-// ── Device badge helper ───────────────────────────────────────
-// Shows a small pill in the register pane with the device ID so
-// the student knows their phone is bound.
+function showLiveTab(tab) {
+  liveTab = tab;
+  document.getElementById('seg-present').classList.toggle('active', tab==='present');
+  document.getElementById('seg-absent').classList.toggle('active', tab==='absent');
+  renderLiveList();
+}
+
+function renderLiveList() {
+  if (!liveData) return;
+  const el   = document.getElementById('live-list');
+  const list = liveTab==='present' ? liveData.present : liveData.absent;
+  if (!list || list.length===0) {
+    el.innerHTML=`<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px">${liveTab==='present'?'No one has marked yet':'Everyone present! 🎉'}</div>`;
+    return;
+  }
+  el.innerHTML = list.map((s,i) => liveTab==='present'
+    ? `<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email}<br>${s.department||'—'} · ${s.time} · ${s.distance}m · ${s.method}</div></div><span class="att-badge" style="background:rgba(34,197,94,.15);color:var(--success);border-color:rgba(34,197,94,.3)">✓</span></div>`
+    : `<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email} · ${s.department||'—'}</div></div><span class="att-badge" style="background:rgba(239,68,68,.15);color:var(--danger);border-color:rgba(239,68,68,.3)">✗</span></div>`
+  ).join('');
+}
+
+function exportCurrentSession() {
+  if (!liveData) return;
+  const rows=[['Name','Email','Department','Time','Method','Distance(m)','Status']];
+  liveData.present.forEach(s=>rows.push([s.name,s.email,s.department||'',s.time,s.method,s.distance,'Present']));
+  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.department||'','','','','Absent']));
+  downloadCSV(rows,'attendance_live.csv');
+}
+
+// ── History ───────────────────────────────
+async function loadHistory() {
+  const date = document.getElementById('hist-date').value;
+  const el   = document.getElementById('history-list');
+  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">Loading…</div>';
+  try {
+    const d = await api({ action:'getSessions', userId:teacherData.userId });
+    let sessions = d.sessions || [];
+    if (date) sessions = sessions.filter(s => s.Date === date);
+    historyData = sessions;
+    if (!sessions.length) {
+      el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">No sessions found</div>';
+      document.getElementById('hist-export-row').style.display='none'; return;
+    }
+    document.getElementById('hist-export-row').style.display='block';
+    el.innerHTML = sessions.map(s=>`
+      <div class="att-item" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="toggleSessionDetail('${s.SessionID}','${s.Subject.replace(/'/g,"\\'")}')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div class="name">${s.Subject}</div><div class="meta">${s.Date} · ${s.StartTime}–${s.EndTime}</div></div>
+          <div style="text-align:right"><span class="att-badge">${s.presentCount||0} present</span><div style="font-size:10px;margin-top:3px;color:${s.Status==='open'?'var(--success)':'var(--muted)'}">${s.Status}</div></div>
+        </div>
+        <div id="detail-${s.SessionID}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px"></div>
+      </div>`).join('');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function toggleSessionDetail(sessionId, subject) {
+  const el = document.getElementById('detail-'+sessionId);
+  if (!el) return;
+  if (el.style.display==='block') { el.style.display='none'; return; }
+  el.style.display='block';
+  el.innerHTML='<div style="color:var(--muted);font-size:11px">Loading…</div>';
+  try {
+    const d = await api({ action:'getDashboard', sessionId });
+    if (!d.success) { el.innerHTML='<div style="color:var(--danger);font-size:11px">'+d.message+'</div>'; return; }
+    el.innerHTML=`
+      <div style="display:flex;gap:12px;margin-bottom:8px;font-size:11px">
+        <span style="color:var(--success)">✓ ${d.presentCount} present</span>
+        <span style="color:var(--danger)">✗ ${d.absentCount} absent</span>
+        <span style="color:var(--muted)">${d.total} total · ${d.total?Math.round(d.presentCount/d.total*100):0}%</span>
+      </div>
+      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.time} · ${s.method}</span></div>`).join('')}
+      ${!d.present.length?'<div style="font-size:11px;color:var(--muted)">No students marked</div>':''}
+      <button onclick="event.stopPropagation();exportOneSession('${sessionId}','${subject}')" class="export-btn" style="float:none;margin-top:10px">Export CSV</button>`;
+  } catch(e) { el.innerHTML='<div style="color:var(--danger);font-size:11px">Error</div>'; }
+}
+
+async function exportOneSession(sessionId, subject) {
+  try {
+    const d = await api({ action:'exportAttendance', sessionId });
+    if (d.success) downloadCSV(null,'attendance_'+subject.replace(/\s+/g,'_')+'.csv',d.csv);
+    else toast(d.message,'error');
+  } catch(e) { toast('Export failed','error'); }
+}
+
+async function exportHistory() {
+  if (!historyData.length) return;
+  try {
+    const date = historyData[0]?.Date || '';
+    const d = await api({ action:'exportAttendance', date });
+    if (d.success) downloadCSV(null,'attendance_'+date+'.csv',d.csv);
+    else toast(d.message,'error');
+  } catch(e) { toast('Export failed','error'); }
+}
+
+// ── Students ──────────────────────────────
+async function loadStudents() {
+  const el = document.getElementById('students-list');
+  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">Loading…</div>';
+  try {
+    const d = await api({ action:'getStudents' });
+    allStudents = d.students || [];
+    document.getElementById('student-count').textContent = allStudents.length+' students registered';
+    renderStudents(allStudents);
+  } catch(e) { toast('Error loading students','error'); }
+}
+
+function filterStudents() {
+  const q = document.getElementById('student-search').value.toLowerCase();
+  const f = allStudents.filter(s=>(s.FullName||'').toLowerCase().includes(q)||(s.Email||'').toLowerCase().includes(q)||(s.Department||'').toLowerCase().includes(q));
+  document.getElementById('student-count').textContent = f.length+' of '+allStudents.length+' students';
+  renderStudents(f);
+}
+
+function renderStudents(list) {
+  const el = document.getElementById('students-list');
+  if (!list.length) { el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">No students found</div>'; return; }
+  el.innerHTML = list.map((s,i)=>`
+    <div class="att-item">
+      <div>
+        <div class="name">${i+1}. ${s.FullName}</div>
+        <div class="meta">${s.Email}<br>${s.Department||'No dept'}</div>
+      </div>
+      <div style="text-align:right;font-size:10px;line-height:1.8">
+        <span style="color:${s.DeviceId?'var(--success)':'var(--muted)'}">${s.DeviceId?'📱 bound':'📱 none'}</span><br>
+        <span style="color:${s.BiometricCredentialId?'var(--success)':'var(--muted)'}">${s.BiometricCredentialId?'🔐 bio':'🔐 none'}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ── CSV download ──────────────────────────
+function downloadCSV(rows, filename, csvString) {
+  const content = csvString || rows.map(r=>r.map(c=>'"'+(c||'')+'"').join(',')).join('\n');
+  const blob = new Blob([content],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename; a.click();
+}
+
+// ── Device badge ──────────────────────────
 function showDeviceBadge(dId) {
-  const existing = document.getElementById('device-badge');
-  if (existing) existing.remove();
+  const ex = document.getElementById('device-badge');
+  if (ex) ex.remove();
   const badge = document.createElement('div');
   badge.id = 'device-badge';
-  badge.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;margin-bottom:12px;font-size:11.5px;color:#86efac';
-  badge.innerHTML = `<svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5-4H7V4h10v12z"/></svg>
-  <span>Device bound: <code style="font-family:monospace;letter-spacing:.5px">${dId}</code></span>`;
-  // Insert before the Create Account button
-  const btn = document.getElementById('btn-register');
-  btn.parentNode.insertBefore(badge, btn);
+  badge.style.cssText='display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;margin-bottom:12px;font-size:11.5px;color:#86efac';
+  badge.innerHTML=`<svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5-4H7V4h10v12z"/></svg><span>Device bound: <code style="font-family:monospace">${dId}</code></span>`;
+  const btn=document.getElementById('btn-register');
+  btn.parentNode.insertBefore(badge,btn);
 }
 
 // ── Init ──────────────────────────────────────────────────────
