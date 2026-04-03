@@ -1,11 +1,11 @@
-# BioAttend Fix: TypeError output.addHeader is not a function
+# GitHub Push Plan: Push to kcraju011/bio (main branch)
 
-## Approved Plan Steps
-- [x] **Step 1**: Edit `code.gs` - Fix `doOptions()` function (replace 3 `addHeader()` → `setHeaders()`) ✅
-- [x] **Step 2**: Edit `code.gs` - Fix `jsonOut()` function (replace `addHeader()` → `setHeader()`) ✅
-- [ ] **Step 3**: Test in Google Apps Script editor (run `doOptions()`, check no errors)
-- [ ] **Step 4**: Deploy new web app version, update frontend API URL if needed
-- [ ] **Step 5**: Test full flow: OPTIONS preflight + frontend API calls (Sign In/Register)
+## Steps from Approved Plan
+- [ ] **Step 1**: Stage all changes (`git add .`)
+- [ ] **Step 2**: Commit changes (\"Fix CORS headers + update BioAttend app\")
+- [ ] **Step 3**: Push current branch to main (`git push origin blackboxai/fix-cors-headers:main`)
+- [ ] **Step 4**: Verify push success (`git log --oneline -5`)
+- [ ] **Step 5**: Check GitHub repo online
 
-**Status**: Starting edits...
+**Next**: Execute Git commands step-by-step.
 
