@@ -12,7 +12,7 @@ var SHEET_SESSIONS   = 'Sessions';
 // ── Location config ───────────────────────────────────────────
 var COLLEGE_LAT    = 13.32623;
 var COLLEGE_LNG    = 77.12621;
-var FENCE_RADIUS_M = 100; // 100m for production — set 500 for testing
+var FENCE_RADIUS_M = 1000; // 100m for production — set 500 for testing
 
 // ── Anti-cheat config ─────────────────────────────────────────
 var COOLDOWN_HOURS = 3;
