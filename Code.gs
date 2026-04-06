@@ -2,27 +2,27 @@
 //  BioAttend – Google Apps Script Backend
 //  College : Siddaganga Institute of Technology, Tumkur
 //  Deploy  : Web App → Execute as Me → Access: Anyone
-//  Version : 4 (fixed column mapping, no setHeader, dev mode)
+//  Version : 5 (auto-sessions, bluetooth key, updated coords)
 // ============================================================
 
-// ── Sheet names ───────────────────────────────────────────────
 var SHEET_USERS      = 'Users';
 var SHEET_ATTENDANCE = 'Attendance';
 var SHEET_SESSIONS   = 'Sessions';
 
 // ── Location config ───────────────────────────────────────────
-// DEVELOPMENT MODE: using home location for testing
-// Change to SIT coords (13.3318, 77.1274) when deploying for real
-var COLLEGE_LAT    = 13.3280233;
-var COLLEGE_LNG    = 77.1198344;
-var FENCE_RADIUS_M = 500; // relaxed for home testing — set to 100 for production
+var COLLEGE_LAT    = 13.32623;
+var COLLEGE_LNG    = 77.12621;
+var FENCE_RADIUS_M = 100; // 100m for production — set 500 for testing
 
 // ── Anti-cheat config ─────────────────────────────────────────
 var COOLDOWN_HOURS = 3;
 
-// Allowed WiFi SSIDs (dev: home network included for testing)
+// ── DEV MODE ──────────────────────────────────────────────────
+// Set true to skip WiFi + geofence checks during testing
+var DEV_MODE = false;
+
+// ── Allowed WiFi SSIDs ────────────────────────────────────────
 var CAMPUS_SSIDS = [
-  'Airtel_Vodka',   // dev/home — REMOVE before production
   'SIT-WiFi',
   'SIT_Campus',
   'SIT-Student',
@@ -33,10 +33,30 @@ var CAMPUS_SSIDS = [
   'sit_campus'
 ];
 
-// ── DEV MODE: set true to skip WiFi + geofence checks ────────
-var DEV_MODE = true; // CHANGE TO false before production deployment
+// ── AUTO SESSION SCHEDULE ─────────────────────────────────────
+// Format: { hour:24h, minute, durationMinutes, subject, days }
+// days: 1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat,0=Sun
+// Set teacherId to a fixed teacher UserID or leave blank for 'auto'
+var AUTO_SESSIONS = [
+  { hour:9,  minute:0,  durationMinutes:50, subject:'Morning Session – Period 1',  days:[1,2,3,4,5] },
+  { hour:10, minute:0,  durationMinutes:50, subject:'Morning Session – Period 2',  days:[1,2,3,4,5] },
+  { hour:11, minute:0,  durationMinutes:50, subject:'Morning Session – Period 3',  days:[1,2,3,4,5] },
+  { hour:12, minute:0,  durationMinutes:50, subject:'Noon Session – Period 4',     days:[1,2,3,4,5] },
+  { hour:14, minute:0,  durationMinutes:50, subject:'Afternoon Session – Period 5',days:[1,2,3,4,5] },
+  { hour:15, minute:0,  durationMinutes:50, subject:'Afternoon Session – Period 6',days:[1,2,3,4,5] }
+];
 
-// ── JSON output (no setHeader — not supported in Apps Script) ─
+// ── BLUETOOTH CONFIG ──────────────────────────────────────────
+// Teacher broadcasts a BLE beacon with this name prefix.
+// Student app scans for it. Actual BT scanning happens in browser JS.
+// Server stores the current session's bluetooth key for validation.
+// Teacher sets their BLE beacon name to: "BIOATTEND-<sessionId_short>"
+// This is verified client-side only (browser Web Bluetooth API).
+// Server trusts the client report but logs it.
+var BT_REQUIRED = true;  // Set false to make bluetooth optional
+var BT_BEACON_PREFIX = 'BIOATTEND';
+
+// ── JSON output ───────────────────────────────────────────────
 function jsonOut(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
@@ -47,7 +67,7 @@ function jsonOut(obj) {
 function doGet(e) {
   try {
     var param = (e && e.parameter) ? e.parameter : {};
-    if (!param.data) return jsonOut({ status: 'BioAttend API v4 running', time: new Date().toString(), devMode: DEV_MODE });
+    if (!param.data) return jsonOut({ status: 'BioAttend API v5 running', time: new Date().toString(), devMode: DEV_MODE });
     var body = JSON.parse(decodeURIComponent(param.data));
     return jsonOut(route(body));
   } catch (err) {
@@ -67,34 +87,32 @@ function doPost(e) {
 // ── Router ────────────────────────────────────────────────────
 function route(body) {
   switch (body.action) {
-    case 'register':         return registerUser(body);
-    case 'signIn':           return signInUser(body);
-    case 'markAttendance':   return markAttendance(body);
-    case 'saveBiometric':    return saveBiometric(body);
-    case 'getBiometric':     return getBiometric(body);
-    case 'createSession':    return createSession(body);
-    case 'closeSession':     return closeSession(body);
-    case 'getActiveSession': return getActiveSession(body);
-    case 'getSessions':      return getSessions(body);
-    case 'getAttendance':    return getAttendance(body);
-    case 'getStudents':      return getStudents(body);
-    case 'getDashboard':     return getDashboard(body);
-    case 'exportAttendance': return exportAttendance(body);
-    case 'registerDevice':   return registerDevice(body);
-    case 'checkDevice':      return checkDevice(body);
-    case 'checkWifi':        return checkWifi(body);
-    case 'fixRows':          return fixExistingRows();
-    case 'resetUsersSheet':  return resetUsersSheet();
-    case 'debug':            return debugInfo();
+    case 'register':              return registerUser(body);
+    case 'signIn':                return signInUser(body);
+    case 'markAttendance':        return markAttendance(body);
+    case 'saveBiometric':         return saveBiometric(body);
+    case 'getBiometric':          return getBiometric(body);
+    case 'createSession':         return createSession(body);
+    case 'closeSession':          return closeSession(body);
+    case 'getActiveSession':      return getActiveSession(body);
+    case 'getSessions':           return getSessions(body);
+    case 'getAttendance':         return getAttendance(body);
+    case 'getStudents':           return getStudents(body);
+    case 'getDashboard':          return getDashboard(body);
+    case 'exportAttendance':      return exportAttendance(body);
+    case 'registerDevice':        return registerDevice(body);
+    case 'checkDevice':           return checkDevice(body);
+    case 'checkWifi':             return checkWifi(body);
+    case 'getSchedule':           return getSchedule(body);
+    case 'updateSessionSubject':  return updateSessionSubject(body);
+    case 'fixRows':               return fixExistingRows();
+    case 'resetUsersSheet':       return resetUsersSheet();
+    case 'debug':                 return debugInfo();
     default: return { success: false, message: 'Unknown action: ' + body.action };
   }
 }
 
 // ── Sheet helpers ─────────────────────────────────────────────
-// Clean 9-column Users sheet — no MarkFromAnywhere, no DeviceId confusion.
-// DeviceId is stored by registerDevice() dynamically after registration.
-// Col:  1        2          3       4              5     6        7              8             9
-// Name: UserID   FullName   Email   PasswordHash   DOB   Mobile   Institution   Department   Role
 var USER_HEADERS = ['UserID','FullName','Email','PasswordHash','DOB','Mobile','Institution','Department','Role'];
 
 function getSheet(name) {
@@ -104,8 +122,8 @@ function getSheet(name) {
     sheet = ss.insertSheet(name);
     var initHeaders = {
       Users:      USER_HEADERS,
-      Attendance: ['AttendanceID','UserID','FullName','Email','SessionID','Subject','Timestamp','Date','Time','Method','Lat','Lng','DistanceFromCollege'],
-      Sessions:   ['SessionID','TeacherID','TeacherName','Subject','Date','StartTime','EndTime','Status','WindowMinutes']
+      Attendance: ['AttendanceID','UserID','FullName','Email','SessionID','Subject','Timestamp','Date','Time','Method','Lat','Lng','DistanceFromCollege','BluetoothVerified'],
+      Sessions:   ['SessionID','TeacherID','TeacherName','Subject','Date','StartTime','EndTime','Status','WindowMinutes','AutoCreated','BluetoothKey']
     };
     if (initHeaders[name]) {
       var h = initHeaders[name];
@@ -113,7 +131,6 @@ function getSheet(name) {
       sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
     }
   } else if (name === SHEET_USERS) {
-    // Auto-add missing columns to existing sheets without touching existing data
     var existing = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
     ['BiometricCredentialId','DeviceId'].forEach(function(col) {
       if (existing.indexOf(col) === -1) {
@@ -121,11 +138,24 @@ function getSheet(name) {
         sheet.getRange(1,c).setValue(col).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
       }
     });
+  } else if (name === SHEET_SESSIONS) {
+    var existing = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
+    ['AutoCreated','BluetoothKey'].forEach(function(col) {
+      if (existing.indexOf(col) === -1) {
+        var c = sheet.getLastColumn() + 1;
+        sheet.getRange(1,c).setValue(col).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+      }
+    });
+  } else if (name === SHEET_ATTENDANCE) {
+    var existing = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
+    if (existing.indexOf('BluetoothVerified') === -1) {
+      var c = sheet.getLastColumn() + 1;
+      sheet.getRange(1,c).setValue('BluetoothVerified').setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+    }
   }
   return sheet;
 }
 
-// Maps rows to objects using the ACTUAL header row (immune to column order)
 function getRows(sheet) {
   var data = sheet.getDataRange().getValues();
   if (data.length <= 1) return [];
@@ -137,7 +167,6 @@ function getRows(sheet) {
   });
 }
 
-// Finds 1-indexed column number by header name
 function colIndex(sheet, headerName) {
   var headers = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
   var idx = headers.indexOf(headerName);
@@ -159,6 +188,116 @@ function haversineMetres(lat1,lng1,lat2,lng2) {
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
+// ── AUTO SESSION TRIGGER ──────────────────────────────────────
+// Install this as a time-driven trigger:
+// Apps Script → Triggers → Add Trigger → checkAndAutoCreateSessions → Time-driven → Minute timer → Every minute
+function checkAndAutoCreateSessions() {
+  var now  = new Date();
+  var tz   = Session.getScriptTimeZone();
+  var sheet = getSheet(SHEET_SESSIONS);
+  var todayStr = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+  var dayOfWeek = now.getDay(); // 0=Sun,1=Mon,...
+  var curHour  = parseInt(Utilities.formatDate(now, tz, 'HH'));
+  var curMin   = parseInt(Utilities.formatDate(now, tz, 'mm'));
+  var curTotalMin = curHour * 60 + curMin;
+
+  // Check each scheduled slot
+  for (var i = 0; i < AUTO_SESSIONS.length; i++) {
+    var slot = AUTO_SESSIONS[i];
+    if (slot.days.indexOf(dayOfWeek) === -1) continue;
+
+    var slotStart = slot.hour * 60 + slot.minute;
+    var slotEnd   = slotStart + slot.durationMinutes;
+
+    // Only create if we're within the window AND within first 2 mins of start
+    if (curTotalMin < slotStart || curTotalMin > slotStart + 2) continue;
+    if (curTotalMin >= slotEnd) continue;
+
+    // Check if an auto session for this slot already exists today
+    var existing = getRows(sheet);
+    var alreadyExists = false;
+    for (var j = 0; j < existing.length; j++) {
+      var s = existing[j];
+      if (s.Date === todayStr && s.AutoCreated === 'YES' && s.Subject === slot.subject) {
+        alreadyExists = true; break;
+      }
+    }
+    if (alreadyExists) continue;
+
+    // Close any open auto sessions first
+    var data = sheet.getDataRange().getValues();
+    for (var k = 1; k < data.length; k++) {
+      if (data[k][9] === 'YES' && data[k][7] === 'open') { // AutoCreated=YES, Status=open
+        sheet.getRange(k+1,8).setValue('closed');
+      }
+    }
+
+    // Create the session
+    var startStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
+    var endDate  = new Date(now.getTime() + slot.durationMinutes * 60000);
+    var endStr   = Utilities.formatDate(endDate, tz, 'HH:mm:ss');
+    var sessId   = generateId('sess');
+    var btKey    = BT_BEACON_PREFIX + '-' + sessId.substr(-6).toUpperCase();
+
+    sheet.appendRow([
+      sessId,
+      'AUTO',
+      'Auto Schedule',
+      slot.subject,
+      todayStr,
+      startStr,
+      endStr,
+      'open',
+      slot.durationMinutes,
+      'YES',
+      btKey
+    ]);
+    Logger.log('Auto session created: ' + slot.subject + ' at ' + startStr);
+  }
+}
+
+// ── Get Schedule (for client display) ────────────────────────
+function getSchedule(body) {
+  try {
+    var now = new Date();
+    var tz  = Session.getScriptTimeZone();
+    var dayOfWeek = now.getDay();
+    var schedule = AUTO_SESSIONS.filter(function(s) {
+      return s.days.indexOf(dayOfWeek) !== -1;
+    }).map(function(s) {
+      var h = String(s.hour).padStart(2,'0');
+      var m = String(s.minute).padStart(2,'0');
+      var eH = Math.floor((s.hour * 60 + s.minute + s.durationMinutes) / 60);
+      var eM = (s.hour * 60 + s.minute + s.durationMinutes) % 60;
+      return {
+        subject: s.subject,
+        startTime: h + ':' + m,
+        endTime: String(eH).padStart(2,'0') + ':' + String(eM).padStart(2,'0'),
+        durationMinutes: s.durationMinutes
+      };
+    });
+    return { success: true, schedule: schedule, dayOfWeek: dayOfWeek };
+  } catch(err) { return { success: false, message: 'getSchedule: ' + err.toString() }; }
+}
+
+// ── Update Session Subject (teacher can rename auto session) ──
+function updateSessionSubject(body) {
+  try {
+    if (!body.sessionId || !body.subject) return { success:false, message:'sessionId and subject required' };
+    var sheet = getSheet(SHEET_SESSIONS);
+    var data  = sheet.getDataRange().getValues();
+    var headers = data[0];
+    var subCol = headers.indexOf('Subject') + 1;
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] === body.sessionId) {
+        sheet.getRange(i+1, subCol).setValue(body.subject);
+        return { success: true };
+      }
+    }
+    return { success: false, message: 'Session not found' };
+  } catch(err) { return { success:false, message:'updateSessionSubject: '+err.toString() }; }
+}
+
 // ── 1. Register ───────────────────────────────────────────────
 function registerUser(body) {
   try {
@@ -175,20 +314,16 @@ function registerUser(body) {
     var userId = generateId('u');
     var role   = body.role || 'student';
 
-    // Write exactly 9 columns matching USER_HEADERS:
-    // UserID, FullName, Email, PasswordHash, DOB, Mobile, Institution, Department, Role
-    // BiometricCredentialId and DeviceId are added as extra columns by getSheet()
-    // and written separately by saveBiometric() and registerDevice()
     sheet.appendRow([
-      userId,                       // 1 UserID
-      body.name,                    // 2 FullName
-      body.email,                   // 3 Email
-      hashPassword(body.password),  // 4 PasswordHash
-      body.dob     || '',           // 5 DOB
-      body.mobile  || '',           // 6 Mobile
-      'SIT Tumkur',                 // 7 Institution
-      body.department || '',        // 8 Department
-      role                          // 9 Role
+      userId,
+      body.name,
+      body.email,
+      hashPassword(body.password),
+      body.dob     || '',
+      body.mobile  || '',
+      'SIT Tumkur',
+      body.department || '',
+      role
     ]);
     return { success:true, userId:userId, role:role, message:'Account created' };
   } catch(err) { return { success:false, message:'register: '+err.toString() }; }
@@ -217,7 +352,7 @@ function markAttendance(body) {
     var now = new Date();
     var tz  = Session.getScriptTimeZone();
 
-    // A. Geofence (skip in DEV_MODE)
+    // A. Geofence
     var dist = 0;
     if (!DEV_MODE) {
       var lat = parseFloat(body.lat), lng = parseFloat(body.lng);
@@ -226,12 +361,11 @@ function markAttendance(body) {
       if (dist > FENCE_RADIUS_M)
         return { success:false, message:'You are '+dist+'m from campus. Must be within '+FENCE_RADIUS_M+'m.', distance:dist };
     } else {
-      // DEV_MODE: still compute distance for logging but don't block
       var lat = parseFloat(body.lat)||COLLEGE_LAT, lng = parseFloat(body.lng)||COLLEGE_LNG;
       dist = Math.round(haversineMetres(lat, lng, COLLEGE_LAT, COLLEGE_LNG));
     }
 
-    // B. Device binding (skip in DEV_MODE)
+    // B. Device binding
     if (!DEV_MODE && body.deviceId) {
       var uRows = getRows(getSheet(SHEET_USERS));
       for (var di=0; di<uRows.length; di++) {
@@ -244,7 +378,7 @@ function markAttendance(body) {
       }
     }
 
-    // C. WiFi check (skip in DEV_MODE)
+    // C. WiFi check
     if (!DEV_MODE && body.ssid) {
       var ssidOk = false, cs = String(body.ssid).trim().toLowerCase();
       for (var si=0; si<CAMPUS_SSIDS.length; si++) {
@@ -266,7 +400,27 @@ function markAttendance(body) {
     }
     if (!activeSession) return { success:false, message:'No active session right now. Wait for your teacher to open one.' };
 
-    // E. Duplicate check
+    // E. Bluetooth check
+    // body.bluetoothVerified = true means the client scanned and found the beacon
+    // body.bluetoothKey = the beacon name the student's device found
+    var btVerified = false;
+    if (!DEV_MODE && BT_REQUIRED) {
+      if (!body.bluetoothVerified) {
+        return { success:false, code:'BT_REQUIRED', message:'You must be in the classroom. Please connect to the teacher\'s Bluetooth beacon first.' };
+      }
+      // Optionally verify the key matches the session's bluetooth key
+      var sessionBtKey = String(activeSession.BluetoothKey || '').trim();
+      if (sessionBtKey && body.bluetoothKey) {
+        if (String(body.bluetoothKey).trim() !== sessionBtKey) {
+          return { success:false, code:'BT_MISMATCH', message:'Bluetooth beacon does not match this classroom. Are you in the right room?' };
+        }
+      }
+      btVerified = true;
+    } else if (DEV_MODE) {
+      btVerified = body.bluetoothVerified || false;
+    }
+
+    // F. Duplicate check
     var attSheet = getSheet(SHEET_ATTENDANCE);
     var existing = getRows(attSheet);
     for (var j=0; j<existing.length; j++) {
@@ -274,7 +428,7 @@ function markAttendance(body) {
         return { success:false, message:'Already marked for this session.' };
     }
 
-    // F. Cooldown check
+    // G. Cooldown check
     var coolMs = COOLDOWN_HOURS*3600000;
     for (var ci=0; ci<existing.length; ci++) {
       if (existing[ci].UserID===body.userId && existing[ci].Timestamp) {
@@ -286,25 +440,26 @@ function markAttendance(body) {
       }
     }
 
-    // G. Get user
+    // H. Get user
     var users = getRows(getSheet(SHEET_USERS));
     var user  = null;
     for (var k=0; k<users.length; k++) { if (users[k].UserID===body.userId){ user=users[k]; break; } }
     if (!user) return { success:false, message:'User not found' };
 
-    // H. Record
+    // I. Record
     var dateStr = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
     var timeStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
     attSheet.appendRow([
       generateId('a'), body.userId, user.FullName, user.Email,
       activeSession.SessionID, activeSession.Subject,
       now.toISOString(), dateStr, timeStr,
-      body.method||'password', lat, lng, dist
+      body.method||'password', lat, lng, dist, btVerified ? 'YES' : 'NO'
     ]);
     return {
       success:true,
       message:(DEV_MODE?'[DEV] ':'')+'\u2713 Attendance marked for '+activeSession.Subject+' at '+timeStr,
-      subject:activeSession.Subject, distance:dist
+      subject:activeSession.Subject, distance:dist,
+      bluetoothVerified: btVerified
     };
   } catch(err) { return { success:false, message:'markAttendance: '+err.toString() }; }
 }
@@ -323,6 +478,7 @@ function createSession(body) {
     var end=new Date(now.getTime()+parseInt(body.windowMinutes)*60000);
     var endStr=Utilities.formatDate(end,tz,'HH:mm:ss');
     var sessId=generateId('sess');
+    var btKey=BT_BEACON_PREFIX+'-'+sessId.substr(-6).toUpperCase();
 
     // Close existing open sessions by this teacher
     var data=sheet.getDataRange().getValues();
@@ -330,8 +486,8 @@ function createSession(body) {
       if (data[i][1]===body.userId&&data[i][7]==='open')
         sheet.getRange(i+1,8).setValue('closed');
     }
-    sheet.appendRow([sessId,body.userId,body.teacherName||'',body.subject,dateStr,startStr,endStr,'open',body.windowMinutes]);
-    return { success:true, sessionId:sessId, subject:body.subject, startTime:startStr, endTime:endStr, message:'Session opened for '+body.windowMinutes+' min' };
+    sheet.appendRow([sessId,body.userId,body.teacherName||'',body.subject,dateStr,startStr,endStr,'open',body.windowMinutes,'NO',btKey]);
+    return { success:true, sessionId:sessId, subject:body.subject, startTime:startStr, endTime:endStr, bluetoothKey:btKey, message:'Session opened for '+body.windowMinutes+' min. BT Beacon: '+btKey };
   } catch(err) { return { success:false, message:'createSession: '+err.toString() }; }
 }
 
@@ -356,7 +512,12 @@ function getActiveSession(body) {
       if (s.Status==='open'&&String(s.Date)===todayStr){
         var st=new Date(s.Date+'T'+s.StartTime), en=new Date(s.Date+'T'+s.EndTime);
         if (now>=st&&now<=en){
-          return { success:true, active:true, session:s, secondsLeft:Math.max(0,Math.round((en-now)/1000)) };
+          return {
+            success:true, active:true, session:s,
+            secondsLeft:Math.max(0,Math.round((en-now)/1000)),
+            bluetoothKey: s.BluetoothKey || '',
+            bluetoothRequired: BT_REQUIRED && !DEV_MODE
+          };
         }
       }
     }
@@ -368,15 +529,15 @@ function getActiveSession(body) {
 function getSessions(body) {
   try {
     var sheet=getSheet(SHEET_SESSIONS), rows=getRows(sheet);
-    if (body.userId) rows=rows.filter(function(r){ return r.TeacherID===body.userId; });
+    if (body.userId) rows=rows.filter(function(r){ return r.TeacherID===body.userId || r.TeacherID==='AUTO'; });
     var attRows=getRows(getSheet(SHEET_ATTENDANCE));
     rows.forEach(function(s){ s.presentCount=attRows.filter(function(a){ return a.SessionID===s.SessionID; }).length; });
     rows.reverse();
-    return { success:true, sessions:rows.slice(0,20) };
+    return { success:true, sessions:rows.slice(0,30) };
   } catch(err) { return { success:false, message:'getSessions: '+err.toString() }; }
 }
 
-// ── 8. Get Attendance list ────────────────────────────────────
+// ── 8. Get Attendance ─────────────────────────────────────────
 function getAttendance(body) {
   try {
     var rows=getRows(getSheet(SHEET_ATTENDANCE));
@@ -395,18 +556,15 @@ function getStudents(body) {
   } catch(err) { return { success:false, message:'getStudents: '+err.toString() }; }
 }
 
-// ── 9b. Get Dashboard (live stats for a session) ─────────────
-// Returns present students + absent students for a session
+// ── 9b. Get Dashboard ─────────────────────────────────────────
 function getDashboard(body) {
   try {
     if (!body.sessionId) return { success:false, message:'sessionId required' };
 
-    // All students enrolled (all users with role=student)
     var allStudents = getRows(getSheet(SHEET_USERS)).filter(function(r){
       return String(r.Role||'student').trim() === 'student';
     });
 
-    // Who marked attendance for this session
     var attRows = getRows(getSheet(SHEET_ATTENDANCE)).filter(function(r){
       return r.SessionID === body.sessionId;
     });
@@ -414,42 +572,30 @@ function getDashboard(body) {
     var presentIds = {};
     attRows.forEach(function(a){ presentIds[a.UserID] = a; });
 
-    var present = [];
-    var absent  = [];
+    var present = [], absent = [];
 
     allStudents.forEach(function(s) {
       if (presentIds[s.UserID]) {
         present.push({
-          userId:     s.UserID,
-          name:       s.FullName,
-          email:      s.Email,
-          department: s.Department,
-          time:       presentIds[s.UserID].Time,
-          method:     presentIds[s.UserID].Method,
-          distance:   presentIds[s.UserID].DistanceFromCollege
+          userId:s.UserID, name:s.FullName, email:s.Email, department:s.Department,
+          time:presentIds[s.UserID].Time, method:presentIds[s.UserID].Method,
+          distance:presentIds[s.UserID].DistanceFromCollege,
+          bluetoothVerified: presentIds[s.UserID].BluetoothVerified || 'NO'
         });
       } else {
-        absent.push({
-          userId:     s.UserID,
-          name:       s.FullName,
-          email:      s.Email,
-          department: s.Department
-        });
+        absent.push({ userId:s.UserID, name:s.FullName, email:s.Email, department:s.Department });
       }
     });
 
     return {
-      success:      true,
-      total:        allStudents.length,
-      presentCount: present.length,
-      absentCount:  absent.length,
-      present:      present,
-      absent:       absent
+      success:true, total:allStudents.length,
+      presentCount:present.length, absentCount:absent.length,
+      present:present, absent:absent
     };
   } catch(err) { return { success:false, message:'getDashboard: '+err.toString() }; }
 }
 
-// ── 9c. Export Attendance as CSV data ─────────────────────────
+// ── 9c. Export Attendance ─────────────────────────────────────
 function exportAttendance(body) {
   try {
     var rows = getRows(getSheet(SHEET_ATTENDANCE));
@@ -457,30 +603,24 @@ function exportAttendance(body) {
     if (body.date)      rows = rows.filter(function(r){ return r.Date === body.date; });
     if (body.subject)   rows = rows.filter(function(r){ return r.Subject === body.subject; });
 
-    // Build CSV string
-    var headers = ['Name','Email','Department','Date','Time','Subject','Method','Distance(m)'];
+    var headers = ['Name','Email','Department','Date','Time','Subject','Method','Distance(m)','BT Verified'];
     var lines   = [headers.join(',')];
-
-    // Get department from users sheet
     var userMap = {};
     getRows(getSheet(SHEET_USERS)).forEach(function(u){ userMap[u.UserID] = u.Department || ''; });
 
     rows.forEach(function(r) {
       lines.push([
-        '"'+(r.FullName||'')+'"',
-        '"'+(r.Email||'')+'"',
-        '"'+(userMap[r.UserID]||'')+'"',
-        r.Date || '',
-        r.Time || '',
-        '"'+(r.Subject||'')+'"',
-        r.Method || '',
-        r.DistanceFromCollege || ''
+        '"'+(r.FullName||'')+'"', '"'+(r.Email||'')+'"', '"'+(userMap[r.UserID]||'')+'"',
+        r.Date||'', r.Time||'', '"'+(r.Subject||'')+'"', r.Method||'',
+        r.DistanceFromCollege||'', r.BluetoothVerified||'NO'
       ].join(','));
     });
 
     return { success:true, csv:lines.join('\n'), rowCount:rows.length };
   } catch(err) { return { success:false, message:'exportAttendance: '+err.toString() }; }
 }
+
+// ── 10. Save Biometric ────────────────────────────────────────
 function saveBiometric(body) {
   try {
     var sheet=getSheet(SHEET_USERS), data=sheet.getDataRange().getValues(), headers=data[0];
@@ -528,7 +668,7 @@ function registerDevice(body) {
   } catch(err) { return { success:false, message:'registerDevice: '+err.toString() }; }
 }
 
-// ── 13. Check Device ─────────────────────────────────────────
+// ── 13. Check Device ──────────────────────────────────────────
 function checkDevice(body) {
   try {
     if (!body.userId||!body.deviceId) return { success:false, message:'userId and deviceId required' };
@@ -557,53 +697,36 @@ function checkWifi(body) {
   } catch(err) { return { success:false, message:'checkWifi: '+err.toString() }; }
 }
 
-// ── 15. Reset Users Sheet (run once from editor to fix corruption) ──
-// Deletes the old Users sheet and creates a fresh clean one.
-// ALL existing user rows are deleted — re-register after running this.
+// ── 15. Reset Users Sheet ─────────────────────────────────────
 function resetUsersSheet() {
   try {
-    var ss    = SpreadsheetApp.getActiveSpreadsheet();
-    var old   = ss.getSheetByName(SHEET_USERS);
+    var ss=SpreadsheetApp.getActiveSpreadsheet();
+    var old=ss.getSheetByName(SHEET_USERS);
     if (old) ss.deleteSheet(old);
-    // Re-create with clean headers
-    var sheet = ss.insertSheet(SHEET_USERS);
-    var h = USER_HEADERS.concat(['BiometricCredentialId','DeviceId']);
+    var sheet=ss.insertSheet(SHEET_USERS);
+    var h=USER_HEADERS.concat(['BiometricCredentialId','DeviceId']);
     sheet.appendRow(h);
     sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
-    return { success:true, message:'Users sheet reset. Headers: ' + h.join(', ') + '. Please re-register all users.' };
+    return { success:true, message:'Users sheet reset. Headers: '+h.join(', ') };
   } catch(err) { return { success:false, message:'resetUsersSheet: '+err.toString() }; }
 }
 
-// ── 16. Fix existing bad rows (repair without deleting) ───────
+// ── 16. Fix Rows ──────────────────────────────────────────────
 function fixExistingRows() {
   try {
-    var sheet   = getSheet(SHEET_USERS);
-    var data    = sheet.getDataRange().getValues();
-    var headers = data[0];
-    var roleCol = headers.indexOf('Role')+1;
-    var mfaCol  = headers.indexOf('MarkFromAnywhere')+1;
-    if (roleCol < 1) return { success:false, message:'Role column not found' };
-    var fixed = 0;
-    for (var i=1; i<data.length; i++) {
-      var role = String(data[i][roleCol-1]||'').trim();
-      var mfa  = mfaCol>0 ? String(data[i][mfaCol-1]||'').trim() : '';
-      // If Role is blank but MarkFromAnywhere has a role value
-      if (!role && (mfa==='teacher'||mfa==='student')) {
-        sheet.getRange(i+1,roleCol).setValue(mfa);
-        if (mfaCol>0) sheet.getRange(i+1,mfaCol).setValue('NO');
-        fixed++;
-      }
-      // If Role is blank entirely
-      if (!role && mfa!=='teacher' && mfa!=='student') {
-        sheet.getRange(i+1,roleCol).setValue('student');
-        fixed++;
-      }
+    var sheet=getSheet(SHEET_USERS), data=sheet.getDataRange().getValues(), headers=data[0];
+    var roleCol=headers.indexOf('Role')+1;
+    if (roleCol<1) return { success:false, message:'Role column not found' };
+    var fixed=0;
+    for (var i=1;i<data.length;i++){
+      var role=String(data[i][roleCol-1]||'').trim();
+      if (!role){ sheet.getRange(i+1,roleCol).setValue('student'); fixed++; }
     }
     return { success:true, message:'Fixed '+fixed+' rows' };
   } catch(err) { return { success:false, message:'fixExistingRows: '+err.toString() }; }
 }
 
-// ── 16. Debug ─────────────────────────────────────────────────
+// ── 17. Debug ─────────────────────────────────────────────────
 function debugInfo() {
   try {
     var ss=SpreadsheetApp.getActiveSpreadsheet();
@@ -615,7 +738,9 @@ function debugInfo() {
       sheets:ss.getSheets().map(function(s){ return s.getName(); }),
       userHeaders:headers,
       devMode:DEV_MODE,
-      college:{ lat:COLLEGE_LAT, lng:COLLEGE_LNG, fenceM:FENCE_RADIUS_M }
+      btRequired:BT_REQUIRED,
+      college:{ lat:COLLEGE_LAT, lng:COLLEGE_LNG, fenceM:FENCE_RADIUS_M },
+      autoSessionsCount:AUTO_SESSIONS.length
     };
   } catch(err) { return { success:false, message:'debug: '+err.toString() }; }
 }

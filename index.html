@@ -7,29 +7,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --bg:      #050a1a;
-  --card:    #0d1530;
-  --inp:     #111d3a;
-  --tab-act: #1a2a52;
-  --acc:     #4f6ef7;
-  --acc2:    #7c3aed;
-  --text:    #e8eaf6;
-  --muted:   #6b7db3;
-  --border:  #1e2f5a;
-  --danger:  #ef4444;
-  --success: #22c55e;
-  --warn:    #f59e0b;
-  --rad:     14px;
+  --bg:#050a1a;--card:#0d1530;--inp:#111d3a;--tab-act:#1a2a52;
+  --acc:#4f6ef7;--acc2:#7c3aed;--text:#e8eaf6;--muted:#6b7db3;
+  --border:#1e2f5a;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b;
+  --rad:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Sora',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(79,110,247,.18) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 110%,rgba(124,58,237,.14) 0%,transparent 55%);pointer-events:none;z-index:0}
-
-/* ── Card ── */
 .card{position:relative;width:100%;max-width:440px;background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.6);z-index:1;animation:slideUp .5s cubic-bezier(.22,1,.36,1) both;margin:0 auto}
 @keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
-
-/* ── Header ── */
 .header{padding:28px 24px 18px;background:linear-gradient(160deg,#0d1a40 0%,#080f2a 100%);text-align:center}
 .logo-ring{width:58px;height:58px;margin:0 auto 12px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;box-shadow:0 0 28px rgba(79,110,247,.5);animation:pulse 3s ease-in-out infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 18px rgba(79,110,247,.4)}50%{box-shadow:0 0 36px rgba(79,110,247,.7)}}
@@ -37,20 +24,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .brand{font-size:21px;font-weight:700;color:#fff;letter-spacing:-.3px}
 .tagline{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.8px;text-transform:uppercase}
 .college-badge{display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:3px 10px;background:rgba(79,110,247,.15);border:1px solid rgba(79,110,247,.3);border-radius:20px;font-size:10.5px;color:var(--acc);letter-spacing:.3px}
-
-/* ── Tabs ── */
 .tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)}
 .tab-btn{padding:12px 0;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:12px;font-weight:500;color:var(--muted);transition:color .2s,background .2s;position:relative}
 .tab-btn.active{color:var(--acc);background:var(--tab-act)}
 .tab-btn.active::after{content:'';position:absolute;bottom:0;left:12px;right:12px;height:2px;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:2px 2px 0 0}
-
-/* ── Panes ── */
 .form-body{padding:20px 20px 24px}
-.pane{display:none}
-.pane.active{display:block;animation:fadeIn .3s ease both}
+.pane{display:none}.pane.active{display:block;animation:fadeIn .3s ease both}
 @keyframes fadeIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
-
-/* ── Fields ── */
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:10px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
@@ -60,24 +40,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .field input:focus,.field select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,110,247,.14)}
 .field select option{background:#1a2a52}
 .field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.4)}
-
-/* pw toggle */
-.pw-wrap{position:relative}
-.pw-wrap input{padding-right:40px}
+.pw-wrap{position:relative}.pw-wrap input{padding-right:40px}
 .pw-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;transition:color .2s}
 .pw-eye:hover{color:var(--text)}
-
-/* toggle switch */
-.toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--inp);border:1px solid var(--border);border-radius:var(--rad);padding:11px 13px;margin-bottom:16px}
-.toggle-row span{font-size:13px;color:var(--text)}
-.toggle{position:relative;width:44px;height:24px}
-.toggle input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:background .3s}
-.slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .3s}
-.toggle input:checked+.slider{background:var(--acc)}
-.toggle input:checked+.slider::before{transform:translateX(20px)}
-
-/* buttons */
 .btn{width:100%;padding:12px;border:none;border-radius:var(--rad);font-family:'Sora',sans-serif;font-size:14.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .1s,box-shadow .2s}
 .btn-primary{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 4px 18px rgba(79,110,247,.35)}
 .btn-primary:hover{opacity:.91;box-shadow:0 6px 26px rgba(79,110,247,.5)}
@@ -90,59 +55,44 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-danger:hover{background:rgba(239,68,68,.2)}
 .btn-success{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--success)}
 .btn-success:hover{background:rgba(34,197,94,.2)}
-
+.btn-bt{background:rgba(79,110,247,.12);border:1px solid rgba(79,110,247,.4);color:var(--acc);margin-top:10px}
+.btn-bt:hover{background:rgba(79,110,247,.22)}
+.btn-bt.verified{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4);color:var(--success)}
 .divider{display:flex;align-items:center;gap:10px;margin:12px 0;color:var(--muted);font-size:11px}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .hint{text-align:center;font-size:11px;color:var(--muted);margin-top:7px}
-
-/* ── Info boxes ── */
 .info-box{border-radius:12px;padding:11px 13px;font-size:12.5px;margin-bottom:14px;display:flex;align-items:flex-start;gap:9px}
 .info-box.blue{background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.25);color:#a5b4fc}
 .info-box.green{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#86efac}
 .info-box.red{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
 .info-box.orange{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fcd34d}
 .info-box svg{flex-shrink:0;margin-top:1px}
-
-/* ── Session badge ── */
 .session-card{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:14px;padding:14px;margin-bottom:14px}
 .session-card .subj{font-size:15px;font-weight:600;color:var(--success);margin-bottom:4px}
 .session-card .meta{font-size:11.5px;color:var(--muted)}
 .session-card .timer{font-size:20px;font-weight:700;color:var(--success);font-variant-numeric:tabular-nums;margin-top:6px}
 .no-session{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:14px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:14px}
-
-/* ── Attendance list ── */
 .att-list{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;margin-top:12px}
 .att-item{background:var(--inp);border:1px solid var(--border);border-radius:10px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between}
 .att-item .name{font-size:13px;font-weight:500;color:var(--text)}
 .att-item .meta{font-size:11px;color:var(--muted)}
 .att-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;background:rgba(34,197,94,.15);color:var(--success);border:1px solid rgba(34,197,94,.3)}
-
-/* ── Toast ── */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(50px);background:#1a2a52;border:1px solid var(--acc);color:var(--text);padding:10px 20px;border-radius:40px;font-size:12.5px;opacity:0;transition:opacity .3s,transform .3s;z-index:999;white-space:nowrap;max-width:90vw;text-align:center}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.error{border-color:var(--danger)}
 #toast.success{border-color:var(--success)}
 #toast.warn{border-color:var(--warn)}
-
-/* ── Spinner ── */
 .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── Teacher dashboard layout ── */
 .dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .dash-name{font-size:14px;font-weight:600;color:var(--text)}
 .dash-sub{font-size:10.5px;color:var(--muted);margin-top:2px}
 .dash-logout{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;transition:color .2s,border-color .2s}
 .dash-logout:hover{color:var(--danger);border-color:var(--danger)}
-
-/* ── Sub-tabs ── */
 .sub-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--inp);border-radius:10px;padding:3px;margin-bottom:14px;gap:2px}
 .sub-tab{padding:7px 0;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:11px;font-weight:500;color:var(--muted);border-radius:8px;transition:all .2s}
 .sub-tab.active{background:var(--tab-act);color:var(--acc)}
-.sub-pane{display:none}
-.sub-pane.active{display:block;animation:fadeIn .25s ease both}
-
-/* ── Stats row ── */
+.sub-pane{display:none}.sub-pane.active{display:block;animation:fadeIn .25s ease both}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 .stat-card{border-radius:12px;padding:10px 6px;text-align:center;border:1px solid}
 .stat-card.green{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25)}
@@ -151,36 +101,39 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stat-card.purple{background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.25)}
 .stat-num{font-size:18px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 .stat-lbl{font-size:9.5px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.6px}
-
-/* ── Segment control ── */
 .seg-control{display:inline-flex;background:var(--inp);border-radius:8px;padding:2px;gap:2px}
 .seg{padding:5px 14px;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:11.5px;font-weight:500;color:var(--muted);border-radius:6px;transition:all .2s}
 .seg.active{background:var(--tab-act);color:var(--acc)}
-
-/* ── Export button ── */
 .export-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.3);border-radius:8px;color:var(--acc);font-size:11.5px;font-family:'Sora',sans-serif;cursor:pointer;float:right;transition:background .2s}
 .export-btn:hover{background:rgba(79,110,247,.2)}
-
-/* ── Live toggle row ── */
 #live-toggle-row{display:flex;align-items:center;justify-content:space-between}
-
-/* ── Student search ── */
 #student-search{background:var(--inp);border:1px solid var(--border);border-radius:var(--rad);color:var(--text);font-family:'Sora',sans-serif;font-size:13px;padding:9px 13px;width:100%;outline:none;transition:border-color .2s}
 #student-search:focus{border-color:var(--acc)}
 #student-search::placeholder{color:var(--muted)}
-
-/* ── Location pill ── */
 .loc-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;margin-bottom:6px}
 .loc-pill.ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--success)}
 .loc-pill.fail{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--danger)}
 .loc-pill.checking{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--warn)}
 .loc-pill.warn{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--warn)}
+
+/* Bluetooth scan animation */
+.bt-scanning{display:flex;align-items:center;gap:8px;padding:10px 13px;background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.3);border-radius:12px;margin-bottom:10px;font-size:12px;color:var(--acc)}
+.bt-ring{width:20px;height:20px;border-radius:50%;border:2px solid var(--acc);border-top-color:transparent;animation:spin .8s linear infinite}
+.bt-ok{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.35);color:var(--success)}
+.bt-fail{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.35);color:var(--danger)}
+
+/* Schedule list */
+.schedule-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.schedule-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--inp);font-size:12px}
+.schedule-item.active-slot{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.07)}
+.schedule-item .stime{font-variant-numeric:tabular-nums;color:var(--acc);font-weight:600;min-width:80px;font-size:11px}
+.schedule-item .ssubj{color:var(--text);flex:1}
+.schedule-item .sdot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0}
+.schedule-item.active-slot .sdot{background:var(--success);box-shadow:0 0 6px var(--success)}
 </style>
 </head>
 <body>
 <div class="card">
-
-  <!-- Header -->
   <div class="header">
     <div class="logo-ring">
       <svg viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
@@ -193,29 +146,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
   </div>
 
-  <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn" id="tab-signin"   onclick="switchTab('signin')">Sign In</button>
+    <button class="tab-btn" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
     <button class="tab-btn active" id="tab-register" onclick="switchTab('register')">Register</button>
-    <button class="tab-btn" id="tab-teacher"  onclick="switchTab('teacher')">Teacher</button>
+    <button class="tab-btn" id="tab-teacher" onclick="switchTab('teacher')">Teacher</button>
   </div>
 
   <div class="form-body">
 
-    <!-- ══════════════════════════════════════════
-         SIGN IN PANE
-    ══════════════════════════════════════════ -->
+    <!-- ═══════════════ SIGN IN PANE ═══════════════ -->
     <div class="pane" id="pane-signin">
-
-      <!-- Live session banner -->
       <div id="si-session-banner"></div>
-
-      <!-- DEV MODE notice (shown only when DEV_MODE=true in JS) -->
       <div id="dev-banner"></div>
-
-      <!-- Security status row: GPS + WiFi + Cooldown -->
       <div id="si-loc-status"></div>
       <div id="si-wifi-status"></div>
+      <div id="si-bt-status"></div>
       <div id="si-cooldown-status"></div>
 
       <div class="field">
@@ -232,7 +177,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </div>
       </div>
 
-      <button class="btn btn-primary" id="btn-signin" onclick="handleSignIn()">
+      <!-- Bluetooth scan button (shown when session active) -->
+      <div id="bt-scan-section" style="display:none">
+        <button class="btn btn-bt" id="btn-bt-scan" onclick="scanBluetooth()">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+          <span id="bt-btn-text">Scan for Teacher's Bluetooth</span>
+        </button>
+        <div id="bt-result" style="margin-top:6px"></div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-signin" onclick="handleSignIn()" style="margin-top:12px">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
         Sign In &amp; Mark Attendance
       </button>
@@ -245,9 +199,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </button>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         REGISTER PANE
-    ══════════════════════════════════════════ -->
+    <!-- ═══════════════ REGISTER PANE ═══════════════ -->
     <div class="pane active" id="pane-register">
       <div class="row2">
         <div class="field"><label>Full Name <span class="req">*</span></label><input type="text" id="r-name" placeholder="Your name"/></div>
@@ -271,10 +223,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </select>
       </div>
       <div class="field"><label>Role</label>
-        <select id="r-role" onchange="toggleRoleField()">
-          <option value="student">Student</option>
-          <option value="teacher">Teacher / Staff</option>
-        </select>
+        <select id="r-role"><option value="student">Student</option><option value="teacher">Teacher / Staff</option></select>
       </div>
       <div class="field"><label>Password <span class="req">*</span></label>
         <div class="pw-wrap">
@@ -284,14 +233,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           </button>
         </div>
       </div>
-
       <button class="btn btn-primary" id="btn-register" onclick="handleRegister()">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Create Account
       </button>
-
       <div class="divider">then register biometric</div>
-
       <button class="btn btn-secondary" id="btn-bio-reg" disabled onclick="handleBiometricRegister()">
         <svg width="17" height="17" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
         Register Fingerprint / Face ID
@@ -299,12 +245,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="hint" id="bio-hint">Create your account first, then register biometric</div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TEACHER PANE — Full Admin Panel
-    ══════════════════════════════════════════ -->
+    <!-- ═══════════════ TEACHER PANE ═══════════════ -->
     <div class="pane" id="pane-teacher">
 
-      <!-- ── Login ── -->
       <div id="teacher-login-section">
         <div class="info-box blue">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
@@ -325,10 +268,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </button>
       </div>
 
-      <!-- ── Dashboard (after login) ── -->
       <div id="teacher-dashboard" style="display:none">
-
-        <!-- Header row -->
         <div class="dash-header">
           <div>
             <div class="dash-name" id="t-welcome"></div>
@@ -337,17 +277,20 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           <button class="dash-logout" onclick="teacherLogout()">Logout</button>
         </div>
 
-        <!-- Sub-tabs -->
         <div class="sub-tabs">
-          <button class="sub-tab active" id="stab-session" onclick="switchSubTab('session')">Session</button>
-          <button class="sub-tab" id="stab-live"    onclick="switchSubTab('live')">Live</button>
-          <button class="sub-tab" id="stab-history" onclick="switchSubTab('history')">History</button>
+          <button class="sub-tab active" id="stab-session"  onclick="switchSubTab('session')">Session</button>
+          <button class="sub-tab" id="stab-live"     onclick="switchSubTab('live')">Live</button>
+          <button class="sub-tab" id="stab-history"  onclick="switchSubTab('history')">History</button>
           <button class="sub-tab" id="stab-students" onclick="switchSubTab('students')">Students</button>
         </div>
 
-        <!-- ── Sub-pane: Session ── -->
+        <!-- Sub: Session -->
         <div class="sub-pane active" id="sp-session">
+          <!-- Today's auto schedule -->
+          <div id="auto-schedule-display"></div>
           <div id="active-session-display"></div>
+          <!-- BT key display for teacher -->
+          <div id="teacher-bt-key" style="display:none;padding:10px 12px;background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.3);border-radius:12px;margin-bottom:12px;font-size:12px;color:var(--acc)"></div>
           <div id="open-session-form">
             <div class="field"><label>Subject / Class <span class="req">*</span></label>
               <input type="text" id="t-subject" placeholder="e.g. Data Structures – 3CSE-B"/>
@@ -368,31 +311,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           </div>
         </div>
 
-        <!-- ── Sub-pane: Live Dashboard ── -->
+        <!-- Sub: Live -->
         <div class="sub-pane" id="sp-live">
           <div id="live-session-info" class="no-session" style="margin-bottom:12px">No active session</div>
-
-          <!-- Stats row -->
           <div class="stats-row" id="live-stats" style="display:none">
-            <div class="stat-card green">
-              <div class="stat-num" id="stat-present">0</div>
-              <div class="stat-lbl">Present</div>
-            </div>
-            <div class="stat-card red">
-              <div class="stat-num" id="stat-absent">0</div>
-              <div class="stat-lbl">Absent</div>
-            </div>
-            <div class="stat-card blue">
-              <div class="stat-num" id="stat-total">0</div>
-              <div class="stat-lbl">Total</div>
-            </div>
-            <div class="stat-card purple">
-              <div class="stat-num" id="stat-pct">0%</div>
-              <div class="stat-lbl">Attendance</div>
-            </div>
+            <div class="stat-card green"><div class="stat-num" id="stat-present">0</div><div class="stat-lbl">Present</div></div>
+            <div class="stat-card red"><div class="stat-num" id="stat-absent">0</div><div class="stat-lbl">Absent</div></div>
+            <div class="stat-card blue"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Total</div></div>
+            <div class="stat-card purple"><div class="stat-num" id="stat-pct">0%</div><div class="stat-lbl">Attendance</div></div>
           </div>
-
-          <!-- Live toggle: present / absent -->
           <div id="live-toggle-row" style="display:none;margin-bottom:10px">
             <div class="seg-control">
               <button class="seg active" id="seg-present" onclick="showLiveTab('present')">Present</button>
@@ -403,16 +330,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
               Export CSV
             </button>
           </div>
-
           <div id="live-list" class="att-list"></div>
-
           <div id="live-refresh-row" style="display:none;text-align:center;margin-top:10px">
             <button onclick="refreshLive()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↻ Refresh</button>
             <div style="font-size:10px;color:var(--muted);margin-top:4px" id="live-updated"></div>
           </div>
         </div>
 
-        <!-- ── Sub-pane: History ── -->
+        <!-- Sub: History -->
         <div class="sub-pane" id="sp-history">
           <div class="field" style="margin-bottom:10px">
             <label>Filter by date</label>
@@ -420,14 +345,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           </div>
           <div id="history-list" class="att-list"></div>
           <div style="text-align:center;margin-top:10px;display:none" id="hist-export-row">
-            <button class="export-btn" onclick="exportHistory()">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-              Export CSV
-            </button>
+            <button class="export-btn" onclick="exportHistory()">Export CSV</button>
           </div>
         </div>
 
-        <!-- ── Sub-pane: Students ── -->
+        <!-- Sub: Students -->
         <div class="sub-pane" id="sp-students">
           <div class="field" style="margin-bottom:10px">
             <input type="text" id="student-search" placeholder="Search by name or email…" oninput="filterStudents()"/>
@@ -436,28 +358,29 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           <div id="students-list" class="att-list"></div>
         </div>
 
-      </div><!-- /teacher-dashboard -->
+      </div>
     </div>
 
-  </div><!-- /form-body -->
-</div><!-- /card -->
-
+  </div>
+</div>
 <div id="toast"></div>
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
 const API = 'https://script.google.com/macros/s/AKfycbzMidoZcaGaQeyQzfXmjTIdibLPwFVj-0mzAXcB8-OybhKUL4BHsLQSpa-meFVNYLA5bQ/exec';
 
-// SIT Tumkur geofence (server also validates, this is client preview)
-// DEV MODE — set false when deploying for real college use
-const DEV_MODE     = true;
+// Production SIT Tumkur coordinates
+const COLLEGE_LAT  = 13.32623;
+const COLLEGE_LNG  = 77.12621;
+const FENCE_M      = 100; // 100m for production campus use
 
-// Location: home coords for testing — change to SIT (13.3318, 77.1274) for production
-const COLLEGE_LAT  = 13.3280233;
-const COLLEGE_LNG  = 77.1198344;
-const FENCE_M      = 1000; // home testing (939m OK) — set 100 for SIT campus production
+// Set true only for testing at home
+const DEV_MODE = false;
 
-// ── State ─────────────────────────────────────────────────────
+// Bluetooth prefix — must match Code.gs BT_BEACON_PREFIX
+const BT_BEACON_PREFIX = 'BIOATTEND';
+
+// ── State ──────────────────────────────────────────────────────
 let currentUserId   = null;
 let currentUserName = null;
 let currentUserRole = null;
@@ -466,75 +389,57 @@ let teacherData     = null;
 let userLat = null, userLng = null;
 let sessionTimer    = null;
 let activeSessionId = null;
-let deviceId        = null; // set once on load
+let activeBluetoothKey = null;
+let bluetoothVerified = false;
+let foundBluetoothKey = null;
+let deviceId        = null;
+let liveData = null, liveTab = 'present', liveSessionId = null;
+let allStudents = [], historyData = [];
 
-// ── Device fingerprint ────────────────────────────────────────
-// Builds a stable ID from browser/hardware signals, hashed to 16 hex chars.
-// Not 100% unique but sufficient to catch proxy attendance on different phones.
+// ── Device fingerprint ─────────────────────────────────────────
 async function getDeviceId() {
   if (deviceId) return deviceId;
-
-  // Pull from localStorage if already generated on this device
   try {
     const stored = localStorage.getItem('bioattend_device_id');
     if (stored) { deviceId = stored; return deviceId; }
   } catch(e) {}
-
-  // Build fingerprint from stable browser properties
   const canvas = document.createElement('canvas');
-  const ctx    = canvas.getContext('2d');
-  ctx.textBaseline = 'top';
-  ctx.font = '14px Arial';
-  ctx.fillText('BioAttend-SIT-🔐', 2, 2);
-  const canvasData = canvas.toDataURL();
-
-  const raw = [
-    navigator.userAgent,
-    navigator.language,
-    screen.width + 'x' + screen.height,
-    screen.colorDepth,
-    new Date().getTimezoneOffset(),
-    navigator.hardwareConcurrency || '',
-    navigator.maxTouchPoints || '',
-    canvasData.slice(-60)           // last 60 chars of canvas = GPU signature
-  ].join('|');
-
-  // SHA-256 hash → first 16 hex chars
-  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
-  const hex  = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-  deviceId   = hex.slice(0, 16);
-
+  const ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'top'; ctx.font = '14px Arial';
+  ctx.fillText('BioAttend-SIT', 2, 2);
+  const raw = [navigator.userAgent, navigator.language, screen.width+'x'+screen.height,
+    screen.colorDepth, new Date().getTimezoneOffset(), navigator.hardwareConcurrency||'',
+    navigator.maxTouchPoints||'', canvas.toDataURL().slice(-60)].join('|');
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+  const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  deviceId = hex.slice(0,16);
   try { localStorage.setItem('bioattend_device_id', deviceId); } catch(e) {}
   return deviceId;
 }
 
-// ── API helper ────────────────────────────────────────────────
+// ── API helper ─────────────────────────────────────────────────
 async function api(payload) {
   const url = API + '?data=' + encodeURIComponent(JSON.stringify(payload));
-  const res = await fetch(url, { redirect: 'follow' });
+  const res = await fetch(url, { redirect:'follow' });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const text = await res.text();
-  try { return JSON.parse(text); }
-  catch(e) { console.error('Non-JSON response:', text); throw new Error('Server error'); }
+  try { return JSON.parse(text); } catch(e) { throw new Error('Server error'); }
 }
 
-// ── Toast ─────────────────────────────────────────────────────
+// ── Toast ──────────────────────────────────────────────────────
 function toast(msg, type='') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show ' + type;
-  clearTimeout(t._t);
-  t._t = setTimeout(() => t.className = '', 3500);
+  t.textContent = msg; t.className = 'show ' + type;
+  clearTimeout(t._t); t._t = setTimeout(() => t.className = '', 3500);
 }
 
-// ── Loading ───────────────────────────────────────────────────
 function setLoading(id, on) {
   const b = document.getElementById(id);
+  if (!b) return;
   if (on) { b._html = b.innerHTML; b.innerHTML = '<span class="spin"></span> Please wait…'; b.disabled = true; }
   else { b.innerHTML = b._html || b.innerHTML; b.disabled = false; }
 }
 
-// ── Tab switch ────────────────────────────────────────────────
 function switchTab(tab) {
   ['signin','register','teacher'].forEach(t => {
     document.getElementById('pane-'+t).classList.toggle('active', t===tab);
@@ -543,32 +448,89 @@ function switchTab(tab) {
   if (tab === 'signin') checkSession();
 }
 
-// ── Password eye ──────────────────────────────────────────────
 function togglePw(id) {
   const i = document.getElementById(id);
   i.type = i.type === 'password' ? 'text' : 'password';
 }
 
-// ── Haversine (client) ────────────────────────────────────────
-function haversine(lat1, lng1, lat2, lng2) {
-  const R = 6371000, dL = (lat2-lat1)*Math.PI/180, dN = (lng2-lng1)*Math.PI/180;
-  const a = Math.sin(dL/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dN/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+function haversine(lat1,lng1,lat2,lng2) {
+  const R=6371000, dL=(lat2-lat1)*Math.PI/180, dN=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dN/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-// ── Get GPS ───────────────────────────────────────────────────
 function getLocation() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) return reject(new Error('GPS not supported'));
     navigator.geolocation.getCurrentPosition(
       pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; resolve(pos); },
       err => reject(new Error('GPS denied: ' + err.message)),
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
     );
   });
 }
 
-// ── Location pill ─────────────────────────────────────────────
+// ── BLUETOOTH SCANNING ─────────────────────────────────────────
+// Uses Web Bluetooth API to scan for teacher's BLE beacon.
+// Teacher runs a free BLE beacon app on their phone broadcasting
+// the beacon name shown in their dashboard (e.g. BIOATTEND-ABC123).
+// Student's browser scans for any device whose name starts with BIOATTEND.
+
+async function scanBluetooth() {
+  const btn = document.getElementById('btn-bt-scan');
+  const resultEl = document.getElementById('bt-result');
+  const btnText = document.getElementById('bt-btn-text');
+
+  if (!navigator.bluetooth) {
+    resultEl.innerHTML = '<div class="bt-scanning bt-fail">Bluetooth not supported in this browser. Use Chrome on Android.</div>';
+    return;
+  }
+
+  try {
+    btn.disabled = true;
+    btnText.textContent = 'Scanning…';
+    resultEl.innerHTML = '<div class="bt-scanning"><div class="bt-ring"></div><span>Scanning for teacher\'s Bluetooth beacon nearby…</span></div>';
+
+    // Web Bluetooth requires user gesture and shows a picker.
+    // We request devices with name prefix matching our beacon.
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [
+        { namePrefix: BT_BEACON_PREFIX }
+      ],
+      optionalServices: []
+    });
+
+    const foundName = device.name || '';
+    foundBluetoothKey = foundName;
+
+    // Check if the found key matches the active session's BT key
+    if (activeBluetoothKey && foundName !== activeBluetoothKey) {
+      bluetoothVerified = false;
+      resultEl.innerHTML = `<div class="bt-scanning bt-fail">Wrong classroom beacon found: "${foundName}". Expected "${activeBluetoothKey}". Are you in the right room?</div>`;
+      toast('Wrong classroom — check you are in the right room', 'error');
+    } else {
+      bluetoothVerified = true;
+      btn.classList.add('verified');
+      btnText.textContent = 'Bluetooth Verified ✓';
+      resultEl.innerHTML = `<div class="bt-scanning bt-ok">Connected to teacher beacon: ${foundName}</div>`;
+      toast('Bluetooth verified — you are in the classroom', 'success');
+    }
+
+  } catch(e) {
+    bluetoothVerified = false;
+    if (e.name === 'NotFoundError') {
+      resultEl.innerHTML = '<div class="bt-scanning bt-fail">No teacher beacon found nearby. Make sure you are inside the classroom.</div>';
+      toast('No teacher beacon found nearby', 'error');
+    } else if (e.name === 'SecurityError') {
+      resultEl.innerHTML = '<div class="bt-scanning bt-fail">Bluetooth permission denied. Allow Bluetooth access in browser settings.</div>';
+    } else {
+      resultEl.innerHTML = `<div class="bt-scanning bt-fail">${e.message}</div>`;
+    }
+  }
+  btn.disabled = false;
+}
+
+// ── Location pill ──────────────────────────────────────────────
 async function updateLocPill(elId) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -577,7 +539,7 @@ async function updateLocPill(elId) {
     await getLocation();
     const dist = Math.round(haversine(userLat, userLng, COLLEGE_LAT, COLLEGE_LNG));
     if (DEV_MODE) {
-      el.innerHTML = `<span class="loc-pill warn">🔧 DEV: ${dist}m from test location (geofence disabled)</span>`;
+      el.innerHTML = `<span class="loc-pill warn">🔧 DEV: ${dist}m from SIT (geofence disabled)</span>`;
     } else if (dist <= FENCE_M) {
       el.innerHTML = `<span class="loc-pill ok">✓ On campus (${dist}m from SIT)</span>`;
     } else {
@@ -588,88 +550,72 @@ async function updateLocPill(elId) {
   }
 }
 
-// ── WiFi SSID detection ───────────────────────────────────────
-// Browsers cannot directly read WiFi SSID — we use the Network Information
-// API to detect if the device is on WiFi at all, then ask the user to
-// confirm their network, and send it to the server for validation.
-// On Android Chrome, navigator.connection gives type = 'wifi' or 'cellular'.
-let detectedSsid = null;
-
 async function updateWifiPill() {
   const el = document.getElementById('si-wifi-status');
   if (!el) return;
-
-  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  const type = conn ? conn.type : null;
-
-  // Not on WiFi at all
-  if (type && type !== 'wifi' && type !== 'unknown') {
-    el.innerHTML = `<span class="loc-pill fail">✗ Not on WiFi — connect to SIT campus network</span>`;
-    detectedSsid = null;
-    return;
-  }
-
-  // On WiFi — we can't read SSID from browser (OS restriction), so
-  // show an input for the student to confirm their network name.
-  // Pre-fill from localStorage if saved before.
   const saved = (() => { try { return localStorage.getItem('bioattend_ssid') || ''; } catch(e) { return ''; } })();
-
-  el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-      <span class="loc-pill ${saved ? 'ok' : 'warn'}" style="margin-bottom:0">
-        📶 WiFi name:
-      </span>
-      <input id="ssid-input" value="${saved}" placeholder="e.g. SIT-WiFi"
-        style="flex:1;padding:3px 8px;border-radius:8px;border:1px solid var(--border);
-               background:var(--inp);color:var(--text);font-size:11px;font-family:'Sora',sans-serif;outline:none"
-        oninput="saveSsid(this.value)" />
-    </div>`;
-  detectedSsid = saved;
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+    <span class="loc-pill ${saved?'ok':'warn'}" style="margin-bottom:0">📶 WiFi:</span>
+    <input id="ssid-input" value="${saved}" placeholder="e.g. SIT-WiFi"
+      style="flex:1;padding:3px 8px;border-radius:8px;border:1px solid var(--border);background:var(--inp);color:var(--text);font-size:11px;font-family:'Sora',sans-serif;outline:none"
+      oninput="saveSsid(this.value)"/>
+  </div>`;
 }
 
 function saveSsid(val) {
-  detectedSsid = val.trim();
-  try { localStorage.setItem('bioattend_ssid', detectedSsid); } catch(e) {}
+  try { localStorage.setItem('bioattend_ssid', val.trim()); } catch(e) {}
 }
 
-// ── Cooldown status ───────────────────────────────────────────
-// Checks localStorage for last attendance timestamp to warn student
-// before they even hit the server.
 function updateCooldownPill() {
   const el = document.getElementById('si-cooldown-status');
   if (!el) return;
   try {
     const lastTs = localStorage.getItem('bioattend_last_attendance');
-    if (!lastTs) { el.innerHTML = ''; return; }
-    const diff    = Date.now() - parseInt(lastTs);
-    const coolMs  = 3 * 60 * 60 * 1000; // 3 hours
+    if (!lastTs) { el.innerHTML=''; return; }
+    const diff = Date.now() - parseInt(lastTs);
+    const coolMs = 3*60*60*1000;
     if (diff < coolMs) {
-      const minsLeft = Math.ceil((coolMs - diff) / 60000);
-      const hrs  = Math.floor(minsLeft / 60);
-      const mins = minsLeft % 60;
-      const label = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
-      el.innerHTML = `<span class="loc-pill warn">⏱ Cooldown: ${label} until you can mark again</span>`;
-    } else {
-      el.innerHTML = '';
-    }
-  } catch(e) { el.innerHTML = ''; }
+      const ml = Math.ceil((coolMs-diff)/60000);
+      const hrs=Math.floor(ml/60), mins=ml%60;
+      el.innerHTML = `<span class="loc-pill warn">⏱ Cooldown: ${hrs>0?hrs+'h ':''} ${mins}m remaining</span>`;
+    } else { el.innerHTML=''; }
+  } catch(e) { el.innerHTML=''; }
 }
 
-// ── Check active session for student ─────────────────────────
+// ── Check active session ───────────────────────────────────────
 async function checkSession() {
   const banner = document.getElementById('si-session-banner');
+  const btSection = document.getElementById('bt-scan-section');
   if (!banner) return;
   try {
-    const d = await api({ action: 'getActiveSession' });
+    const d = await api({ action:'getActiveSession' });
     if (d.active) {
       activeSessionId = d.session.SessionID;
+      activeBluetoothKey = d.bluetoothKey || null;
+      const btRequired = d.bluetoothRequired;
       let secs = d.secondsLeft;
+
       banner.innerHTML = `
         <div class="session-card">
           <div class="subj">📋 ${d.session.Subject}</div>
           <div class="meta">Session open — mark attendance now!</div>
           <div class="timer" id="sess-timer">${fmtTime(secs)}</div>
         </div>`;
+
+      // Show BT scan section if bluetooth is required
+      if (btSection) {
+        btSection.style.display = btRequired ? 'block' : 'none';
+        // Reset BT state when session changes
+        if (!bluetoothVerified) {
+          const btn = document.getElementById('btn-bt-scan');
+          const btnText = document.getElementById('bt-btn-text');
+          if (btn) btn.classList.remove('verified');
+          if (btnText) btnText.textContent = 'Scan for Teacher\'s Bluetooth';
+          const resultEl = document.getElementById('bt-result');
+          if (resultEl) resultEl.innerHTML='';
+        }
+      }
+
       clearInterval(sessionTimer);
       sessionTimer = setInterval(() => {
         secs--;
@@ -677,359 +623,355 @@ async function checkSession() {
         if (el) el.textContent = fmtTime(secs);
         if (secs <= 0) { clearInterval(sessionTimer); checkSession(); }
       }, 1000);
-      // Also check location, wifi, cooldown
       updateLocPill('si-loc-status');
       updateWifiPill();
       updateCooldownPill();
     } else {
-      activeSessionId = null;
+      activeSessionId = null; activeBluetoothKey = null; bluetoothVerified = false;
       clearInterval(sessionTimer);
-      banner.innerHTML = '<div class="no-session">⏳ No active attendance session right now.<br><span style="font-size:11px">Your teacher will open one during class.</span></div>';
-      document.getElementById('si-loc-status').innerHTML = '';
-      document.getElementById('si-wifi-status').innerHTML = '';
-      document.getElementById('si-cooldown-status').innerHTML = '';
+      if (btSection) btSection.style.display = 'none';
+      banner.innerHTML = '<div class="no-session">⏳ No active attendance session right now.<br><span style="font-size:11px">Sessions open automatically at scheduled times.</span></div>';
+      document.getElementById('si-loc-status').innerHTML='';
+      document.getElementById('si-wifi-status').innerHTML='';
+      document.getElementById('si-bt-status').innerHTML='';
+      document.getElementById('si-cooldown-status').innerHTML='';
     }
   } catch(e) { console.warn('checkSession:', e); }
 }
 
 function fmtTime(secs) {
-  const m = Math.floor(Math.max(0,secs)/60), s = Math.max(0,secs)%60;
-  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  const m=Math.floor(Math.max(0,secs)/60), s=Math.max(0,secs)%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
 }
 
-// ── Sign In ───────────────────────────────────────────────────
+// ── Sign In ────────────────────────────────────────────────────
 async function handleSignIn() {
   const email    = document.getElementById('si-email').value.trim();
   const password = document.getElementById('si-password').value;
-  if (!email || !password) { toast('Please enter email and password', 'error'); return; }
+  if (!email||!password) { toast('Please enter email and password','error'); return; }
 
-  // Client-side cooldown pre-check (saves a round trip)
+  // Client cooldown pre-check
   try {
     const lastTs = localStorage.getItem('bioattend_last_attendance');
     if (lastTs) {
-      const diff   = Date.now() - parseInt(lastTs);
-      const coolMs = 3 * 60 * 60 * 1000;
-      if (diff < coolMs) {
-        const minsLeft = Math.ceil((coolMs - diff) / 60000);
-        toast(`⏱ Cooldown active — ${minsLeft} min(s) remaining`, 'error');
-        return;
+      const diff=Date.now()-parseInt(lastTs);
+      if (diff<3*60*60*1000) {
+        toast(`⏱ Cooldown active — ${Math.ceil((3*60*60*1000-diff)/60000)} min remaining`,'error'); return;
       }
     }
   } catch(e) {}
 
   setLoading('btn-signin', true);
   try {
-    // 1. Sign in
-    const auth = await api({ action: 'signIn', email, password });
-    if (!auth.success) { toast(auth.message, 'error'); setLoading('btn-signin', false); return; }
+    const auth = await api({ action:'signIn', email, password });
+    if (!auth.success) { toast(auth.message,'error'); setLoading('btn-signin',false); return; }
 
-    currentUserId   = auth.userId;
-    currentUserName = auth.name;
-    currentUserRole = auth.role;
+    currentUserId=auth.userId; currentUserName=auth.name; currentUserRole=auth.role;
 
-    // 2. Device binding check
-    const dId    = await getDeviceId();
-    const devChk = await api({ action: 'checkDevice', userId: auth.userId, deviceId: dId });
-    if (!devChk.success && devChk.status === 'mismatch') {
-      toast('⛔ ' + devChk.message, 'error');
-      setLoading('btn-signin', false);
-      return;
+    // Device binding
+    const dId = await getDeviceId();
+    const devChk = await api({ action:'checkDevice', userId:auth.userId, deviceId:dId });
+    if (!devChk.success && devChk.status==='mismatch') {
+      toast('⛔ '+devChk.message,'error'); setLoading('btn-signin',false); return;
     }
-    if (devChk.status === 'unbound') {
-      await api({ action: 'registerDevice', userId: auth.userId, deviceId: dId });
+    if (devChk.status==='unbound') {
+      await api({ action:'registerDevice', userId:auth.userId, deviceId:dId });
     }
 
-    // 3. WiFi check (skipped in DEV_MODE)
+    // WiFi check
     const ssidEl = document.getElementById('ssid-input');
-    const ssid   = ssidEl ? ssidEl.value.trim() : (detectedSsid || '');
+    const ssid   = ssidEl ? ssidEl.value.trim() : '';
     if (!DEV_MODE && ssid) {
-      toast('📶 Checking WiFi…', 'warn');
-      const wifiChk = await api({ action: 'checkWifi', ssid });
+      const wifiChk = await api({ action:'checkWifi', ssid });
       if (!wifiChk.onCampusWifi) {
-        toast('📶 ' + (wifiChk.message || 'Not on SIT campus WiFi'), 'error');
-        setLoading('btn-signin', false);
-        return;
+        toast('📶 '+(wifiChk.message||'Not on SIT campus WiFi'),'error');
+        setLoading('btn-signin',false); return;
       }
     }
 
-    // 4. Get GPS
-    toast('📡 Getting your location…', 'warn');
+    // GPS
+    toast('📡 Getting your location…','warn');
     await getLocation();
 
-    // 5. Mark attendance — send device + ssid for server double-check
+    // Mark attendance — pass bluetooth result
     const att = await api({
-      action: 'markAttendance',
-      userId: auth.userId,
-      lat: userLat, lng: userLng,
-      method: 'password',
-      deviceId: dId,
-      ssid: ssid || undefined
+      action:'markAttendance',
+      userId:auth.userId,
+      lat:userLat, lng:userLng,
+      method:'password',
+      deviceId:dId,
+      ssid:ssid||undefined,
+      bluetoothVerified: bluetoothVerified,
+      bluetoothKey: foundBluetoothKey||undefined
     });
 
     if (att.success) {
-      toast(att.message, 'success');
-      // Save timestamp for client-side cooldown
+      toast(att.message,'success');
       try { localStorage.setItem('bioattend_last_attendance', Date.now().toString()); } catch(e) {}
       updateCooldownPill();
+      bluetoothVerified = false; // reset for next session
     } else {
-      toast(att.message, 'error');
-      // If server says cooldown, update the pill
-      if (att.code === 'COOLDOWN') updateCooldownPill();
+      toast(att.message,'error');
+      if (att.code==='COOLDOWN') updateCooldownPill();
+      if (att.code==='BT_REQUIRED') {
+        toast('📡 Please scan Bluetooth first to prove you are in class','error');
+      }
     }
-
-  } catch(e) { toast('Error: ' + e.message, 'error'); }
-  setLoading('btn-signin', false);
+  } catch(e) { toast('Error: '+e.message,'error'); }
+  setLoading('btn-signin',false);
 }
 
-// ── Register ──────────────────────────────────────────────────
+// ── Register ───────────────────────────────────────────────────
 async function handleRegister() {
-  const name     = document.getElementById('r-name').value.trim();
-  const email    = document.getElementById('r-email').value.trim();
-  const password = document.getElementById('r-password').value;
-  const dob      = document.getElementById('r-dob').value;
-  const mobile   = document.getElementById('r-mobile').value.trim();
-  const dept     = document.getElementById('r-dept').value;
-  const role     = document.getElementById('r-role').value;
+  const name=document.getElementById('r-name').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const password=document.getElementById('r-password').value;
+  const dob=document.getElementById('r-dob').value;
+  const mobile=document.getElementById('r-mobile').value.trim();
+  const dept=document.getElementById('r-dept').value;
+  const role=document.getElementById('r-role').value;
 
-  if (!name || !email || !password) { toast('Name, email and password are required', 'error'); return; }
-  if (password.length < 8) { toast('Password must be at least 8 characters', 'error'); return; }
+  if (!name||!email||!password) { toast('Name, email and password are required','error'); return; }
+  if (password.length<8) { toast('Password must be at least 8 characters','error'); return; }
 
-  setLoading('btn-register', true);
+  setLoading('btn-register',true);
   try {
-    const dId = await getDeviceId();
-    const d   = await api({ action: 'register', name, email, password, dob, mobile, department: dept, role, deviceId: dId });
+    const dId=await getDeviceId();
+    const d=await api({ action:'register', name, email, password, dob, mobile, department:dept, role, deviceId:dId });
     if (d.success) {
-      registeredUserId = d.userId;
-
-      // Immediately bind this device to the new account
-      const devReg = await api({ action: 'registerDevice', userId: d.userId, deviceId: dId });
-      const devMsg = devReg.alreadyBound
-        ? ' (device already bound to another account — contact admin)'
-        : ' · Device bound ✓';
-
-      toast('✓ Account created!' + devMsg, 'success');
+      registeredUserId=d.userId;
+      await api({ action:'registerDevice', userId:d.userId, deviceId:dId });
+      toast('✓ Account created! Device bound.','success');
       showDeviceBadge(dId);
-      document.getElementById('btn-bio-reg').disabled = false;
-      document.getElementById('bio-hint').textContent = 'Tap below to register your biometric';
-    } else {
-      toast(d.message, 'error');
-    }
-  } catch(e) { toast('Error: ' + e.message, 'error'); }
-  setLoading('btn-register', false);
+      document.getElementById('btn-bio-reg').disabled=false;
+      document.getElementById('bio-hint').textContent='Tap below to register your biometric';
+    } else { toast(d.message,'error'); }
+  } catch(e) { toast('Error: '+e.message,'error'); }
+  setLoading('btn-register',false);
 }
 
-// ── Biometric register ────────────────────────────────────────
+// ── Biometric register ─────────────────────────────────────────
 async function handleBiometricRegister() {
-  if (!registeredUserId) { toast('Create account first', 'error'); return; }
-  if (!window.PublicKeyCredential) { toast('WebAuthn not supported', 'error'); return; }
+  if (!registeredUserId) { toast('Create account first','error'); return; }
+  if (!window.PublicKeyCredential) { toast('WebAuthn not supported','error'); return; }
   try {
-    const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const cred = await navigator.credentials.create({ publicKey: {
+    const challenge=crypto.getRandomValues(new Uint8Array(32));
+    const cred=await navigator.credentials.create({ publicKey:{
       challenge,
-      rp: { name: 'BioAttend SIT', id: location.hostname },
-      user: { id: Uint8Array.from(registeredUserId, c=>c.charCodeAt(0)), name: document.getElementById('r-email').value, displayName: document.getElementById('r-name').value },
-      pubKeyCredParams: [{ type:'public-key', alg:-7 }],
-      authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
-      timeout: 60000
+      rp:{name:'BioAttend SIT',id:location.hostname},
+      user:{id:Uint8Array.from(registeredUserId,c=>c.charCodeAt(0)),name:document.getElementById('r-email').value,displayName:document.getElementById('r-name').value},
+      pubKeyCredParams:[{type:'public-key',alg:-7}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+      timeout:60000
     }});
-    const credId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
-    const d = await api({ action: 'saveBiometric', userId: registeredUserId, credentialId: credId });
-    if (d.success) { toast('✓ Biometric registered!', 'success'); document.getElementById('bio-hint').textContent = '✓ Biometric saved — ready to use'; }
-    else toast(d.message, 'error');
-  } catch(e) { toast('Biometric error: ' + e.message, 'error'); }
+    const credId=btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+    const d=await api({ action:'saveBiometric', userId:registeredUserId, credentialId:credId });
+    if (d.success) { toast('✓ Biometric registered!','success'); document.getElementById('bio-hint').textContent='✓ Biometric saved — ready to use'; }
+    else toast(d.message,'error');
+  } catch(e) { toast('Biometric error: '+e.message,'error'); }
 }
 
-// ── Biometric sign in ─────────────────────────────────────────
+// ── Biometric sign in ──────────────────────────────────────────
 async function handleBiometricSignIn() {
-  if (!window.PublicKeyCredential) { toast('WebAuthn not supported', 'error'); return; }
-  const email = document.getElementById('si-email').value.trim();
-  if (!email) { toast('Enter your email first', 'error'); return; }
+  if (!window.PublicKeyCredential) { toast('WebAuthn not supported','error'); return; }
+  const email=document.getElementById('si-email').value.trim();
+  if (!email) { toast('Enter your email first','error'); return; }
   try {
-    const info = await api({ action: 'getBiometric', email });
-    if (!info.credentialId) { toast(info.message || 'No biometric registered', 'error'); return; }
-
-    // Device check before biometric prompt
-    const dId    = await getDeviceId();
-    const devChk = await api({ action: 'checkDevice', userId: info.userId, deviceId: dId });
-    if (!devChk.success && devChk.status === 'mismatch') {
-      toast('⛔ ' + devChk.message, 'error'); return;
-    }
-
-    // Cooldown client pre-check
+    const info=await api({ action:'getBiometric', email });
+    if (!info.credentialId) { toast(info.message||'No biometric registered','error'); return; }
+    const dId=await getDeviceId();
+    const devChk=await api({ action:'checkDevice', userId:info.userId, deviceId:dId });
+    if (!devChk.success&&devChk.status==='mismatch') { toast('⛔ '+devChk.message,'error'); return; }
     try {
-      const lastTs = localStorage.getItem('bioattend_last_attendance');
-      if (lastTs) {
-        const diff = Date.now() - parseInt(lastTs);
-        if (diff < 3 * 60 * 60 * 1000) {
-          const minsLeft = Math.ceil((3 * 60 * 60 * 1000 - diff) / 60000);
-          toast(`⏱ Cooldown: ${minsLeft} min(s) remaining`, 'error'); return;
-        }
+      const lastTs=localStorage.getItem('bioattend_last_attendance');
+      if (lastTs&&(Date.now()-parseInt(lastTs))<3*60*60*1000) {
+        toast(`⏱ Cooldown active`,'error'); return;
       }
     } catch(e) {}
-
-    // WiFi check (skipped in DEV_MODE)
-    const ssidEl = document.getElementById('ssid-input');
-    const ssid   = ssidEl ? ssidEl.value.trim() : (detectedSsid || '');
-    if (!DEV_MODE && ssid) {
-      const wifiChk = await api({ action: 'checkWifi', ssid });
-      if (!wifiChk.onCampusWifi) {
-        toast('📶 ' + (wifiChk.message || 'Not on SIT campus WiFi'), 'error'); return;
-      }
+    const ssidEl=document.getElementById('ssid-input');
+    const ssid=ssidEl?ssidEl.value.trim():'';
+    if (!DEV_MODE&&ssid) {
+      const wifiChk=await api({ action:'checkWifi', ssid });
+      if (!wifiChk.onCampusWifi) { toast('📶 '+(wifiChk.message||'Not on SIT campus WiFi'),'error'); return; }
     }
-
-    const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const rawId = Uint8Array.from(atob(info.credentialId), c=>c.charCodeAt(0));
-    await navigator.credentials.get({ publicKey: { challenge, allowCredentials:[{type:'public-key',id:rawId}], userVerification:'required', timeout:60000 }});
-
-    // Mark attendance after biometric
-    toast('📡 Verifying location…', 'warn');
+    const challenge=crypto.getRandomValues(new Uint8Array(32));
+    const rawId=Uint8Array.from(atob(info.credentialId),c=>c.charCodeAt(0));
+    await navigator.credentials.get({ publicKey:{challenge,allowCredentials:[{type:'public-key',id:rawId}],userVerification:'required',timeout:60000}});
+    toast('📡 Verifying location…','warn');
     await getLocation();
-    const att = await api({
-      action: 'markAttendance',
-      userId: info.userId,
-      lat: userLat, lng: userLng,
-      method: 'biometric',
-      deviceId: dId,
-      ssid: ssid || undefined
+    const att=await api({
+      action:'markAttendance', userId:info.userId, lat:userLat, lng:userLng,
+      method:'biometric', deviceId:dId, ssid:ssid||undefined,
+      bluetoothVerified:bluetoothVerified, bluetoothKey:foundBluetoothKey||undefined
     });
-
     if (att.success) {
-      toast(att.message, 'success');
-      try { localStorage.setItem('bioattend_last_attendance', Date.now().toString()); } catch(e) {}
-      updateCooldownPill();
-    } else {
-      toast(att.message, 'error');
-      if (att.code === 'COOLDOWN') updateCooldownPill();
-    }
-  } catch(e) { toast('Biometric error: ' + e.message, 'error'); }
+      toast(att.message,'success');
+      try { localStorage.setItem('bioattend_last_attendance',Date.now().toString()); } catch(e) {}
+      updateCooldownPill(); bluetoothVerified=false;
+    } else { toast(att.message,'error'); }
+  } catch(e) { toast('Biometric error: '+e.message,'error'); }
 }
 
-// ══════════════════════════════════════════
-// TEACHER ADMIN PANEL — Phase 2
-// ══════════════════════════════════════════
+// ══════════════════ TEACHER PANEL ══════════════════
 
-let liveData      = null;
-let liveTab       = 'present';
-let liveSessionId = null;
-let allStudents   = [];
-let historyData   = [];
-
-// ── Login ─────────────────────────────────
 async function handleTeacherLogin() {
-  const email    = document.getElementById('t-email').value.trim();
-  const password = document.getElementById('t-password').value;
-  if (!email || !password) { toast('Enter email and password', 'error'); return; }
-  setLoading('btn-teacher-login', true);
+  const email=document.getElementById('t-email').value.trim();
+  const password=document.getElementById('t-password').value;
+  if (!email||!password) { toast('Enter email and password','error'); return; }
+  setLoading('btn-teacher-login',true);
   try {
-    const d = await api({ action:'signIn', email, password });
-    if (!d.success) { toast(d.message, 'error'); setLoading('btn-teacher-login', false); return; }
-    if (d.role !== 'teacher' && d.role !== 'admin') {
-      toast('This account is not a teacher account', 'error');
-      setLoading('btn-teacher-login', false); return;
+    const d=await api({ action:'signIn', email, password });
+    if (!d.success) { toast(d.message,'error'); setLoading('btn-teacher-login',false); return; }
+    if (d.role!=='teacher'&&d.role!=='admin') {
+      toast('This account is not a teacher account','error'); setLoading('btn-teacher-login',false); return;
     }
-    teacherData = d;
+    teacherData=d;
     showTeacherDashboard();
-  } catch(e) { toast('Error: ' + e.message, 'error'); }
-  setLoading('btn-teacher-login', false);
+  } catch(e) { toast('Error: '+e.message,'error'); }
+  setLoading('btn-teacher-login',false);
 }
 
 function showTeacherDashboard() {
-  document.getElementById('teacher-login-section').style.display = 'none';
-  document.getElementById('teacher-dashboard').style.display = 'block';
-  document.getElementById('t-welcome').textContent = 'Hello, ' + teacherData.name;
+  document.getElementById('teacher-login-section').style.display='none';
+  document.getElementById('teacher-dashboard').style.display='block';
+  document.getElementById('t-welcome').textContent='Hello, '+teacherData.name;
   switchSubTab('session');
   checkActiveForTeacher();
+  loadAutoSchedule();
 }
 
 function teacherLogout() {
-  teacherData = null;
-  clearInterval(sessionTimer);
-  liveSessionId = null;
-  document.getElementById('teacher-login-section').style.display = 'block';
-  document.getElementById('teacher-dashboard').style.display = 'none';
-  document.getElementById('t-email').value = '';
-  document.getElementById('t-password').value = '';
+  teacherData=null; clearInterval(sessionTimer); liveSessionId=null;
+  document.getElementById('teacher-login-section').style.display='block';
+  document.getElementById('teacher-dashboard').style.display='none';
+  document.getElementById('t-email').value='';
+  document.getElementById('t-password').value='';
 }
 
-// ── Sub-tabs ──────────────────────────────
 function switchSubTab(tab) {
   ['session','live','history','students'].forEach(t => {
     document.getElementById('sp-'+t).classList.toggle('active', t===tab);
     document.getElementById('stab-'+t).classList.toggle('active', t===tab);
   });
-  if (tab === 'live')     refreshLive();
-  if (tab === 'history')  { document.getElementById('hist-date').value = new Date().toISOString().slice(0,10); loadHistory(); }
-  if (tab === 'students') loadStudents();
+  if (tab==='live') refreshLive();
+  if (tab==='history') { document.getElementById('hist-date').value=new Date().toISOString().slice(0,10); loadHistory(); }
+  if (tab==='students') loadStudents();
 }
 
-// ── Session ───────────────────────────────
+// ── Auto schedule display for teacher ─────────────────────────
+async function loadAutoSchedule() {
+  const el = document.getElementById('auto-schedule-display');
+  if (!el) return;
+  try {
+    const d = await api({ action:'getSchedule' });
+    if (!d.success||!d.schedule||!d.schedule.length) { el.innerHTML=''; return; }
+    const now = new Date();
+    const curMin = now.getHours()*60+now.getMinutes();
+    el.innerHTML = `<div style="font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Today's Auto Schedule</div>
+      <div class="schedule-list">${d.schedule.map(s => {
+        const [sh,sm]=s.startTime.split(':').map(Number);
+        const [eh,em]=s.endTime.split(':').map(Number);
+        const startMin=sh*60+sm, endMin=eh*60+em;
+        const isActive=curMin>=startMin&&curMin<endMin;
+        return `<div class="schedule-item ${isActive?'active-slot':''}">
+          <div class="sdot"></div>
+          <div class="stime">${s.startTime}–${s.endTime}</div>
+          <div class="ssubj">${s.subject}</div>
+          ${isActive?'<span style="font-size:10px;color:var(--success);font-weight:600">LIVE</span>':''}
+        </div>`;
+      }).join('')}</div>`;
+  } catch(e) { console.warn('loadAutoSchedule:', e); }
+}
+
 async function checkActiveForTeacher() {
   try {
-    const d    = await api({ action:'getActiveSession' });
-    const el   = document.getElementById('active-session-display');
-    const form = document.getElementById('open-session-form');
+    const d=await api({ action:'getActiveSession' });
+    const el=document.getElementById('active-session-display');
+    const form=document.getElementById('open-session-form');
+    const btKeyEl=document.getElementById('teacher-bt-key');
     if (d.active) {
-      let secs = d.secondsLeft;
-      liveSessionId   = d.session.SessionID;
-      activeSessionId = d.session.SessionID;
-      el.innerHTML = `
+      let secs=d.secondsLeft;
+      liveSessionId=d.session.SessionID;
+      activeSessionId=d.session.SessionID;
+      const btKey=d.session.BluetoothKey||d.bluetoothKey||'';
+      if (btKey&&btKeyEl) {
+        btKeyEl.style.display='block';
+        btKeyEl.innerHTML=`<strong>📡 Your BT Beacon Name:</strong> <code style="font-family:monospace;font-size:14px;color:#fff">${btKey}</code><br><span style="font-size:10.5px;opacity:.8">Set your BLE beacon app to broadcast this name so students can verify.</span>`;
+      }
+      el.innerHTML=`
         <div class="session-card" style="margin-bottom:12px">
           <div class="subj" style="font-size:14px">🟢 ${d.session.Subject} — LIVE</div>
-          <div class="meta">Closes in <span id="t-timer" style="font-weight:700;color:var(--success)">${fmtTime(secs)}</span></div>
-          <button onclick="closeCurrentSession('${d.session.SessionID}')" class="btn btn-danger" style="margin-top:10px;padding:8px">Stop Session Early</button>
+          <div class="meta">Closes in <span id="t-timer" style="font-weight:700;color:var(--success)">${fmtTime(secs)}</span>
+          ${d.session.AutoCreated==='YES'?'<span style="margin-left:8px;font-size:10px;background:rgba(79,110,247,.2);color:var(--acc);padding:2px 6px;border-radius:10px">Auto</span>':''}</div>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="closeCurrentSession('${d.session.SessionID}')" class="btn btn-danger" style="margin-top:0;padding:6px 12px;width:auto;font-size:12px">Stop Session</button>
+            <button onclick="promptRenameSession('${d.session.SessionID}')" style="background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.3);border-radius:8px;padding:6px 12px;color:var(--acc);font-size:12px;cursor:pointer;font-family:'Sora',sans-serif">Rename</button>
+          </div>
         </div>`;
-      form.style.display = 'none';
+      form.style.display='none';
       clearInterval(sessionTimer);
-      sessionTimer = setInterval(() => {
+      sessionTimer=setInterval(()=>{
         secs--;
-        const t = document.getElementById('t-timer');
-        if (t) t.textContent = fmtTime(secs);
-        if (secs <= 0) { clearInterval(sessionTimer); checkActiveForTeacher(); }
-      }, 1000);
+        const t=document.getElementById('t-timer');
+        if (t) t.textContent=fmtTime(secs);
+        if (secs<=0) { clearInterval(sessionTimer); checkActiveForTeacher(); }
+      },1000);
     } else {
-      liveSessionId = null; activeSessionId = null;
-      el.innerHTML  = ''; form.style.display = 'block';
+      liveSessionId=null; activeSessionId=null;
+      if (btKeyEl) btKeyEl.style.display='none';
+      el.innerHTML=''; form.style.display='block';
     }
   } catch(e) {}
 }
 
-async function openSession() {
-  const subject = document.getElementById('t-subject').value.trim();
-  const minutes = document.getElementById('t-window').value;
-  if (!subject) { toast('Enter a subject name', 'error'); return; }
-  setLoading('btn-open-session', true);
+async function promptRenameSession(sessionId) {
+  const newName = prompt('Enter new subject name:');
+  if (!newName||!newName.trim()) return;
   try {
-    const d = await api({ action:'createSession', userId:teacherData.userId, teacherName:teacherData.name, role:teacherData.role, subject, windowMinutes:minutes });
+    const d = await api({ action:'updateSessionSubject', sessionId, subject:newName.trim() });
+    if (d.success) { toast('Session renamed','success'); checkActiveForTeacher(); }
+    else toast(d.message,'error');
+  } catch(e) { toast('Error renaming','error'); }
+}
+
+async function openSession() {
+  const subject=document.getElementById('t-subject').value.trim();
+  const minutes=document.getElementById('t-window').value;
+  if (!subject) { toast('Enter a subject name','error'); return; }
+  setLoading('btn-open-session',true);
+  try {
+    const d=await api({ action:'createSession', userId:teacherData.userId, teacherName:teacherData.name, role:teacherData.role, subject, windowMinutes:minutes });
     if (d.success) {
-      toast('✓ Session opened — students can mark now', 'success');
-      document.getElementById('t-subject').value = '';
+      toast('✓ Session opened — BT beacon: '+d.bluetoothKey,'success');
+      document.getElementById('t-subject').value='';
       checkActiveForTeacher();
-    } else toast(d.message, 'error');
-  } catch(e) { toast('Error: ' + e.message, 'error'); }
-  setLoading('btn-open-session', false);
+    } else toast(d.message,'error');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+  setLoading('btn-open-session',false);
 }
 
 async function closeCurrentSession(sessionId) {
   try {
     await api({ action:'closeSession', sessionId });
-    toast('Session closed', 'success');
-    clearInterval(sessionTimer);
-    liveSessionId = null; activeSessionId = null;
+    toast('Session closed','success');
+    clearInterval(sessionTimer); liveSessionId=null; activeSessionId=null;
+    const btKeyEl=document.getElementById('teacher-bt-key');
+    if (btKeyEl) btKeyEl.style.display='none';
     checkActiveForTeacher();
-  } catch(e) { toast('Error closing session', 'error'); }
+  } catch(e) { toast('Error closing session','error'); }
 }
 
-// ── Live Dashboard ────────────────────────
+// ── Live Dashboard ─────────────────────────────────────────────
 async function refreshLive() {
-  const listEl  = document.getElementById('live-list');
-  const infoEl  = document.getElementById('live-session-info');
-  const statsEl = document.getElementById('live-stats');
-  const togEl   = document.getElementById('live-toggle-row');
-  const refEl   = document.getElementById('live-refresh-row');
+  const listEl=document.getElementById('live-list');
+  const infoEl=document.getElementById('live-session-info');
+  const statsEl=document.getElementById('live-stats');
+  const togEl=document.getElementById('live-toggle-row');
+  const refEl=document.getElementById('live-refresh-row');
 
   try {
-    const chk = await api({ action:'getActiveSession' });
-    if (chk.active) liveSessionId = chk.session.SessionID;
+    const chk=await api({ action:'getActiveSession' });
+    if (chk.active) liveSessionId=chk.session.SessionID;
   } catch(e) {}
 
   if (!liveSessionId) {
@@ -1040,69 +982,69 @@ async function refreshLive() {
   }
 
   try {
-    const d = await api({ action:'getDashboard', sessionId:liveSessionId });
+    const d=await api({ action:'getDashboard', sessionId:liveSessionId });
     if (!d.success) { toast(d.message,'error'); return; }
-    liveData = d;
+    liveData=d;
     infoEl.style.display='none'; statsEl.style.display='grid';
     togEl.style.display='flex'; refEl.style.display='block';
-    document.getElementById('stat-present').textContent = d.presentCount;
-    document.getElementById('stat-absent').textContent  = d.absentCount;
-    document.getElementById('stat-total').textContent   = d.total;
-    const pct = d.total ? Math.round(d.presentCount/d.total*100) : 0;
-    document.getElementById('stat-pct').textContent     = pct+'%';
-    document.getElementById('live-updated').textContent = 'Updated '+new Date().toLocaleTimeString();
+    document.getElementById('stat-present').textContent=d.presentCount;
+    document.getElementById('stat-absent').textContent=d.absentCount;
+    document.getElementById('stat-total').textContent=d.total;
+    const pct=d.total?Math.round(d.presentCount/d.total*100):0;
+    document.getElementById('stat-pct').textContent=pct+'%';
+    document.getElementById('live-updated').textContent='Updated '+new Date().toLocaleTimeString();
     renderLiveList();
   } catch(e) { toast('Error: '+e.message,'error'); }
 }
 
 function showLiveTab(tab) {
-  liveTab = tab;
-  document.getElementById('seg-present').classList.toggle('active', tab==='present');
-  document.getElementById('seg-absent').classList.toggle('active', tab==='absent');
+  liveTab=tab;
+  document.getElementById('seg-present').classList.toggle('active',tab==='present');
+  document.getElementById('seg-absent').classList.toggle('active',tab==='absent');
   renderLiveList();
 }
 
 function renderLiveList() {
   if (!liveData) return;
-  const el   = document.getElementById('live-list');
-  const list = liveTab==='present' ? liveData.present : liveData.absent;
-  if (!list || list.length===0) {
+  const el=document.getElementById('live-list');
+  const list=liveTab==='present'?liveData.present:liveData.absent;
+  if (!list||!list.length) {
     el.innerHTML=`<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px">${liveTab==='present'?'No one has marked yet':'Everyone present! 🎉'}</div>`;
     return;
   }
-  el.innerHTML = list.map((s,i) => liveTab==='present'
-    ? `<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email}<br>${s.department||'—'} · ${s.time} · ${s.distance}m · ${s.method}</div></div><span class="att-badge" style="background:rgba(34,197,94,.15);color:var(--success);border-color:rgba(34,197,94,.3)">✓</span></div>`
-    : `<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email} · ${s.department||'—'}</div></div><span class="att-badge" style="background:rgba(239,68,68,.15);color:var(--danger);border-color:rgba(239,68,68,.3)">✗</span></div>`
+  el.innerHTML=list.map((s,i)=>liveTab==='present'
+    ?`<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email}<br>${s.department||'—'} · ${s.time} · ${s.method} ${s.bluetoothVerified==='YES'?'· 📡 BT ✓':''}</div></div><span class="att-badge">✓</span></div>`
+    :`<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email} · ${s.department||'—'}</div></div><span class="att-badge" style="background:rgba(239,68,68,.15);color:var(--danger);border-color:rgba(239,68,68,.3)">✗</span></div>`
   ).join('');
 }
 
 function exportCurrentSession() {
   if (!liveData) return;
-  const rows=[['Name','Email','Department','Time','Method','Distance(m)','Status']];
-  liveData.present.forEach(s=>rows.push([s.name,s.email,s.department||'',s.time,s.method,s.distance,'Present']));
-  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.department||'','','','','Absent']));
+  const rows=[['Name','Email','Department','Time','Method','Distance(m)','BT Verified','Status']];
+  liveData.present.forEach(s=>rows.push([s.name,s.email,s.department||'',s.time,s.method,s.distance,s.bluetoothVerified||'NO','Present']));
+  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.department||'','','','','NO','Absent']));
   downloadCSV(rows,'attendance_live.csv');
 }
 
-// ── History ───────────────────────────────
+// ── History ────────────────────────────────────────────────────
 async function loadHistory() {
-  const date = document.getElementById('hist-date').value;
-  const el   = document.getElementById('history-list');
+  const date=document.getElementById('hist-date').value;
+  const el=document.getElementById('history-list');
   el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">Loading…</div>';
   try {
-    const d = await api({ action:'getSessions', userId:teacherData.userId });
-    let sessions = d.sessions || [];
-    if (date) sessions = sessions.filter(s => s.Date === date);
-    historyData = sessions;
+    const d=await api({ action:'getSessions', userId:teacherData.userId });
+    let sessions=d.sessions||[];
+    if (date) sessions=sessions.filter(s=>s.Date===date);
+    historyData=sessions;
     if (!sessions.length) {
       el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">No sessions found</div>';
       document.getElementById('hist-export-row').style.display='none'; return;
     }
     document.getElementById('hist-export-row').style.display='block';
-    el.innerHTML = sessions.map(s=>`
-      <div class="att-item" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="toggleSessionDetail('${s.SessionID}','${s.Subject.replace(/'/g,"\\'")}')">
+    el.innerHTML=sessions.map(s=>`
+      <div class="att-item" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="toggleSessionDetail('${s.SessionID}','${(s.Subject||'').replace(/'/g,"\\'")}')">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div class="name">${s.Subject}</div><div class="meta">${s.Date} · ${s.StartTime}–${s.EndTime}</div></div>
+          <div><div class="name">${s.Subject||'—'}${s.AutoCreated==='YES'?'<span style="margin-left:6px;font-size:9px;background:rgba(79,110,247,.2);color:var(--acc);padding:1px 5px;border-radius:8px">Auto</span>':''}</div><div class="meta">${s.Date} · ${s.StartTime}–${s.EndTime}</div></div>
           <div style="text-align:right"><span class="att-badge">${s.presentCount||0} present</span><div style="font-size:10px;margin-top:3px;color:${s.Status==='open'?'var(--success)':'var(--muted)'}">${s.Status}</div></div>
         </div>
         <div id="detail-${s.SessionID}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px"></div>
@@ -1111,13 +1053,13 @@ async function loadHistory() {
 }
 
 async function toggleSessionDetail(sessionId, subject) {
-  const el = document.getElementById('detail-'+sessionId);
+  const el=document.getElementById('detail-'+sessionId);
   if (!el) return;
   if (el.style.display==='block') { el.style.display='none'; return; }
   el.style.display='block';
   el.innerHTML='<div style="color:var(--muted);font-size:11px">Loading…</div>';
   try {
-    const d = await api({ action:'getDashboard', sessionId });
+    const d=await api({ action:'getDashboard', sessionId });
     if (!d.success) { el.innerHTML='<div style="color:var(--danger);font-size:11px">'+d.message+'</div>'; return; }
     el.innerHTML=`
       <div style="display:flex;gap:12px;margin-bottom:8px;font-size:11px">
@@ -1125,7 +1067,7 @@ async function toggleSessionDetail(sessionId, subject) {
         <span style="color:var(--danger)">✗ ${d.absentCount} absent</span>
         <span style="color:var(--muted)">${d.total} total · ${d.total?Math.round(d.presentCount/d.total*100):0}%</span>
       </div>
-      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.time} · ${s.method}</span></div>`).join('')}
+      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.time} · ${s.method}${s.bluetoothVerified==='YES'?' · 📡':''}</span></div>`).join('')}
       ${!d.present.length?'<div style="font-size:11px;color:var(--muted)">No students marked</div>':''}
       <button onclick="event.stopPropagation();exportOneSession('${sessionId}','${subject}')" class="export-btn" style="float:none;margin-top:10px">Export CSV</button>`;
   } catch(e) { el.innerHTML='<div style="color:var(--danger);font-size:11px">Error</div>'; }
@@ -1133,7 +1075,7 @@ async function toggleSessionDetail(sessionId, subject) {
 
 async function exportOneSession(sessionId, subject) {
   try {
-    const d = await api({ action:'exportAttendance', sessionId });
+    const d=await api({ action:'exportAttendance', sessionId });
     if (d.success) downloadCSV(null,'attendance_'+subject.replace(/\s+/g,'_')+'.csv',d.csv);
     else toast(d.message,'error');
   } catch(e) { toast('Export failed','error'); }
@@ -1142,41 +1084,38 @@ async function exportOneSession(sessionId, subject) {
 async function exportHistory() {
   if (!historyData.length) return;
   try {
-    const date = historyData[0]?.Date || '';
-    const d = await api({ action:'exportAttendance', date });
+    const date=historyData[0]?.Date||'';
+    const d=await api({ action:'exportAttendance', date });
     if (d.success) downloadCSV(null,'attendance_'+date+'.csv',d.csv);
     else toast(d.message,'error');
   } catch(e) { toast('Export failed','error'); }
 }
 
-// ── Students ──────────────────────────────
+// ── Students ───────────────────────────────────────────────────
 async function loadStudents() {
-  const el = document.getElementById('students-list');
+  const el=document.getElementById('students-list');
   el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">Loading…</div>';
   try {
-    const d = await api({ action:'getStudents' });
-    allStudents = d.students || [];
-    document.getElementById('student-count').textContent = allStudents.length+' students registered';
+    const d=await api({ action:'getStudents' });
+    allStudents=d.students||[];
+    document.getElementById('student-count').textContent=allStudents.length+' students registered';
     renderStudents(allStudents);
   } catch(e) { toast('Error loading students','error'); }
 }
 
 function filterStudents() {
-  const q = document.getElementById('student-search').value.toLowerCase();
-  const f = allStudents.filter(s=>(s.FullName||'').toLowerCase().includes(q)||(s.Email||'').toLowerCase().includes(q)||(s.Department||'').toLowerCase().includes(q));
-  document.getElementById('student-count').textContent = f.length+' of '+allStudents.length+' students';
+  const q=document.getElementById('student-search').value.toLowerCase();
+  const f=allStudents.filter(s=>(s.FullName||'').toLowerCase().includes(q)||(s.Email||'').toLowerCase().includes(q)||(s.Department||'').toLowerCase().includes(q));
+  document.getElementById('student-count').textContent=f.length+' of '+allStudents.length+' students';
   renderStudents(f);
 }
 
 function renderStudents(list) {
-  const el = document.getElementById('students-list');
+  const el=document.getElementById('students-list');
   if (!list.length) { el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">No students found</div>'; return; }
-  el.innerHTML = list.map((s,i)=>`
+  el.innerHTML=list.map((s,i)=>`
     <div class="att-item">
-      <div>
-        <div class="name">${i+1}. ${s.FullName}</div>
-        <div class="meta">${s.Email}<br>${s.Department||'No dept'}</div>
-      </div>
+      <div><div class="name">${i+1}. ${s.FullName}</div><div class="meta">${s.Email}<br>${s.Department||'No dept'}</div></div>
       <div style="text-align:right;font-size:10px;line-height:1.8">
         <span style="color:${s.DeviceId?'var(--success)':'var(--muted)'}">${s.DeviceId?'📱 bound':'📱 none'}</span><br>
         <span style="color:${s.BiometricCredentialId?'var(--success)':'var(--muted)'}">${s.BiometricCredentialId?'🔐 bio':'🔐 none'}</span>
@@ -1184,60 +1123,49 @@ function renderStudents(list) {
     </div>`).join('');
 }
 
-// ── CSV download ──────────────────────────
+// ── CSV ────────────────────────────────────────────────────────
 function downloadCSV(rows, filename, csvString) {
-  const content = csvString || rows.map(r=>r.map(c=>'"'+(c||'')+'"').join(',')).join('\n');
-  const blob = new Blob([content],{type:'text/csv'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename; a.click();
+  const content=csvString||rows.map(r=>r.map(c=>'"'+(c||'')+'"').join(',')).join('\n');
+  const blob=new Blob([content],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=filename; a.click();
 }
 
-// ── Device badge ──────────────────────────
 function showDeviceBadge(dId) {
-  const ex = document.getElementById('device-badge');
+  const ex=document.getElementById('device-badge');
   if (ex) ex.remove();
-  const badge = document.createElement('div');
-  badge.id = 'device-badge';
+  const badge=document.createElement('div');
+  badge.id='device-badge';
   badge.style.cssText='display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;margin-bottom:12px;font-size:11.5px;color:#86efac';
   badge.innerHTML=`<svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5-4H7V4h10v12z"/></svg><span>Device bound: <code style="font-family:monospace">${dId}</code></span>`;
   const btn=document.getElementById('btn-register');
   btn.parentNode.insertBefore(badge,btn);
 }
 
-// ── Init ──────────────────────────────────────────────────────
+// ── Init ───────────────────────────────────────────────────────
 switchTab('register');
 
-// Show dev mode banner
 if (DEV_MODE) {
-  const db = document.getElementById('dev-banner');
-  if (db) db.innerHTML = `<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:11.5px;color:#fcd34d">🔧 DEV MODE — geofence &amp; WiFi checks disabled. Home location active.</div>`;
+  const db=document.getElementById('dev-banner');
+  if (db) db.innerHTML=`<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:11.5px;color:#fcd34d">🔧 DEV MODE — geofence, WiFi &amp; Bluetooth checks disabled.</div>`;
 }
 
-// Pre-compute device fingerprint in background
 getDeviceId().then(dId => {
-  console.log('[BioAttend] Device ID:', dId);
   try {
-    const stored = localStorage.getItem('bioattend_device_id');
+    const stored=localStorage.getItem('bioattend_device_id');
     if (stored) showDeviceBadge(stored);
   } catch(e) {}
 });
 
-// Immediately show security status when user opens Sign In tab
-document.getElementById('tab-signin').addEventListener('click', () => {
-  setTimeout(() => {
-    updateWifiPill();
-    updateCooldownPill();
-  }, 100);
+document.getElementById('tab-signin').addEventListener('click',()=>{
+  setTimeout(()=>{ updateWifiPill(); updateCooldownPill(); },100);
 });
 
-// Poll session status every 30s when on signin tab
-setInterval(() => {
+setInterval(()=>{
   if (document.getElementById('pane-signin').classList.contains('active')) {
-    checkSession();
-    updateCooldownPill();
+    checkSession(); updateCooldownPill();
   }
-}, 30000);
+},30000);
 </script>
 </body>
 </html>
