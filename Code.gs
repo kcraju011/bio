@@ -10,8 +10,8 @@ var SHEET_ATTENDANCE = 'Attendance';
 var SHEET_SESSIONS   = 'Sessions';
 
 // ── Location config ───────────────────────────────────────────
-var COLLEGE_LAT    = 13.32623;
-var COLLEGE_LNG    = 77.12621;
+var COLLEGE_LAT    = 13.3260801;
+var COLLEGE_LNG    = 77.1261350;
 var FENCE_RADIUS_M = 1000; // 100m for production — set 500 for testing
 
 // ── Anti-cheat config ─────────────────────────────────────────
