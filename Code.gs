@@ -12,7 +12,7 @@ var SHEET_SESSIONS   = 'Sessions';
 // ── Location config ───────────────────────────────────────────
 var COLLEGE_LAT    = 13.3260801;
 var COLLEGE_LNG    = 77.1261350;
-var FENCE_RADIUS_M = 1000; // 100m for production — set 500 for testing
+var FENCE_RADIUS_M = 3000; // 3km geofence radius
 
 // ── Anti-cheat config ─────────────────────────────────────────
 var COOLDOWN_HOURS = 3;
@@ -621,6 +621,8 @@ function exportAttendance(body) {
 }
 
 // ── 10. Save Biometric ────────────────────────────────────────
+// Biometric code reference: saveBiometric function starts here (approx line 360 in current file)
+
 function saveBiometric(body) {
   try {
     var sheet=getSheet(SHEET_USERS), data=sheet.getDataRange().getValues(), headers=data[0];
@@ -634,6 +636,8 @@ function saveBiometric(body) {
 }
 
 // ── 11. Get Biometric ─────────────────────────────────────────
+// Biometric code reference: getBiometric function starts here (approx line 385 in current file)
+
 function getBiometric(body) {
   try {
     var rows=getRows(getSheet(SHEET_USERS));
