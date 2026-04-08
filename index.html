@@ -110,11 +110,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 #student-search{background:var(--inp);border:1px solid var(--border);border-radius:var(--rad);color:var(--text);font-family:'Sora',sans-serif;font-size:13px;padding:9px 13px;width:100%;outline:none;transition:border-color .2s}
 #student-search:focus{border-color:var(--acc)}
 #student-search::placeholder{color:var(--muted)}
-.loc-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;margin-bottom:6px}
-.loc-pill.ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--success)}
-.loc-pill.fail{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--danger)}
-.loc-pill.checking{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--warn)}
-.loc-pill.warn{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--warn)}
+.cooldown-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;margin-bottom:6px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--warn)}
 
 /* Bluetooth scan animation */
 .bt-scanning{display:flex;align-items:center;gap:8px;padding:10px 13px;background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.3);border-radius:12px;margin-bottom:10px;font-size:12px;color:var(--acc)}
@@ -158,9 +154,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="pane" id="pane-signin">
       <div id="si-session-banner"></div>
       <div id="dev-banner"></div>
-      <div id="si-loc-status"></div>
-      <div id="si-wifi-status"></div>
-      <div id="si-bt-status"></div>
       <div id="si-cooldown-status"></div>
 
       <div class="field">
@@ -210,10 +203,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="field"><label>Department</label>
         <select id="r-dept">
           <option value="">Select department</option>
-          <option>Computer Science & Engineering</option>
-          <option>Information Science & Engineering</option>
-          <option>Electronics & Communication</option>
-          <option>Electrical & Electronics</option>
+          <option>Computer Science &amp; Engineering</option>
+          <option>Information Science &amp; Engineering</option>
+          <option>Electronics &amp; Communication</option>
+          <option>Electrical &amp; Electronics</option>
           <option>Mechanical Engineering</option>
           <option>Civil Engineering</option>
           <option>Chemical Engineering</option>
@@ -286,10 +279,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
         <!-- Sub: Session -->
         <div class="sub-pane active" id="sp-session">
-          <!-- Today's auto schedule -->
           <div id="auto-schedule-display"></div>
           <div id="active-session-display"></div>
-          <!-- BT key display for teacher -->
           <div id="teacher-bt-key" style="display:none;padding:10px 12px;background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.3);border-radius:12px;margin-bottom:12px;font-size:12px;color:var(--acc)"></div>
           <div id="open-session-form">
             <div class="field"><label>Subject / Class <span class="req">*</span></label>
@@ -369,12 +360,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 // ── CONFIG ────────────────────────────────────────────────────
 const API = 'https://script.google.com/macros/s/AKfycbzMidoZcaGaQeyQzfXmjTIdibLPwFVj-0mzAXcB8-OybhKUL4BHsLQSpa-meFVNYLA5bQ/exec';
 
-// Production SIT Tumkur coordinates
-const COLLEGE_LAT  = 13.3260801;
-const COLLEGE_LNG  = 77.1261350;
-const FENCE_M      = 3000; // 3km to match backend FENCE_RADIUS_M = 3000
-
-// Set true only for testing at home
+// Set true only for testing
 const DEV_MODE = false;
 
 // Bluetooth prefix — must match Code.gs BT_BEACON_PREFIX
@@ -386,7 +372,6 @@ let currentUserName = null;
 let currentUserRole = null;
 let registeredUserId = null;
 let teacherData     = null;
-let userLat = null, userLng = null;
 let sessionTimer    = null;
 let activeSessionId = null;
 let activeBluetoothKey = null;
@@ -445,7 +430,7 @@ function switchTab(tab) {
     document.getElementById('pane-'+t).classList.toggle('active', t===tab);
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
   });
-  if (tab === 'signin') checkSession();
+  if (tab === 'signin') { checkSession(); updateCooldownPill(); }
 }
 
 function togglePw(id) {
@@ -453,29 +438,29 @@ function togglePw(id) {
   i.type = i.type === 'password' ? 'text' : 'password';
 }
 
-function haversine(lat1,lng1,lat2,lng2) {
-  const R=6371000, dL=(lat2-lat1)*Math.PI/180, dN=(lng2-lng1)*Math.PI/180;
-  const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dN/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+function fmtTime(secs) {
+  const m=Math.floor(Math.max(0,secs)/60), s=Math.max(0,secs)%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
 }
 
-function getLocation() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) return reject(new Error('GPS not supported'));
-    navigator.geolocation.getCurrentPosition(
-      pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; resolve(pos); },
-      err => reject(new Error('GPS denied: ' + err.message)),
-      { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
-    );
-  });
+// ── Cooldown pill ──────────────────────────────────────────────
+function updateCooldownPill() {
+  const el = document.getElementById('si-cooldown-status');
+  if (!el) return;
+  try {
+    const lastTs = localStorage.getItem('bioattend_last_attendance');
+    if (!lastTs) { el.innerHTML=''; return; }
+    const diff = Date.now() - parseInt(lastTs);
+    const coolMs = 3*60*60*1000;
+    if (diff < coolMs) {
+      const ml = Math.ceil((coolMs-diff)/60000);
+      const hrs=Math.floor(ml/60), mins=ml%60;
+      el.innerHTML = `<span class="cooldown-pill">⏱ Cooldown: ${hrs>0?hrs+'h ':''} ${mins}m remaining</span>`;
+    } else { el.innerHTML=''; }
+  } catch(e) { el.innerHTML=''; }
 }
 
 // ── BLUETOOTH SCANNING ─────────────────────────────────────────
-// Uses Web Bluetooth API to scan for teacher's BLE beacon.
-// Teacher runs a free BLE beacon app on their phone broadcasting
-// the beacon name shown in their dashboard (e.g. BIOATTEND-ABC123).
-// Student's browser scans for any device whose name starts with BIOATTEND.
-
 async function scanBluetooth() {
   const btn = document.getElementById('btn-bt-scan');
   const resultEl = document.getElementById('bt-result');
@@ -491,22 +476,17 @@ async function scanBluetooth() {
     btnText.textContent = 'Scanning…';
     resultEl.innerHTML = '<div class="bt-scanning"><div class="bt-ring"></div><span>Scanning for teacher\'s Bluetooth beacon nearby…</span></div>';
 
-    // Web Bluetooth requires user gesture and shows a picker.
-    // We request devices with name prefix matching our beacon.
     const device = await navigator.bluetooth.requestDevice({
-      filters: [
-        { namePrefix: BT_BEACON_PREFIX }
-      ],
+      filters: [{ namePrefix: BT_BEACON_PREFIX }],
       optionalServices: []
     });
 
     const foundName = device.name || '';
     foundBluetoothKey = foundName;
 
-    // Check if the found key matches the active session's BT key
     if (activeBluetoothKey && foundName !== activeBluetoothKey) {
       bluetoothVerified = false;
-      resultEl.innerHTML = `<div class="bt-scanning bt-fail">Wrong classroom beacon found: "${foundName}". Expected "${activeBluetoothKey}". Are you in the right room?</div>`;
+      resultEl.innerHTML = `<div class="bt-scanning bt-fail">Wrong classroom beacon: "${foundName}". Expected "${activeBluetoothKey}".</div>`;
       toast('Wrong classroom — check you are in the right room', 'error');
     } else {
       bluetoothVerified = true;
@@ -515,71 +495,18 @@ async function scanBluetooth() {
       resultEl.innerHTML = `<div class="bt-scanning bt-ok">Connected to teacher beacon: ${foundName}</div>`;
       toast('Bluetooth verified — you are in the classroom', 'success');
     }
-
   } catch(e) {
     bluetoothVerified = false;
     if (e.name === 'NotFoundError') {
       resultEl.innerHTML = '<div class="bt-scanning bt-fail">No teacher beacon found nearby. Make sure you are inside the classroom.</div>';
       toast('No teacher beacon found nearby', 'error');
     } else if (e.name === 'SecurityError') {
-      resultEl.innerHTML = '<div class="bt-scanning bt-fail">Bluetooth permission denied. Allow Bluetooth access in browser settings.</div>';
+      resultEl.innerHTML = '<div class="bt-scanning bt-fail">Bluetooth permission denied. Allow access in browser settings.</div>';
     } else {
       resultEl.innerHTML = `<div class="bt-scanning bt-fail">${e.message}</div>`;
     }
   }
   btn.disabled = false;
-}
-
-// ── Location pill ──────────────────────────────────────────────
-async function updateLocPill(elId) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  el.innerHTML = '<span class="loc-pill checking">📡 Checking location…</span>';
-  try {
-    await getLocation();
-    const dist = Math.round(haversine(userLat, userLng, COLLEGE_LAT, COLLEGE_LNG));
-    if (DEV_MODE) {
-      el.innerHTML = `<span class="loc-pill warn">🔧 DEV: ${dist}m from SIT (geofence disabled)</span>`;
-    } else if (dist <= FENCE_M) {
-      el.innerHTML = `<span class="loc-pill ok">✓ On campus (${dist}m from SIT)</span>`;
-    } else {
-      el.innerHTML = `<span class="loc-pill fail">✗ ${dist}m away — must be within ${FENCE_M}m</span>`;
-    }
-  } catch(e) {
-    el.innerHTML = `<span class="loc-pill fail">✗ GPS unavailable — ${e.message}</span>`;
-  }
-}
-
-async function updateWifiPill() {
-  const el = document.getElementById('si-wifi-status');
-  if (!el) return;
-  const saved = (() => { try { return localStorage.getItem('bioattend_ssid') || ''; } catch(e) { return ''; } })();
-  el.innerHTML = `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-    <span class="loc-pill ${saved?'ok':'warn'}" style="margin-bottom:0">📶 WiFi:</span>
-    <input id="ssid-input" value="${saved}" placeholder="e.g. SIT-WiFi"
-      style="flex:1;padding:3px 8px;border-radius:8px;border:1px solid var(--border);background:var(--inp);color:var(--text);font-size:11px;font-family:'Sora',sans-serif;outline:none"
-      oninput="saveSsid(this.value)"/>
-  </div>`;
-}
-
-function saveSsid(val) {
-  try { localStorage.setItem('bioattend_ssid', val.trim()); } catch(e) {}
-}
-
-function updateCooldownPill() {
-  const el = document.getElementById('si-cooldown-status');
-  if (!el) return;
-  try {
-    const lastTs = localStorage.getItem('bioattend_last_attendance');
-    if (!lastTs) { el.innerHTML=''; return; }
-    const diff = Date.now() - parseInt(lastTs);
-    const coolMs = 3*60*60*1000;
-    if (diff < coolMs) {
-      const ml = Math.ceil((coolMs-diff)/60000);
-      const hrs=Math.floor(ml/60), mins=ml%60;
-      el.innerHTML = `<span class="loc-pill warn">⏱ Cooldown: ${hrs>0?hrs+'h ':''} ${mins}m remaining</span>`;
-    } else { el.innerHTML=''; }
-  } catch(e) { el.innerHTML=''; }
 }
 
 // ── Check active session ───────────────────────────────────────
@@ -602,10 +529,8 @@ async function checkSession() {
           <div class="timer" id="sess-timer">${fmtTime(secs)}</div>
         </div>`;
 
-      // Show BT scan section if bluetooth is required
       if (btSection) {
         btSection.style.display = btRequired ? 'block' : 'none';
-        // Reset BT state when session changes
         if (!bluetoothVerified) {
           const btn = document.getElementById('btn-bt-scan');
           const btnText = document.getElementById('bt-btn-text');
@@ -623,25 +548,14 @@ async function checkSession() {
         if (el) el.textContent = fmtTime(secs);
         if (secs <= 0) { clearInterval(sessionTimer); checkSession(); }
       }, 1000);
-      updateLocPill('si-loc-status');
-      updateWifiPill();
-      updateCooldownPill();
     } else {
       activeSessionId = null; activeBluetoothKey = null; bluetoothVerified = false;
       clearInterval(sessionTimer);
       if (btSection) btSection.style.display = 'none';
       banner.innerHTML = '<div class="no-session">⏳ No active attendance session right now.<br><span style="font-size:11px">Sessions open automatically at scheduled times.</span></div>';
-      document.getElementById('si-loc-status').innerHTML='';
-      document.getElementById('si-wifi-status').innerHTML='';
-      document.getElementById('si-bt-status').innerHTML='';
       document.getElementById('si-cooldown-status').innerHTML='';
     }
   } catch(e) { console.warn('checkSession:', e); }
-}
-
-function fmtTime(secs) {
-  const m=Math.floor(Math.max(0,secs)/60), s=Math.max(0,secs)%60;
-  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
 }
 
 // ── Sign In ────────────────────────────────────────────────────
@@ -678,29 +592,12 @@ async function handleSignIn() {
       await api({ action:'registerDevice', userId:auth.userId, deviceId:dId });
     }
 
-    // WiFi check
-    const ssidEl = document.getElementById('ssid-input');
-    const ssid   = ssidEl ? ssidEl.value.trim() : '';
-    if (!DEV_MODE && ssid) {
-      const wifiChk = await api({ action:'checkWifi', ssid });
-      if (!wifiChk.onCampusWifi) {
-        toast('📶 '+(wifiChk.message||'Not on SIT campus WiFi'),'error');
-        setLoading('btn-signin',false); return;
-      }
-    }
-
-    // GPS
-    toast('📡 Getting your location…','warn');
-    await getLocation();
-
     // Mark attendance — pass bluetooth result
     const att = await api({
       action:'markAttendance',
       userId:auth.userId,
-      lat:userLat, lng:userLng,
       method:'password',
       deviceId:dId,
-      ssid:ssid||undefined,
       bluetoothVerified: bluetoothVerified,
       bluetoothKey: foundBluetoothKey||undefined
     });
@@ -709,13 +606,11 @@ async function handleSignIn() {
       toast(att.message,'success');
       try { localStorage.setItem('bioattend_last_attendance', Date.now().toString()); } catch(e) {}
       updateCooldownPill();
-      bluetoothVerified = false; // reset for next session
+      bluetoothVerified = false;
     } else {
       toast(att.message,'error');
       if (att.code==='COOLDOWN') updateCooldownPill();
-      if (att.code==='BT_REQUIRED') {
-        toast('📡 Please scan Bluetooth first to prove you are in class','error');
-      }
+      if (att.code==='BT_REQUIRED') toast('📡 Please scan Bluetooth first to prove you are in class','error');
     }
   } catch(e) { toast('Error: '+e.message,'error'); }
   setLoading('btn-signin',false);
@@ -785,23 +680,15 @@ async function handleBiometricSignIn() {
     try {
       const lastTs=localStorage.getItem('bioattend_last_attendance');
       if (lastTs&&(Date.now()-parseInt(lastTs))<3*60*60*1000) {
-        toast(`⏱ Cooldown active`,'error'); return;
+        toast('⏱ Cooldown active','error'); return;
       }
     } catch(e) {}
-    const ssidEl=document.getElementById('ssid-input');
-    const ssid=ssidEl?ssidEl.value.trim():'';
-    if (!DEV_MODE&&ssid) {
-      const wifiChk=await api({ action:'checkWifi', ssid });
-      if (!wifiChk.onCampusWifi) { toast('📶 '+(wifiChk.message||'Not on SIT campus WiFi'),'error'); return; }
-    }
     const challenge=crypto.getRandomValues(new Uint8Array(32));
     const rawId=Uint8Array.from(atob(info.credentialId),c=>c.charCodeAt(0));
     await navigator.credentials.get({ publicKey:{challenge,allowCredentials:[{type:'public-key',id:rawId}],userVerification:'required',timeout:60000}});
-    toast('📡 Verifying location…','warn');
-    await getLocation();
     const att=await api({
-      action:'markAttendance', userId:info.userId, lat:userLat, lng:userLng,
-      method:'biometric', deviceId:dId, ssid:ssid||undefined,
+      action:'markAttendance', userId:info.userId,
+      method:'biometric', deviceId:dId,
       bluetoothVerified:bluetoothVerified, bluetoothKey:foundBluetoothKey||undefined
     });
     if (att.success) {
@@ -858,7 +745,6 @@ function switchSubTab(tab) {
   if (tab==='students') loadStudents();
 }
 
-// ── Auto schedule display for teacher ─────────────────────────
 async function loadAutoSchedule() {
   const el = document.getElementById('auto-schedule-display');
   if (!el) return;
@@ -1020,9 +906,9 @@ function renderLiveList() {
 
 function exportCurrentSession() {
   if (!liveData) return;
-  const rows=[['Name','Email','Department','Time','Method','Distance(m)','BT Verified','Status']];
-  liveData.present.forEach(s=>rows.push([s.name,s.email,s.department||'',s.time,s.method,s.distance,s.bluetoothVerified||'NO','Present']));
-  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.department||'','','','','NO','Absent']));
+  const rows=[['Name','Email','Department','Time','Method','BT Verified','Status']];
+  liveData.present.forEach(s=>rows.push([s.name,s.email,s.department||'',s.time,s.method,s.bluetoothVerified||'NO','Present']));
+  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.department||'','','','NO','Absent']));
   downloadCSV(rows,'attendance_live.csv');
 }
 
@@ -1147,7 +1033,7 @@ switchTab('register');
 
 if (DEV_MODE) {
   const db=document.getElementById('dev-banner');
-  if (db) db.innerHTML=`<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:11.5px;color:#fcd34d">🔧 DEV MODE — geofence, WiFi &amp; Bluetooth checks disabled.</div>`;
+  if (db) db.innerHTML=`<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:11.5px;color:#fcd34d">🔧 DEV MODE — Bluetooth checks disabled.</div>`;
 }
 
 getDeviceId().then(dId => {
@@ -1158,7 +1044,7 @@ getDeviceId().then(dId => {
 });
 
 document.getElementById('tab-signin').addEventListener('click',()=>{
-  setTimeout(()=>{ updateWifiPill(); updateCooldownPill(); },100);
+  setTimeout(()=>{ updateCooldownPill(); },100);
 });
 
 setInterval(()=>{
