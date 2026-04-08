@@ -42,6 +42,7 @@ function route(body) {
     case 'register':         return registerUser(body);
     case 'signIn':           return signInUser(body);
     case 'markAttendance':   return markAttendance(body);
+    case 'markExit':         return markExit(body);
     case 'saveBiometric':    return saveBiometric(body);
     case 'getBiometric':     return getBiometric(body);
     case 'createSession':    return createSession(body);
@@ -55,7 +56,8 @@ function route(body) {
     case 'registerDevice':   return registerDevice(body);
     case 'checkDevice':      return checkDevice(body);
     case 'fixRows':          return fixExistingRows();
-    case 'resetUsersSheet':  return resetUsersSheet();
+    case 'resetUsersSheet':      return resetUsersSheet();
+    case 'resetAttendanceSheet': return resetAttendanceSheet();
     case 'debug':            return debugInfo();
     default: return { success: false, message: 'Unknown action: ' + body.action };
   }
@@ -75,7 +77,13 @@ function getSheet(name) {
     sheet = ss.insertSheet(name);
     var initHeaders = {
       Users:      USER_HEADERS,
-      Attendance: ['AttendanceID','UserID','FullName','Email','SessionID','Subject','Timestamp','Date','Time','Method','Lat','Lng','DistanceFromCollege'],
+      Attendance: [
+        'AttendanceID','UserID','FullName','Email',
+        'SessionID','Subject',
+        'EntryTimestamp','Date','EntryTime','Method',
+        'EntryLat','EntryLng','EntryAddress',
+        'ExitTime','ExitLat','ExitLng','ExitAddress','Duration'
+      ],
       Sessions:   ['SessionID','TeacherID','TeacherName','Subject','Date','StartTime','EndTime','Status','WindowMinutes']
     };
     if (initHeaders[name]) {
@@ -90,6 +98,34 @@ function getSheet(name) {
       if (existing.indexOf(col) === -1) {
         var c = sheet.getLastColumn() + 1;
         sheet.getRange(1,c).setValue(col).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+      }
+    });
+  } else if (name === SHEET_ATTENDANCE) {
+    // Handle existing attendance sheets — rename old columns and add new ones
+    var existingAtt = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
+
+    // Rename old column names to new names
+    var renames = {
+      'Timestamp':           'EntryTimestamp',
+      'Time':                'EntryTime',
+      'Lat':                 'EntryLat',
+      'Lng':                 'EntryLng',
+      'DistanceFromCollege': 'EntryAddress'
+    };
+    existingAtt.forEach(function(h, i) {
+      if (renames[h]) {
+        sheet.getRange(1, i+1).setValue(renames[h]);
+        existingAtt[i] = renames[h]; // update local copy too
+      }
+    });
+
+    // Add any still-missing new columns
+    var needed = ['EntryLat','EntryLng','EntryAddress','ExitTime','ExitLat','ExitLng','ExitAddress','Duration'];
+    needed.forEach(function(col) {
+      if (existingAtt.indexOf(col) === -1) {
+        var c = sheet.getLastColumn() + 1;
+        sheet.getRange(1,c).setValue(col).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+        existingAtt.push(col);
       }
     });
   }
@@ -177,8 +213,7 @@ function signInUser(body) {
   } catch(err) { return { success:false, message:'signIn: '+err.toString() }; }
 }
 
-// ── 3. Mark Attendance ────────────────────────────────────────
-// ── 3. Mark Attendance (simple — no geofence, no session required) ──
+// ── 3. Mark Attendance (entry with location) ──────────────────
 function markAttendance(body) {
   try {
     if (!body.userId) return { success:false, message:'userId required' };
@@ -199,35 +234,128 @@ function markAttendance(body) {
     var existing = getRows(attSheet);
     var dateStr  = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
     for (var j=0; j<existing.length; j++) {
-      if (existing[j].UserID === body.userId && existing[j].Date === dateStr) {
-        return { success:false, message:'Attendance already marked for today.' };
+      var rowUserId = String(existing[j].UserID || '').trim();
+      var rowDate   = String(existing[j].Date   || '').trim();
+      // Also handle if Date is stored as a Date object (spreadsheet auto-converts)
+      if (existing[j].Date instanceof Date) {
+        rowDate = Utilities.formatDate(existing[j].Date, tz, 'yyyy-MM-dd');
+      }
+      if (rowUserId === String(body.userId).trim() && rowDate === dateStr) {
+        return { success:false, message:'Attendance already marked for today at ' + String(existing[j].EntryTime || '') };
       }
     }
 
-    // C. Record
+    // C. Record entry with location
     var timeStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
+    var entryLat  = body.lat     || '';
+    var entryLng  = body.lng     || '';
+    var entryAddr = body.address || '';
+
     attSheet.appendRow([
-      generateId('a'),
-      body.userId,
-      user.FullName,
-      user.Email,
-      '',                        // SessionID — blank (no session required)
-      body.subject || 'General', // Subject
-      now.toISOString(),
-      dateStr,
-      timeStr,
-      body.method || 'password',
-      '', '', ''                 // Lat, Lng, Distance — blank (no GPS)
+      generateId('a'),          // AttendanceID
+      body.userId,              // UserID
+      user.FullName,            // FullName
+      user.Email,               // Email
+      '',                       // SessionID
+      body.subject || 'General',// Subject
+      now.toISOString(),        // EntryTimestamp
+      dateStr,                  // Date
+      timeStr,                  // EntryTime
+      body.method || 'password',// Method
+      entryLat,                 // EntryLat
+      entryLng,                 // EntryLng
+      entryAddr,                // EntryAddress
+      '',                       // ExitTime
+      '',                       // ExitLat
+      '',                       // ExitLng
+      '',                       // ExitAddress
+      ''                        // Duration
     ]);
 
     return {
-      success: true,
-      message: '✓ Attendance marked at ' + timeStr,
-      name:    user.FullName,
-      date:    dateStr,
-      time:    timeStr
+      success:  true,
+      message:  '✓ Attendance marked at ' + timeStr,
+      name:     user.FullName,
+      date:     dateStr,
+      time:     timeStr,
+      location: entryAddr || (entryLat ? entryLat+','+entryLng : 'not captured')
     };
   } catch(err) { return { success:false, message:'markAttendance: '+err.toString() }; }
+}
+
+// ── 3b. Mark Exit (with location) ────────────────────────────
+function markExit(body) {
+  try {
+    if (!body.userId) return { success:false, message:'userId required' };
+
+    var now     = new Date();
+    var tz      = Session.getScriptTimeZone();
+    var dateStr = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+    var timeStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
+
+    var sheet   = getSheet(SHEET_ATTENDANCE);
+    var data    = sheet.getDataRange().getValues();
+    var headers = data[0];
+
+    // Find column indexes by header name (immune to order changes)
+    var userIdCol   = headers.indexOf('UserID')      + 1;
+    var dateCol     = headers.indexOf('Date')         + 1;
+    var entryTsCol  = headers.indexOf('EntryTimestamp') + 1;
+    var exitTimeCol = headers.indexOf('ExitTime')    + 1;
+    var exitLatCol  = headers.indexOf('ExitLat')     + 1;
+    var exitLngCol  = headers.indexOf('ExitLng')     + 1;
+    var exitAddrCol = headers.indexOf('ExitAddress') + 1;
+    var durationCol = headers.indexOf('Duration')    + 1;
+
+    // Find today's attendance row for this user
+    for (var i = 1; i < data.length; i++) {
+      var rowUserId = String(data[i][userIdCol - 1] || '').trim();
+      var rowDateRaw = data[i][dateCol - 1];
+      var rowDate;
+      if (rowDateRaw instanceof Date) {
+        rowDate = Utilities.formatDate(rowDateRaw, tz, 'yyyy-MM-dd');
+      } else {
+        rowDate = String(rowDateRaw || '').trim();
+      }
+
+      if (rowUserId === String(body.userId).trim() && rowDate === dateStr) {
+        // Check not already exited
+        var existingExit = String(data[i][exitTimeCol - 1] || '').trim();
+        if (existingExit) {
+          return { success:false, message:'Exit already recorded at ' + existingExit };
+        }
+
+        // Calculate duration from entry
+        var entryTs  = data[i][entryTsCol - 1];
+        var duration = '';
+        if (entryTs) {
+          var entryTime = new Date(entryTs);
+          var diffMs    = now.getTime() - entryTime.getTime();
+          var diffMins  = Math.round(diffMs / 60000);
+          var hrs       = Math.floor(diffMins / 60);
+          var mins      = diffMins % 60;
+          duration      = hrs > 0 ? hrs + 'h ' + mins + 'm' : mins + 'm';
+        }
+
+        // Write exit details into the same row
+        if (exitTimeCol > 0) sheet.getRange(i+1, exitTimeCol).setValue(timeStr);
+        if (exitLatCol  > 0) sheet.getRange(i+1, exitLatCol).setValue(body.lat || '');
+        if (exitLngCol  > 0) sheet.getRange(i+1, exitLngCol).setValue(body.lng || '');
+        if (exitAddrCol > 0) sheet.getRange(i+1, exitAddrCol).setValue(body.address || '');
+        if (durationCol > 0) sheet.getRange(i+1, durationCol).setValue(duration);
+
+        return {
+          success:  true,
+          message:  '✓ Exit recorded at ' + timeStr + (duration ? ' · Duration: ' + duration : ''),
+          exitTime: timeStr,
+          duration: duration,
+          location: body.address || (body.lat ? body.lat+','+body.lng : 'not captured')
+        };
+      }
+    }
+
+    return { success:false, message:'No attendance entry found for today. Mark attendance first.' };
+  } catch(err) { return { success:false, message:'markExit: '+err.toString() }; }
 }
 
 // ── 4. Create Session ─────────────────────────────────────────
@@ -484,7 +612,29 @@ function resetUsersSheet() {
   } catch(err) { return { success:false, message:'resetUsersSheet: '+err.toString() }; }
 }
 
-// ── 16. Fix existing bad rows (repair without deleting) ───────
+// ── Reset Attendance Sheet ────────────────────────────────────
+// Deletes old Attendance sheet and recreates with correct columns.
+// Run once from Apps Script editor after deploying this update.
+function resetAttendanceSheet() {
+  try {
+    var ss  = SpreadsheetApp.getActiveSpreadsheet();
+    var old = ss.getSheetByName(SHEET_ATTENDANCE);
+    if (old) ss.deleteSheet(old);
+    var sheet = ss.insertSheet(SHEET_ATTENDANCE);
+    var h = [
+      'AttendanceID','UserID','FullName','Email',
+      'SessionID','Subject',
+      'EntryTimestamp','Date','EntryTime','Method',
+      'EntryLat','EntryLng','EntryAddress',
+      'ExitTime','ExitLat','ExitLng','ExitAddress','Duration'
+    ];
+    sheet.appendRow(h);
+    sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+    // Freeze header row
+    sheet.setFrozenRows(1);
+    return { success:true, message:'Attendance sheet reset with ' + h.length + ' columns: ' + h.join(', ') };
+  } catch(err) { return { success:false, message:'resetAttendanceSheet: '+err.toString() }; }
+}
 function fixExistingRows() {
   try {
     var sheet   = getSheet(SHEET_USERS);

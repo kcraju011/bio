@@ -124,7 +124,23 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 #toast.success{border-color:var(--success)}
 #toast.warn{border-color:var(--warn)}
 
-/* ── Spinner ── */
+/* ── Location status bar ── */
+.loc-bar{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:10px;font-size:11.5px;margin-bottom:12px}
+.loc-bar.getting{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:var(--warn)}
+.loc-bar.ok{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:var(--success)}
+.loc-bar.fail{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:var(--danger)}
+
+/* ── Attendance success card ── */
+.att-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.att-card .att-name{font-size:15px;font-weight:600;color:var(--success);margin-bottom:6px}
+.att-card .att-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);padding:3px 0;border-bottom:1px solid rgba(34,197,94,.1)}
+.att-card .att-row:last-child{border:none}
+.att-card .att-val{color:var(--text);font-weight:500}
+
+/* ── Exit button ── */
+.btn-exit{width:100%;padding:11px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);border-radius:var(--rad);color:var(--danger);font-family:'Sora',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;transition:background .2s}
+.btn-exit:hover{background:rgba(239,68,68,.2)}
+.btn-exit:disabled{opacity:.45;cursor:not-allowed}
 .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -202,8 +218,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     ══════════════════════════════════════════ -->
     <div class="pane" id="pane-signin">
 
+      <!-- Location status pill -->
+      <div id="loc-status-bar"></div>
 
-
+      <!-- Attendance success card (shown after marking) -->
+      <div id="att-success-card" style="display:none"></div>
 
       <div class="field">
         <label>Email</label>
@@ -433,13 +452,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const API = 'https://script.google.com/macros/s/AKfycbxqcAqfoB4R5mCfSH_JolqhSO921ZlXYN-EoETkunadyN1XfpthlLyhNvVWUrgXCO2cSg/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzMidoZcaGaQeyQzfXmjTIdibLPwFVj-0mzAXcB8-OybhKUL4BHsLQSpa-meFVNYLA5bQ/exec';
 
 // ── State ─────────────────────────────────────────────────────
 let currentUserId    = null;
 let currentUserName  = null;
 let currentUserRole  = null;
 let registeredUserId = null;
+let markedUserId     = null; // set after successful attendance mark (for exit)
 let teacherData      = null;
 let sessionTimer     = null;
 let activeSessionId  = null;
@@ -449,6 +469,60 @@ let liveTab          = 'present';
 let liveSessionId    = null;
 let allStudents      = [];
 let historyData      = [];
+
+// ── GPS + reverse geocode ─────────────────────────────────────
+function getLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { resolve({ lat:'', lng:'', address:'' }); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      err => resolve({ lat:'', lng:'', address:'' }), // silent fail — location optional
+      { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
+    );
+  });
+}
+
+async function getLocationWithAddress() {
+  const loc = await getLocation();
+  if (!loc.lat) return loc;
+  try {
+    // Use OpenStreetMap Nominatim for free reverse geocoding
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json`;
+    const res = await fetch(url, { headers:{ 'Accept-Language':'en' } });
+    const d   = await res.json();
+    loc.address = d.display_name ? d.display_name.split(',').slice(0,3).join(',').trim() : '';
+  } catch(e) {
+    loc.address = '';
+  }
+  return loc;
+}
+
+function showLocBar(state, msg) {
+  const el = document.getElementById('loc-status-bar');
+  if (!el) return;
+  const icons = { getting:'📡', ok:'📍', fail:'⚠️' };
+  el.innerHTML = `<div class="loc-bar ${state}">${icons[state]||''} ${msg}</div>`;
+}
+
+function showAttendanceCard(data, userId) {
+  markedUserId = userId;
+  const el = document.getElementById('att-success-card');
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="att-card">
+      <div class="att-name">✓ Attendance Marked</div>
+      <div class="att-row"><span>Name</span><span class="att-val">${data.name||''}</span></div>
+      <div class="att-row"><span>Date</span><span class="att-val">${data.date||''}</span></div>
+      <div class="att-row"><span>Entry time</span><span class="att-val">${data.time||''}</span></div>
+      <div class="att-row"><span>Location</span><span class="att-val" style="max-width:160px;text-align:right;font-size:10.5px">${data.location||'not captured'}</span></div>
+      <div class="att-row"><span>Method</span><span class="att-val">${data.method||'password'}</span></div>
+    </div>
+    <button class="btn-exit" id="btn-exit" onclick="handleExit()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Mark Exit (leaving classroom)
+    </button>`;
+}
 
 // ── Device fingerprint ────────────────────────────────────────
 async function getDeviceId() {
@@ -535,9 +609,28 @@ async function handleSignIn() {
     const auth = await api({ action:'signIn', email, password });
     if (!auth.success) { toast(auth.message, 'error'); setLoading('btn-signin', false); return; }
 
-    // 2. Mark attendance immediately
-    const att = await api({ action:'markAttendance', userId:auth.userId, method:'password' });
-    toast(att.success ? '✓ ' + att.message : att.message, att.success ? 'success' : 'error');
+    // 2. Get location silently in background
+    showLocBar('getting', 'Getting your location…');
+    const loc = await getLocationWithAddress();
+    if (loc.lat) showLocBar('ok', loc.address || `${loc.lat}, ${loc.lng}`);
+    else showLocBar('fail', 'Location not captured — marked without GPS');
+
+    // 3. Mark attendance with location
+    const att = await api({
+      action:  'markAttendance',
+      userId:  auth.userId,
+      method:  'password',
+      lat:     loc.lat,
+      lng:     loc.lng,
+      address: loc.address
+    });
+
+    if (att.success) {
+      toast('✓ ' + att.message, 'success');
+      showAttendanceCard({ ...att, method:'password' }, auth.userId);
+    } else {
+      toast(att.message, 'error');
+    }
   } catch(e) { toast('Error: ' + e.message, 'error'); }
   setLoading('btn-signin', false);
 }
@@ -612,7 +705,7 @@ async function handleBiometricSignIn() {
   if (!email) { toast('Enter your email first, then tap biometric', 'error'); return; }
 
   try {
-    // 1. Get stored credential ID for this email
+    // 1. Get stored credential
     const info = await api({ action:'getBiometric', email });
     if (!info.success || !info.credentialId) {
       toast(info.message || 'No biometric registered for this account', 'error'); return;
@@ -628,12 +721,80 @@ async function handleBiometricSignIn() {
       timeout:          60000
     }});
 
-    // 3. Mark attendance — biometric verified ✓
-    const att = await api({ action:'markAttendance', userId:info.userId, method:'biometric' });
-    toast(att.success ? '✓ ' + att.message : att.message, att.success ? 'success' : 'error');
+    // 3. Get location silently
+    showLocBar('getting', 'Getting your location…');
+    const loc = await getLocationWithAddress();
+    if (loc.lat) showLocBar('ok', loc.address || `${loc.lat}, ${loc.lng}`);
+    else showLocBar('fail', 'Location not captured — marked without GPS');
+
+    // 4. Mark attendance
+    const att = await api({
+      action:  'markAttendance',
+      userId:  info.userId,
+      method:  'biometric',
+      lat:     loc.lat,
+      lng:     loc.lng,
+      address: loc.address
+    });
+
+    if (att.success) {
+      toast('✓ ' + att.message, 'success');
+      showAttendanceCard({ ...att, method:'biometric' }, info.userId);
+    } else {
+      toast(att.message, 'error');
+    }
   } catch(e) {
     if (e.name === 'NotAllowedError') toast('Biometric cancelled', 'warn');
     else toast('Biometric error: ' + e.message, 'error');
+  }
+}
+
+// ── Mark Exit ─────────────────────────────────────────────────
+async function handleExit() {
+  if (!markedUserId) { toast('Mark attendance first', 'error'); return; }
+  const btn = document.getElementById('btn-exit');
+  if (btn) { btn.disabled = true; btn.textContent = 'Getting location…'; }
+
+  try {
+    showLocBar('getting', 'Getting exit location…');
+    const loc = await getLocationWithAddress();
+    if (loc.lat) showLocBar('ok', 'Exit: ' + (loc.address || `${loc.lat}, ${loc.lng}`));
+    else showLocBar('fail', 'Exit location not captured');
+
+    const res = await api({
+      action:  'markExit',
+      userId:  markedUserId,
+      lat:     loc.lat,
+      lng:     loc.lng,
+      address: loc.address
+    });
+
+    if (res.success) {
+      toast('✓ ' + res.message, 'success');
+      // Update the card to show exit info
+      const card = document.getElementById('att-success-card');
+      if (card) {
+        // Append exit rows to existing card
+        const attCard = card.querySelector('.att-card');
+        if (attCard) {
+          const exitRows = `
+            <div class="att-row"><span>Exit time</span><span class="att-val">${res.exitTime||''}</span></div>
+            <div class="att-row"><span>Duration</span><span class="att-val">${res.duration||''}</span></div>
+            <div class="att-row"><span>Exit location</span><span class="att-val" style="max-width:160px;text-align:right;font-size:10.5px">${res.location||'not captured'}</span></div>`;
+          attCard.innerHTML += exitRows;
+          attCard.querySelector('.att-name').textContent = '✓ Entry & Exit Recorded';
+        }
+        // Replace exit button with done message
+        if (btn) { btn.disabled=true; btn.textContent='Exit recorded ✓'; btn.style.opacity='.5'; }
+      }
+      markedUserId = null; // prevent double exit
+    } else {
+      toast(res.message, 'error');
+      if (btn) { btn.disabled=false; btn.innerHTML='<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> Mark Exit (leaving classroom)'; }
+    }
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+    if (btn) { btn.disabled=false; btn.textContent='Mark Exit (leaving classroom)'; }
   }
 }
 
