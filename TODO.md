@@ -1,1 +1,7 @@
-# BioAttend API URL Update Task\n\n## Steps:\n- [✅] 1. Create TODO.md \n- [✅] 2. Update API URL in index.html\n- [ ] 3. Test the update\n- [ ] 4. Mark complete
+# BioAttend API URL Update Task
+
+## Steps:
+- [✅] 1. Create TODO.md 
+- [✅] 2. Update API URL in index.html
+- [✅] 3. Test the update
+- [✅] 4. Mark complete
