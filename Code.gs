@@ -56,6 +56,7 @@ function route(body) {
     case 'registerDevice':   return registerDevice(body);
     case 'checkDevice':      return checkDevice(body);
     case 'fixRows':          return fixExistingRows();
+    case 'fixSheetHeaders':  return fixSheetHeaders();
     case 'resetUsersSheet':      return resetUsersSheet();
     case 'resetAttendanceSheet': return resetAttendanceSheet();
     case 'debug':            return debugInfo();
@@ -110,7 +111,9 @@ function getSheet(name) {
       'Time':                'EntryTime',
       'Lat':                 'EntryLat',
       'Lng':                 'EntryLng',
-      'DistanceFromCollege': 'EntryAddress'
+      'DistanceFromCollege': 'EntryAddress',
+      'Column 1':            'SessionID',
+      'Column 2':            'Subject'
     };
     existingAtt.forEach(function(h, i) {
       if (renames[h]) {
@@ -284,7 +287,6 @@ function markAttendance(body) {
 }
 
 // ── 3b. Mark Exit (with location) ────────────────────────────
-// ── 3b. Mark Exit (with location) ────────────────────────────
 function markExit(body) {
   try {
     if (!body.userId) return { success:false, message:'userId required' };
@@ -294,6 +296,7 @@ function markExit(body) {
     var dateStr = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
     var timeStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
 
+    // Call getSheet() first to ensure all exit columns exist before reading
     var sheet   = getSheet(SHEET_ATTENDANCE);
     var data    = sheet.getDataRange().getValues();
     var headers = data[0];
@@ -318,25 +321,30 @@ function markExit(body) {
     var durationCol = col('Duration');
 
     if (userIdCol < 1 || dateCol < 1) {
-      return { success:false, message:'Sheet columns not found. Please redeploy.' };
+      return { success:false, message:'Sheet missing UserID/Date columns. Run resetAttendanceSheet from the script editor.' };
+    }
+    if (exitTimeCol < 1) {
+      return { success:false, message:'ExitTime column missing. Run resetAttendanceSheet from the script editor, then re-mark attendance today.' };
     }
 
     // Find today's attendance row for this user
     for (var i = 1; i < data.length; i++) {
       var rowUserId = String(data[i][userIdCol - 1] || '').trim();
 
-      // Date cell may be a Date object or string — handle both
+      // Date cell may be a Date object (Sheets auto-converts) or a plain string
       var rawDate = data[i][dateCol - 1];
-      var rowDate = (rawDate instanceof Date)
-        ? Utilities.formatDate(rawDate, tz, 'yyyy-MM-dd')
-        : String(rawDate || '').trim().slice(0, 10);
+      var rowDate;
+      if (rawDate instanceof Date) {
+        rowDate = Utilities.formatDate(rawDate, tz, 'yyyy-MM-dd');
+      } else {
+        rowDate = String(rawDate || '').trim().substring(0, 10);
+      }
 
       if (rowUserId !== String(body.userId).trim()) continue;
       if (rowDate   !== dateStr) continue;
 
       // Found the row — check if already exited
-      var existingExit = exitTimeCol > 0
-        ? String(data[i][exitTimeCol - 1] || '').trim() : '';
+      var existingExit = String(data[i][exitTimeCol - 1] || '').trim();
       if (existingExit) {
         return { success:false, message:'Exit already recorded at ' + existingExit };
       }
@@ -355,27 +363,34 @@ function markExit(body) {
         }
       }
 
-      // Write exit columns (only if column exists)
-      if (exitTimeCol > 0) sheet.getRange(i+1, exitTimeCol).setValue(timeStr);
-      if (exitLatCol  > 0) sheet.getRange(i+1, exitLatCol).setValue(body.lat     || '');
-      if (exitLngCol  > 0) sheet.getRange(i+1, exitLngCol).setValue(body.lng     || '');
-      if (exitAddrCol > 0) sheet.getRange(i+1, exitAddrCol).setValue(body.address || '');
+      // Write exit columns — ExitTime is guaranteed to exist (validated above)
+      var exitLat  = (body.lat  !== undefined && body.lat  !== '') ? body.lat  : '';
+      var exitLng  = (body.lng  !== undefined && body.lng  !== '') ? body.lng  : '';
+      var exitAddr = body.address || '';
+
+      sheet.getRange(i+1, exitTimeCol).setValue(timeStr);
+      if (exitLatCol  > 0) sheet.getRange(i+1, exitLatCol).setValue(exitLat);
+      if (exitLngCol  > 0) sheet.getRange(i+1, exitLngCol).setValue(exitLng);
+      if (exitAddrCol > 0) sheet.getRange(i+1, exitAddrCol).setValue(exitAddr);
       if (durationCol > 0) sheet.getRange(i+1, durationCol).setValue(duration);
+
+      // Flush writes to the sheet immediately
+      SpreadsheetApp.flush();
 
       return {
         success:  true,
         message:  '✓ Exit recorded at ' + timeStr + (duration ? ' · Duration: ' + duration : ''),
         exitTime: timeStr,
         duration: duration,
-        location: body.address || (body.lat ? body.lat + ',' + body.lng : 'not captured')
+        location: exitAddr || (exitLat ? exitLat + ',' + exitLng : 'not captured')
       };
     }
 
-    // Not found — debug info to help diagnose
+    // Row not found — include debug info to help diagnose
     return {
       success: false,
-      message: 'No attendance found for today. Make sure you marked attendance first.',
-      debug:   'Looking for userId=' + body.userId + ' date=' + dateStr
+      message: 'No attendance entry found for today. Did you mark attendance first?',
+      debug:   'userId=' + body.userId + ', date=' + dateStr + ', headers=' + headers.join('|')
     };
   } catch(err) { return { success:false, message:'markExit: ' + err.toString() }; }
 }
@@ -683,6 +698,95 @@ function fixExistingRows() {
     }
     return { success:true, message:'Fixed '+fixed+' rows' };
   } catch(err) { return { success:false, message:'fixExistingRows: '+err.toString() }; }
+}
+
+// ── 17. Fix Sheet Headers + corrupted data rows ───────────────
+// Run this once if your Attendance sheet has "Column 1"/"Column 2" headers
+// or rows where Date contains "General" and EntryTimestamp is blank.
+function fixSheetHeaders() {
+  try {
+    var ss    = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(SHEET_ATTENDANCE);
+    if (!sheet) return { success:false, message:'Attendance sheet not found' };
+
+    var tz      = Session.getScriptTimeZone();
+    var data    = sheet.getDataRange().getValues();
+    var headers = data[0];
+
+    // ── Step 1: Fix header row ──────────────────────────────
+    var headerFixes = {
+      'Column 1': 'SessionID',
+      'Column 2': 'Subject'
+    };
+    var headerChanged = false;
+    headers.forEach(function(h, i) {
+      if (headerFixes[h]) {
+        sheet.getRange(1, i+1).setValue(headerFixes[h])
+          .setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+        headers[i] = headerFixes[h];
+        headerChanged = true;
+      }
+    });
+
+    // ── Step 2: Find column positions after header fix ──────
+    function colIdx(name) {
+      var idx = headers.indexOf(name);
+      return idx === -1 ? -1 : idx + 1;
+    }
+    var sessionIdCol    = colIdx('SessionID');
+    var subjectCol      = colIdx('Subject');
+    var entryTsCol      = colIdx('EntryTimestamp');
+    var dateCol         = colIdx('Date');
+    var entryTimeCol    = colIdx('EntryTime');
+    var methodCol       = colIdx('Method');
+
+    // ── Step 3: Fix data rows where columns were shifted ────
+    // Symptom: Date cell = "General" (the Subject value got written there)
+    // Cause:   appendRow wrote positionally into wrong columns
+    // Fix:     Read EntryTimestamp ISO string to recover Date+EntryTime
+    var rowsFixed = 0;
+    for (var i = 1; i < data.length; i++) {
+      var dateVal = String(data[i][dateCol - 1] || '').trim();
+
+      // If Date column doesn't look like a date, the row is corrupted
+      if (dateVal && !/^\d{4}-\d{2}-\d{2}$/.test(dateVal) && !(data[i][dateCol-1] instanceof Date)) {
+        // Try to recover from EntryTimestamp
+        var tsVal = data[i][entryTsCol - 1];
+        var entryDt = (tsVal instanceof Date) ? tsVal : new Date(tsVal);
+
+        if (!isNaN(entryDt.getTime())) {
+          var fixedDate = Utilities.formatDate(entryDt, tz, 'yyyy-MM-dd');
+          var fixedTime = Utilities.formatDate(entryDt, tz, 'HH:mm:ss');
+
+          // The current "Date" cell actually has Subject value — move it
+          var wrongSubject = dateVal; // e.g. "General"
+          if (subjectCol > 0 && !String(data[i][subjectCol-1]||'').trim()) {
+            sheet.getRange(i+1, subjectCol).setValue(wrongSubject);
+          }
+          sheet.getRange(i+1, dateCol).setValue(fixedDate);
+          if (entryTimeCol > 0 && !String(data[i][entryTimeCol-1]||'').trim()) {
+            sheet.getRange(i+1, entryTimeCol).setValue(fixedTime);
+          }
+          rowsFixed++;
+        } else {
+          // No EntryTimestamp to recover from — write today's date as fallback
+          var now = new Date();
+          sheet.getRange(i+1, dateCol).setValue(Utilities.formatDate(now, tz, 'yyyy-MM-dd'));
+          rowsFixed++;
+        }
+      }
+    }
+
+    SpreadsheetApp.flush();
+
+    return {
+      success:      true,
+      headerFixed:  headerChanged,
+      rowsFixed:    rowsFixed,
+      message:      'Headers fixed: ' + headerChanged + ', data rows repaired: ' + rowsFixed +
+                    '. New headers: ' + headers.join(' | ')
+    };
+  } catch(err) { return { success:false, message:'fixSheetHeaders: '+err.toString() }; }
 }
 
 // ── 16. Debug ─────────────────────────────────────────────────
