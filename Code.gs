@@ -284,6 +284,7 @@ function markAttendance(body) {
 }
 
 // ── 3b. Mark Exit (with location) ────────────────────────────
+// ── 3b. Mark Exit (with location) ────────────────────────────
 function markExit(body) {
   try {
     if (!body.userId) return { success:false, message:'userId required' };
@@ -297,65 +298,86 @@ function markExit(body) {
     var data    = sheet.getDataRange().getValues();
     var headers = data[0];
 
-    // Find column indexes by header name (immune to order changes)
-    var userIdCol   = headers.indexOf('UserID')      + 1;
-    var dateCol     = headers.indexOf('Date')         + 1;
-    var entryTsCol  = headers.indexOf('EntryTimestamp') + 1;
-    var exitTimeCol = headers.indexOf('ExitTime')    + 1;
-    var exitLatCol  = headers.indexOf('ExitLat')     + 1;
-    var exitLngCol  = headers.indexOf('ExitLng')     + 1;
-    var exitAddrCol = headers.indexOf('ExitAddress') + 1;
-    var durationCol = headers.indexOf('Duration')    + 1;
+    // Helper: find col index (1-based), try multiple possible names
+    function col(names) {
+      if (typeof names === 'string') names = [names];
+      for (var n=0; n<names.length; n++) {
+        var idx = headers.indexOf(names[n]);
+        if (idx !== -1) return idx + 1;
+      }
+      return -1;
+    }
+
+    var userIdCol   = col('UserID');
+    var dateCol     = col('Date');
+    var entryTsCol  = col(['EntryTimestamp','Timestamp']); // support old name
+    var exitTimeCol = col('ExitTime');
+    var exitLatCol  = col('ExitLat');
+    var exitLngCol  = col('ExitLng');
+    var exitAddrCol = col('ExitAddress');
+    var durationCol = col('Duration');
+
+    if (userIdCol < 1 || dateCol < 1) {
+      return { success:false, message:'Sheet columns not found. Please redeploy.' };
+    }
 
     // Find today's attendance row for this user
     for (var i = 1; i < data.length; i++) {
       var rowUserId = String(data[i][userIdCol - 1] || '').trim();
-      var rowDateRaw = data[i][dateCol - 1];
-      var rowDate;
-      if (rowDateRaw instanceof Date) {
-        rowDate = Utilities.formatDate(rowDateRaw, tz, 'yyyy-MM-dd');
-      } else {
-        rowDate = String(rowDateRaw || '').trim();
+
+      // Date cell may be a Date object or string — handle both
+      var rawDate = data[i][dateCol - 1];
+      var rowDate = (rawDate instanceof Date)
+        ? Utilities.formatDate(rawDate, tz, 'yyyy-MM-dd')
+        : String(rawDate || '').trim().slice(0, 10);
+
+      if (rowUserId !== String(body.userId).trim()) continue;
+      if (rowDate   !== dateStr) continue;
+
+      // Found the row — check if already exited
+      var existingExit = exitTimeCol > 0
+        ? String(data[i][exitTimeCol - 1] || '').trim() : '';
+      if (existingExit) {
+        return { success:false, message:'Exit already recorded at ' + existingExit };
       }
 
-      if (rowUserId === String(body.userId).trim() && rowDate === dateStr) {
-        // Check not already exited
-        var existingExit = String(data[i][exitTimeCol - 1] || '').trim();
-        if (existingExit) {
-          return { success:false, message:'Exit already recorded at ' + existingExit };
+      // Calculate duration
+      var duration = '';
+      if (entryTsCol > 0) {
+        var rawTs    = data[i][entryTsCol - 1];
+        var entryDt  = (rawTs instanceof Date) ? rawTs : new Date(rawTs);
+        if (!isNaN(entryDt.getTime())) {
+          var diffMins = Math.round((now.getTime() - entryDt.getTime()) / 60000);
+          if (diffMins < 0) diffMins = 0;
+          var hrs  = Math.floor(diffMins / 60);
+          var mins = diffMins % 60;
+          duration = hrs > 0 ? hrs + 'h ' + mins + 'm' : mins + 'm';
         }
-
-        // Calculate duration from entry
-        var entryTs  = data[i][entryTsCol - 1];
-        var duration = '';
-        if (entryTs) {
-          var entryTime = new Date(entryTs);
-          var diffMs    = now.getTime() - entryTime.getTime();
-          var diffMins  = Math.round(diffMs / 60000);
-          var hrs       = Math.floor(diffMins / 60);
-          var mins      = diffMins % 60;
-          duration      = hrs > 0 ? hrs + 'h ' + mins + 'm' : mins + 'm';
-        }
-
-        // Write exit details into the same row
-        if (exitTimeCol > 0) sheet.getRange(i+1, exitTimeCol).setValue(timeStr);
-        if (exitLatCol  > 0) sheet.getRange(i+1, exitLatCol).setValue(body.lat || '');
-        if (exitLngCol  > 0) sheet.getRange(i+1, exitLngCol).setValue(body.lng || '');
-        if (exitAddrCol > 0) sheet.getRange(i+1, exitAddrCol).setValue(body.address || '');
-        if (durationCol > 0) sheet.getRange(i+1, durationCol).setValue(duration);
-
-        return {
-          success:  true,
-          message:  '✓ Exit recorded at ' + timeStr + (duration ? ' · Duration: ' + duration : ''),
-          exitTime: timeStr,
-          duration: duration,
-          location: body.address || (body.lat ? body.lat+','+body.lng : 'not captured')
-        };
       }
+
+      // Write exit columns (only if column exists)
+      if (exitTimeCol > 0) sheet.getRange(i+1, exitTimeCol).setValue(timeStr);
+      if (exitLatCol  > 0) sheet.getRange(i+1, exitLatCol).setValue(body.lat     || '');
+      if (exitLngCol  > 0) sheet.getRange(i+1, exitLngCol).setValue(body.lng     || '');
+      if (exitAddrCol > 0) sheet.getRange(i+1, exitAddrCol).setValue(body.address || '');
+      if (durationCol > 0) sheet.getRange(i+1, durationCol).setValue(duration);
+
+      return {
+        success:  true,
+        message:  '✓ Exit recorded at ' + timeStr + (duration ? ' · Duration: ' + duration : ''),
+        exitTime: timeStr,
+        duration: duration,
+        location: body.address || (body.lat ? body.lat + ',' + body.lng : 'not captured')
+      };
     }
 
-    return { success:false, message:'No attendance entry found for today. Mark attendance first.' };
-  } catch(err) { return { success:false, message:'markExit: '+err.toString() }; }
+    // Not found — debug info to help diagnose
+    return {
+      success: false,
+      message: 'No attendance found for today. Make sure you marked attendance first.',
+      debug:   'Looking for userId=' + body.userId + ' date=' + dateStr
+    };
+  } catch(err) { return { success:false, message:'markExit: ' + err.toString() }; }
 }
 
 // ── 4. Create Session ─────────────────────────────────────────

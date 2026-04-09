@@ -452,7 +452,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const API = 'https://script.google.com/macros/s/AKfycbxqcAqfoB4R5mCfSH_JolqhSO921ZlXYN-EoETkunadyN1XfpthlLyhNvVWUrgXCO2cSg/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzMidoZcaGaQeyQzfXmjTIdibLPwFVj-0mzAXcB8-OybhKUL4BHsLQSpa-meFVNYLA5bQ/exec';
 
 // ── State ─────────────────────────────────────────────────────
 let currentUserId    = null;
@@ -506,6 +506,9 @@ function showLocBar(state, msg) {
 
 function showAttendanceCard(data, userId) {
   markedUserId = userId;
+  // Persist so Exit button works even if state was lost
+  try { sessionStorage.setItem('bioattend_marked_uid', userId); } catch(e) {}
+
   const el = document.getElementById('att-success-card');
   if (!el) return;
   el.style.display = 'block';
@@ -522,6 +525,18 @@ function showAttendanceCard(data, userId) {
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
       Mark Exit (leaving classroom)
     </button>`;
+
+  // Hide sign-in fields while session is active — keep only the card + exit btn
+  ['si-email','si-password'].forEach(id => {
+    const f = document.getElementById(id);
+    if (f && f.closest('.field')) f.closest('.field').style.display = 'none';
+  });
+  const btnSignin = document.getElementById('btn-signin');
+  if (btnSignin) btnSignin.style.display = 'none';
+  const btnBio = document.getElementById('btn-bio-signin');
+  if (btnBio) btnBio.style.display = 'none';
+  const div = document.querySelector('#pane-signin .divider');
+  if (div) div.style.display = 'none';
 }
 
 // ── Device fingerprint ────────────────────────────────────────
@@ -627,6 +642,15 @@ async function handleSignIn() {
 
     if (att.success) {
       toast('✓ ' + att.message, 'success');
+      // Save to sessionStorage so card restores if page refreshes
+      try {
+        sessionStorage.setItem('bioattend_marked_uid', auth.userId);
+        sessionStorage.setItem('bioattend_name',     att.name     || '');
+        sessionStorage.setItem('bioattend_date',     att.date     || '');
+        sessionStorage.setItem('bioattend_time',     att.time     || '');
+        sessionStorage.setItem('bioattend_location', att.location || '');
+        sessionStorage.setItem('bioattend_method',   'password');
+      } catch(e) {}
       showAttendanceCard({ ...att, method:'password' }, auth.userId);
     } else {
       toast(att.message, 'error');
@@ -739,6 +763,14 @@ async function handleBiometricSignIn() {
 
     if (att.success) {
       toast('✓ ' + att.message, 'success');
+      try {
+        sessionStorage.setItem('bioattend_marked_uid', info.userId);
+        sessionStorage.setItem('bioattend_name',     att.name     || '');
+        sessionStorage.setItem('bioattend_date',     att.date     || '');
+        sessionStorage.setItem('bioattend_time',     att.time     || '');
+        sessionStorage.setItem('bioattend_location', att.location || '');
+        sessionStorage.setItem('bioattend_method',   'biometric');
+      } catch(e) {}
       showAttendanceCard({ ...att, method:'biometric' }, info.userId);
     } else {
       toast(att.message, 'error');
@@ -751,9 +783,14 @@ async function handleBiometricSignIn() {
 
 // ── Mark Exit ─────────────────────────────────────────────────
 async function handleExit() {
-  if (!markedUserId) { toast('Mark attendance first', 'error'); return; }
+  // Recover userId from sessionStorage if in-memory state was lost
+  if (!markedUserId) {
+    try { markedUserId = sessionStorage.getItem('bioattend_marked_uid') || null; } catch(e) {}
+  }
+  if (!markedUserId) { toast('No active attendance session. Sign in first.', 'error'); return; }
+
   const btn = document.getElementById('btn-exit');
-  if (btn) { btn.disabled = true; btn.textContent = 'Getting location…'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Getting exit location…'; }
 
   try {
     showLocBar('getting', 'Getting exit location…');
@@ -771,31 +808,69 @@ async function handleExit() {
 
     if (res.success) {
       toast('✓ ' + res.message, 'success');
-      // Update the card to show exit info
-      const card = document.getElementById('att-success-card');
+
+      // Update card to show exit info
+      const card = document.querySelector('.att-card');
       if (card) {
-        // Append exit rows to existing card
-        const attCard = card.querySelector('.att-card');
-        if (attCard) {
-          const exitRows = `
-            <div class="att-row"><span>Exit time</span><span class="att-val">${res.exitTime||''}</span></div>
-            <div class="att-row"><span>Duration</span><span class="att-val">${res.duration||''}</span></div>
-            <div class="att-row"><span>Exit location</span><span class="att-val" style="max-width:160px;text-align:right;font-size:10.5px">${res.location||'not captured'}</span></div>`;
-          attCard.innerHTML += exitRows;
-          attCard.querySelector('.att-name').textContent = '✓ Entry & Exit Recorded';
-        }
-        // Replace exit button with done message
-        if (btn) { btn.disabled=true; btn.textContent='Exit recorded ✓'; btn.style.opacity='.5'; }
+        card.querySelector('.att-name').textContent = '✓ Entry & Exit Recorded';
+        card.innerHTML += `
+          <div class="att-row"><span>Exit time</span><span class="att-val">${res.exitTime||''}</span></div>
+          <div class="att-row"><span>Duration</span><span class="att-val">${res.duration||''}</span></div>
+          <div class="att-row"><span>Exit location</span><span class="att-val" style="max-width:160px;text-align:right;font-size:10.5px">${res.location||'not captured'}</span></div>`;
       }
-      markedUserId = null; // prevent double exit
+
+      // Mark exit button as done
+      if (btn) { btn.textContent = '✓ Exit recorded'; btn.style.opacity = '.5'; btn.disabled = true; }
+
+      // Clear session
+      markedUserId = null;
+      try { sessionStorage.removeItem('bioattend_marked_uid'); } catch(e) {}
+
+      // Show sign-in form again after 3 seconds for next student
+      setTimeout(() => restoreSignInForm(), 3000);
+
     } else {
       toast(res.message, 'error');
-      if (btn) { btn.disabled=false; btn.innerHTML='<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> Mark Exit (leaving classroom)'; }
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> Mark Exit (leaving classroom)';
+      }
     }
   } catch(e) {
     toast('Error: ' + e.message, 'error');
-    if (btn) { btn.disabled=false; btn.textContent='Mark Exit (leaving classroom)'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Mark Exit (leaving classroom)'; }
   }
+}
+
+function restoreSignInForm() {
+  // Hide success card
+  const card = document.getElementById('att-success-card');
+  if (card) card.style.display = 'none';
+  // Clear location bar
+  const loc = document.getElementById('loc-status-bar');
+  if (loc) loc.innerHTML = '';
+  // Show form fields again
+  ['si-email','si-password'].forEach(id => {
+    const f = document.getElementById(id);
+    if (f && f.closest('.field')) f.closest('.field').style.display = '';
+  });
+  const btnSignin = document.getElementById('btn-signin');
+  if (btnSignin) { btnSignin.style.display = ''; btnSignin.disabled = false; }
+  const btnBio = document.getElementById('btn-bio-signin');
+  if (btnBio) btnBio.style.display = '';
+  const div = document.querySelector('#pane-signin .divider');
+  if (div) div.style.display = '';
+  // Clear session so next student starts fresh
+  try {
+    ['bioattend_marked_uid','bioattend_name','bioattend_date',
+     'bioattend_time','bioattend_location','bioattend_method'
+    ].forEach(k => sessionStorage.removeItem(k));
+  } catch(e) {}
+  // Clear email/password fields for next student
+  const email = document.getElementById('si-email');
+  const pass  = document.getElementById('si-password');
+  if (email) email.value = '';
+  if (pass)  pass.value  = '';
 }
 
 // ── Device badge ──────────────────────────────────────────────
@@ -1082,12 +1157,20 @@ function downloadCSV(rows, filename, csvString) {
 // ── Init ──────────────────────────────────────────────────────
 switchTab('signin');
 
-getDeviceId().then(dId => {
-  try {
-    const stored = localStorage.getItem('bioattend_device_id');
-    if (stored) showDeviceBadge(stored);
-  } catch(e) {}
-});
+// If student already marked attendance in this browser session, show the card
+try {
+  const savedUid = sessionStorage.getItem('bioattend_marked_uid');
+  if (savedUid) {
+    markedUserId = savedUid;
+    showAttendanceCard({
+      name:     sessionStorage.getItem('bioattend_name')     || '',
+      date:     sessionStorage.getItem('bioattend_date')     || new Date().toISOString().slice(0,10),
+      time:     sessionStorage.getItem('bioattend_time')     || '',
+      location: sessionStorage.getItem('bioattend_location') || '',
+      method:   sessionStorage.getItem('bioattend_method')   || ''
+    }, savedUid);
+  }
+} catch(e) {}
 </script>
 </body>
 </html>
