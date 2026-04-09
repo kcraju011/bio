@@ -452,7 +452,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const API = 'https://script.google.com/macros/s/AKfycbwLRIv1-n_jC3V1yZUMkmIMW6qREcP03vC3RYZEMk8NrGn5U7I-pHsSBMbTXyTfunLChw/exec';
+const API = 'https://script.google.com/macros/s/AKfycbyxaC1CjCDxQLzyk19ADffDazjh9q7NTfB1rVg87YuPWmAhKx7RFMP0opHA9r5RmGjygQ/exec';
              
 // ── State ─────────────────────────────────────────────────────
 let currentUserId    = null;
@@ -471,22 +471,71 @@ let allStudents      = [];
 let historyData      = [];
 
 // ── GPS + reverse geocode ─────────────────────────────────────
+
+// Step 1: Get fine location using GPS (falls back to coarse if GPS unavailable)
+// Uses watchPosition to get the BEST reading within a time window, then stops.
 function getLocation() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) { resolve({ lat:'', lng:'', address:'' }); return; }
-    navigator.geolocation.getCurrentPosition(
-      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      err => resolve({ lat:'', lng:'', address:'' }), // silent fail — location optional
-      { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({ lat:'', lng:'', address:'', accuracy:null });
+      return;
+    }
+
+    let bestResult  = null;   // best reading collected so far
+    let watchId     = null;
+    let settled     = false;
+
+    const FINE_ACCURACY_TARGET = 50;   // meters — accept immediately if this good
+    const MAX_WAIT_MS          = 9000; // max time to keep trying
+
+    function finish(result) {
+      if (settled) return;
+      settled = true;
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId); // stop tracking
+      resolve(result || { lat:'', lng:'', address:'', accuracy:null });
+    }
+
+    // watchPosition keeps firing as accuracy improves (GPS lock gets better)
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const reading = {
+          lat:      pos.coords.latitude,
+          lng:      pos.coords.longitude,
+          accuracy: pos.coords.accuracy, // meters — lower is better (fine location)
+          address:  ''
+        };
+
+        // Always keep the most accurate reading we've seen
+        if (!bestResult || reading.accuracy < bestResult.accuracy) {
+          bestResult = reading;
+        }
+
+        // If we've hit fine accuracy target, no need to wait longer
+        if (reading.accuracy <= FINE_ACCURACY_TARGET) {
+          finish(bestResult);
+        }
+      },
+      (err) => {
+        // GPS failed — resolve with best we have (could be coarse/Wi-Fi fix)
+        finish(bestResult);
+      },
+      {
+        enableHighAccuracy: true,  // request fine location (GPS)
+        timeout:            9000,  // each individual fix attempt timeout
+        maximumAge:         0      // never use cached position
+      }
     );
+
+    // Hard deadline — use best result collected so far, even if coarse
+    setTimeout(() => finish(bestResult), MAX_WAIT_MS);
   });
 }
 
+// Step 2: Get location + reverse geocode address
 async function getLocationWithAddress() {
   const loc = await getLocation();
   if (!loc.lat) return loc;
   try {
-    // Use OpenStreetMap Nominatim for free reverse geocoding
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json`;
     const res = await fetch(url, { headers:{ 'Accept-Language':'en' } });
     const d   = await res.json();
@@ -497,11 +546,15 @@ async function getLocationWithAddress() {
   return loc;
 }
 
-function showLocBar(state, msg) {
+function showLocBar(state, msg, accuracy) {
   const el = document.getElementById('loc-status-bar');
   if (!el) return;
   const icons = { getting:'📡', ok:'📍', fail:'⚠️' };
-  el.innerHTML = `<div class="loc-bar ${state}">${icons[state]||''} ${msg}</div>`;
+  // Show accuracy badge when we have a fix
+  const accBadge = (accuracy != null && state === 'ok')
+    ? ` <span style="font-size:10px;opacity:.75;margin-left:4px">(±${Math.round(accuracy)}m ${accuracy <= 50 ? '🎯 fine' : '📶 coarse'})</span>`
+    : '';
+  el.innerHTML = `<div class="loc-bar ${state}">${icons[state]||''} ${msg}${accBadge}</div>`;
 }
 
 function showAttendanceCard(data, userId) {
@@ -627,7 +680,7 @@ async function handleSignIn() {
     // 2. Get location silently in background
     showLocBar('getting', 'Getting your location…');
     const loc = await getLocationWithAddress();
-    if (loc.lat) showLocBar('ok', loc.address || `${loc.lat}, ${loc.lng}`);
+    if (loc.lat) showLocBar('ok', loc.address || `${loc.lat}, ${loc.lng}`, loc.accuracy);
     else showLocBar('fail', 'Location not captured — marked without GPS');
 
     // 3. Mark attendance with location
@@ -748,7 +801,7 @@ async function handleBiometricSignIn() {
     // 3. Get location silently
     showLocBar('getting', 'Getting your location…');
     const loc = await getLocationWithAddress();
-    if (loc.lat) showLocBar('ok', loc.address || `${loc.lat}, ${loc.lng}`);
+    if (loc.lat) showLocBar('ok', loc.address || `${loc.lat}, ${loc.lng}`, loc.accuracy);
     else showLocBar('fail', 'Location not captured — marked without GPS');
 
     // 4. Mark attendance
@@ -795,7 +848,7 @@ async function handleExit() {
   try {
     showLocBar('getting', 'Getting exit location…');
     const loc = await getLocationWithAddress();
-    if (loc.lat) showLocBar('ok', 'Exit: ' + (loc.address || `${loc.lat}, ${loc.lng}`));
+    if (loc.lat) showLocBar('ok', 'Exit: ' + (loc.address || `${loc.lat}, ${loc.lng}`), loc.accuracy);
     else showLocBar('fail', 'Exit location not captured');
 
     const res = await api({
