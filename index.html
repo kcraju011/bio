@@ -452,7 +452,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const API = 'https://script.google.com/macros/s/AKfycbyxaC1CjCDxQLzyk19ADffDazjh9q7NTfB1rVg87YuPWmAhKx7RFMP0opHA9r5RmGjygQ/exec';
+const API = 'https://script.google.com/macros/s/AKfycbwMSBm4HQGCfeNn4GVN1MaJ6XMT48Vizdkd_aEQmiE178ALTTef31TbXiHX9rcXiIlOaA/exec';
              
 // ── State ─────────────────────────────────────────────────────
 let currentUserId    = null;
@@ -572,6 +572,8 @@ function showAttendanceCard(data, userId) {
       <div class="att-row"><span>Date</span><span class="att-val">${data.date||''}</span></div>
       <div class="att-row"><span>Entry time</span><span class="att-val">${data.time||''}</span></div>
       <div class="att-row"><span>Location</span><span class="att-val" style="max-width:160px;text-align:right;font-size:10.5px">${data.location||'not captured'}</span></div>
+      ${data.gps ? `<div class="att-row"><span>GPS</span><span class="att-val" style="max-width:160px;text-align:right;font-size:10px">${data.gps}</span></div>` : ''}
+      ${(data.distanceMeters !== '' && data.distanceMeters !== undefined) ? `<div class="att-row"><span>Distance from lab</span><span class="att-val" style="color:${data.distanceMeters <= 100 ? 'var(--success)' : data.distanceMeters <= 300 ? 'var(--warn)' : 'var(--danger)'}">${data.distanceMeters} m ${data.distanceMeters <= 100 ? '✓ In lab' : data.distanceMeters <= 300 ? '⚠ Nearby' : '✗ Far'}</span></div>` : ''}
       <div class="att-row"><span>Method</span><span class="att-val">${data.method||'password'}</span></div>
     </div>
     <button class="btn-exit" id="btn-exit" onclick="handleExit()">
@@ -703,6 +705,8 @@ async function handleSignIn() {
         sessionStorage.setItem('bioattend_time',     att.time     || '');
         sessionStorage.setItem('bioattend_location', att.location || '');
         sessionStorage.setItem('bioattend_method',   'password');
+        sessionStorage.setItem('bioattend_gps',      att.gps      || '');
+        sessionStorage.setItem('bioattend_distance', att.distanceMeters !== '' && att.distanceMeters !== undefined ? att.distanceMeters : '');
       } catch(e) {}
       showAttendanceCard({ ...att, method:'password' }, auth.userId);
     } else {
@@ -823,6 +827,8 @@ async function handleBiometricSignIn() {
         sessionStorage.setItem('bioattend_time',     att.time     || '');
         sessionStorage.setItem('bioattend_location', att.location || '');
         sessionStorage.setItem('bioattend_method',   'biometric');
+        sessionStorage.setItem('bioattend_gps',      att.gps      || '');
+        sessionStorage.setItem('bioattend_distance', att.distanceMeters !== '' && att.distanceMeters !== undefined ? att.distanceMeters : '');
       } catch(e) {}
       showAttendanceCard({ ...att, method:'biometric' }, info.userId);
     } else {
@@ -1142,7 +1148,7 @@ async function toggleSessionDetail(sessionId, subject) {
         <span style="color:var(--danger)">✗ ${d.absentCount} absent</span>
         <span style="color:var(--muted)">${d.total} total · ${d.total?Math.round(d.presentCount/d.total*100):0}%</span>
       </div>
-      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.time} · ${s.method}</span></div>`).join('')}
+      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.time} · ${s.method}</span>${s.distanceMeters !== '' && s.distanceMeters !== undefined ? ` <span style="color:${s.distanceMeters<=100?'var(--success)':s.distanceMeters<=300?'var(--warn)':'var(--danger)'};font-size:10px"> · ${s.distanceMeters}m</span>` : ''}</div>`).join('')}
       ${!d.present.length?'<div style="font-size:11px;color:var(--muted)">No students marked</div>':''}
       <button onclick="event.stopPropagation();exportOneSession('${sessionId}','${subject}')" class="export-btn" style="float:none;margin-top:10px">Export CSV</button>`;
   } catch(e) { el.innerHTML='<div style="color:var(--danger);font-size:11px">Error</div>'; }
@@ -1215,12 +1221,15 @@ try {
   const savedUid = sessionStorage.getItem('bioattend_marked_uid');
   if (savedUid) {
     markedUserId = savedUid;
+    const savedDist = sessionStorage.getItem('bioattend_distance');
     showAttendanceCard({
-      name:     sessionStorage.getItem('bioattend_name')     || '',
-      date:     sessionStorage.getItem('bioattend_date')     || new Date().toISOString().slice(0,10),
-      time:     sessionStorage.getItem('bioattend_time')     || '',
-      location: sessionStorage.getItem('bioattend_location') || '',
-      method:   sessionStorage.getItem('bioattend_method')   || ''
+      name:           sessionStorage.getItem('bioattend_name')     || '',
+      date:           sessionStorage.getItem('bioattend_date')     || new Date().toISOString().slice(0,10),
+      time:           sessionStorage.getItem('bioattend_time')     || '',
+      location:       sessionStorage.getItem('bioattend_location') || '',
+      method:         sessionStorage.getItem('bioattend_method')   || '',
+      gps:            sessionStorage.getItem('bioattend_gps')      || '',
+      distanceMeters: savedDist !== null && savedDist !== '' ? parseInt(savedDist) : undefined
     }, savedUid);
   }
 } catch(e) {}

@@ -8,6 +8,23 @@ var SHEET_USERS      = 'Users';
 var SHEET_ATTENDANCE = 'Attendance';
 var SHEET_SESSIONS   = 'Sessions';
 
+// ── Lab / Classroom GPS anchor ────────────────────────────────
+var LAB_LAT = 13.32603;
+var LAB_LNG = 77.12621;
+
+// ── Haversine distance (returns metres) ──────────────────────
+function haversineMeters(lat1, lng1, lat2, lng2) {
+  var R  = 6371000; // Earth radius in metres
+  var φ1 = lat1 * Math.PI / 180;
+  var φ2 = lat2 * Math.PI / 180;
+  var Δφ = (lat2 - lat1) * Math.PI / 180;
+  var Δλ = (lng2 - lng1) * Math.PI / 180;
+  var a  = Math.sin(Δφ/2)*Math.sin(Δφ/2) +
+           Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)*Math.sin(Δλ/2);
+  var c  = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return Math.round(R * c);
+}
+
 // ── JSON output (no setHeader — not supported in Apps Script) ─
 function jsonOut(obj) {
   return ContentService
@@ -82,8 +99,8 @@ function getSheet(name) {
         'AttendanceID','UserID','FullName','Email',
         'SessionID','Subject',
         'EntryTimestamp','Date','EntryTime','Method',
-        'EntryLat','EntryLng','EntryAddress',
-        'ExitTime','ExitLat','ExitLng','ExitAddress','Duration'
+        'EntryLat','EntryLng','EntryAddress','EntryGPS','EntryDistanceMeters',
+        'ExitTime','ExitLat','ExitLng','ExitAddress','ExitGPS','ExitDistanceMeters','Duration'
       ],
       Sessions:   ['SessionID','TeacherID','TeacherName','Subject','Date','StartTime','EndTime','Status','WindowMinutes']
     };
@@ -123,7 +140,7 @@ function getSheet(name) {
     });
 
     // Add any still-missing new columns
-    var needed = ['EntryLat','EntryLng','EntryAddress','ExitTime','ExitLat','ExitLng','ExitAddress','Duration'];
+    var needed = ['EntryLat','EntryLng','EntryAddress','EntryGPS','EntryDistanceMeters','ExitTime','ExitLat','ExitLng','ExitAddress','ExitGPS','ExitDistanceMeters','Duration'];
     needed.forEach(function(col) {
       if (existingAtt.indexOf(col) === -1) {
         var c = sheet.getLastColumn() + 1;
@@ -254,6 +271,12 @@ function markAttendance(body) {
     var entryLng  = body.lng     || '';
     var entryAddr = body.address || '';
 
+    // Compute full GPS string and distance from lab
+    var entryGPS  = (entryLat !== '' && entryLng !== '') ? entryLat + ', ' + entryLng : '';
+    var entryDist = (entryLat !== '' && entryLng !== '')
+                    ? haversineMeters(parseFloat(entryLat), parseFloat(entryLng), LAB_LAT, LAB_LNG)
+                    : '';
+
     attSheet.appendRow([
       generateId('a'),          // AttendanceID
       body.userId,              // UserID
@@ -268,10 +291,14 @@ function markAttendance(body) {
       entryLat,                 // EntryLat
       entryLng,                 // EntryLng
       entryAddr,                // EntryAddress
+      entryGPS,                 // EntryGPS
+      entryDist,                // EntryDistanceMeters
       '',                       // ExitTime
       '',                       // ExitLat
       '',                       // ExitLng
       '',                       // ExitAddress
+      '',                       // ExitGPS
+      '',                       // ExitDistanceMeters
       ''                        // Duration
     ]);
 
@@ -281,7 +308,9 @@ function markAttendance(body) {
       name:     user.FullName,
       date:     dateStr,
       time:     timeStr,
-      location: entryAddr || (entryLat ? entryLat+','+entryLng : 'not captured')
+      location: entryAddr || entryGPS || 'not captured',
+      gps:      entryGPS,
+      distanceMeters: entryDist
     };
   } catch(err) { return { success:false, message:'markAttendance: '+err.toString() }; }
 }
@@ -318,6 +347,8 @@ function markExit(body) {
     var exitLatCol  = col('ExitLat');
     var exitLngCol  = col('ExitLng');
     var exitAddrCol = col('ExitAddress');
+    var exitGPSCol  = col('ExitGPS');
+    var exitDistCol = col('ExitDistanceMeters');
     var durationCol = col('Duration');
 
     if (userIdCol < 1 || dateCol < 1) {
@@ -368,10 +399,17 @@ function markExit(body) {
       var exitLng  = (body.lng  !== undefined && body.lng  !== '') ? body.lng  : '';
       var exitAddr = body.address || '';
 
+      var exitGPS  = (exitLat !== '' && exitLng !== '') ? exitLat + ', ' + exitLng : '';
+      var exitDist = (exitLat !== '' && exitLng !== '')
+                     ? haversineMeters(parseFloat(exitLat), parseFloat(exitLng), LAB_LAT, LAB_LNG)
+                     : '';
+
       sheet.getRange(i+1, exitTimeCol).setValue(timeStr);
       if (exitLatCol  > 0) sheet.getRange(i+1, exitLatCol).setValue(exitLat);
       if (exitLngCol  > 0) sheet.getRange(i+1, exitLngCol).setValue(exitLng);
       if (exitAddrCol > 0) sheet.getRange(i+1, exitAddrCol).setValue(exitAddr);
+      if (exitGPSCol  > 0) sheet.getRange(i+1, exitGPSCol).setValue(exitGPS);
+      if (exitDistCol > 0) sheet.getRange(i+1, exitDistCol).setValue(exitDist);
       if (durationCol > 0) sheet.getRange(i+1, durationCol).setValue(duration);
 
       // Flush writes to the sheet immediately
@@ -382,7 +420,9 @@ function markExit(body) {
         message:  '✓ Exit recorded at ' + timeStr + (duration ? ' · Duration: ' + duration : ''),
         exitTime: timeStr,
         duration: duration,
-        location: exitAddr || (exitLat ? exitLat + ',' + exitLng : 'not captured')
+        location: exitAddr || exitGPS || 'not captured',
+        gps:      exitGPS,
+        distanceMeters: exitDist
       };
     }
 
@@ -510,9 +550,10 @@ function getDashboard(body) {
           name:       s.FullName,
           email:      s.Email,
           department: s.Department,
-          time:       presentIds[s.UserID].Time,
+          time:       presentIds[s.UserID].EntryTime || presentIds[s.UserID].Time,
           method:     presentIds[s.UserID].Method,
-          distance:   presentIds[s.UserID].DistanceFromCollege
+          gps:        presentIds[s.UserID].EntryGPS || '',
+          distanceMeters: presentIds[s.UserID].EntryDistanceMeters || ''
         });
       } else {
         absent.push({
@@ -544,7 +585,7 @@ function exportAttendance(body) {
     if (body.subject)   rows = rows.filter(function(r){ return r.Subject === body.subject; });
 
     // Build CSV string
-    var headers = ['Name','Email','Department','Date','Time','Subject','Method','Distance(m)'];
+    var headers = ['Name','Email','Department','Date','EntryTime','Subject','Method','EntryGPS','EntryDistanceMeters(m)'];
     var lines   = [headers.join(',')];
 
     // Get department from users sheet
@@ -557,10 +598,11 @@ function exportAttendance(body) {
         '"'+(r.Email||'')+'"',
         '"'+(userMap[r.UserID]||'')+'"',
         r.Date || '',
-        r.Time || '',
+        r.EntryTime || r.Time || '',
         '"'+(r.Subject||'')+'"',
         r.Method || '',
-        r.DistanceFromCollege || ''
+        '"'+(r.EntryGPS||'')+'"',
+        r.EntryDistanceMeters || ''
       ].join(','));
     });
 
@@ -662,8 +704,8 @@ function resetAttendanceSheet() {
       'AttendanceID','UserID','FullName','Email',
       'SessionID','Subject',
       'EntryTimestamp','Date','EntryTime','Method',
-      'EntryLat','EntryLng','EntryAddress',
-      'ExitTime','ExitLat','ExitLng','ExitAddress','Duration'
+      'EntryLat','EntryLng','EntryAddress','EntryGPS','EntryDistanceMeters',
+      'ExitTime','ExitLat','ExitLng','ExitAddress','ExitGPS','ExitDistanceMeters','Duration'
     ];
     sheet.appendRow(h);
     sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
