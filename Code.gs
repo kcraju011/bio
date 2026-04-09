@@ -233,7 +233,25 @@ function signInUser(body) {
   } catch(err) { return { success:false, message:'signIn: '+err.toString() }; }
 }
 
-// ── 3. Mark Attendance (entry with location) ──────────────────
+// ── Normalize a date cell to yyyy-MM-dd string ────────────────
+// Handles: Date objects, ISO strings, plain date strings, spreadsheet serials
+function normalizeDate(raw, tz) {
+  if (!raw && raw !== 0) return '';
+  if (raw instanceof Date) {
+    return Utilities.formatDate(raw, tz, 'yyyy-MM-dd');
+  }
+  var s = String(raw).trim();
+  // Already yyyy-MM-dd
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // ISO with time
+  if (s.length > 10 && s.indexOf('T') > 0) return s.substring(0, 10);
+  // Try parsing as date
+  var d = new Date(s);
+  if (!isNaN(d.getTime())) return Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+  return s.substring(0, 10);
+}
+
+// ── 3. Mark Attendance (entry with location + 200m geofence) ──
 function markAttendance(body) {
   try {
     if (!body.userId) return { success:false, message:'userId required' };
@@ -249,67 +267,74 @@ function markAttendance(body) {
     }
     if (!user) return { success:false, message:'User not found' };
 
-    // B. Prevent duplicate on same calendar date
+    // B. 200m geofence — only enforce when GPS is provided
+    var entryLat = body.lat ? parseFloat(body.lat) : null;
+    var entryLng = body.lng ? parseFloat(body.lng) : null;
+    if (entryLat !== null && entryLng !== null && !isNaN(entryLat) && !isNaN(entryLng)) {
+      var distFromLab = haversineMeters(entryLat, entryLng, LAB_LAT, LAB_LNG);
+      if (distFromLab > 200) {
+        return {
+          success:  false,
+          code:     'TOO_FAR',
+          distance: distFromLab,
+          message:  'You are ' + distFromLab + 'm from the lab. You must be within 200m to mark attendance.'
+        };
+      }
+    }
+
+    // C. Prevent duplicate on same calendar date
     var attSheet = getSheet(SHEET_ATTENDANCE);
     var existing = getRows(attSheet);
     var dateStr  = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
     for (var j=0; j<existing.length; j++) {
       var rowUserId = String(existing[j].UserID || '').trim();
-      var rowDate   = String(existing[j].Date   || '').trim();
-      // Also handle if Date is stored as a Date object (spreadsheet auto-converts)
-      if (existing[j].Date instanceof Date) {
-        rowDate = Utilities.formatDate(existing[j].Date, tz, 'yyyy-MM-dd');
-      }
+      var rowDate   = normalizeDate(existing[j].Date, tz);
       if (rowUserId === String(body.userId).trim() && rowDate === dateStr) {
         return { success:false, message:'Attendance already marked for today at ' + String(existing[j].EntryTime || '') };
       }
     }
 
-    // C. Record entry with location
-    var timeStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
-    var entryLat  = body.lat     || '';
-    var entryLng  = body.lng     || '';
+    // D. Record entry
+    var timeStr   = Utilities.formatDate(now, tz, 'HH:mm:ss');
+    var latStr    = entryLat  !== null ? String(entryLat)  : '';
+    var lngStr    = entryLng  !== null ? String(entryLng)  : '';
     var entryAddr = body.address || '';
-
-    // Compute full GPS string and distance from lab
-    var entryGPS  = (entryLat !== '' && entryLng !== '') ? entryLat + ', ' + entryLng : '';
-    var entryDist = (entryLat !== '' && entryLng !== '')
-                    ? haversineMeters(parseFloat(entryLat), parseFloat(entryLng), LAB_LAT, LAB_LNG)
-                    : '';
+    var entryGPS  = (latStr && lngStr) ? latStr + ', ' + lngStr : '';
+    var entryDist = (latStr && lngStr) ? haversineMeters(entryLat, entryLng, LAB_LAT, LAB_LNG) : '';
 
     attSheet.appendRow([
-      generateId('a'),          // AttendanceID
-      body.userId,              // UserID
-      user.FullName,            // FullName
-      user.Email,               // Email
-      '',                       // SessionID
-      body.subject || 'General',// Subject
-      now.toISOString(),        // EntryTimestamp
-      dateStr,                  // Date
-      timeStr,                  // EntryTime
-      body.method || 'password',// Method
-      entryLat,                 // EntryLat
-      entryLng,                 // EntryLng
-      entryAddr,                // EntryAddress
-      entryGPS,                 // EntryGPS
-      entryDist,                // EntryDistanceMeters
-      '',                       // ExitTime
-      '',                       // ExitLat
-      '',                       // ExitLng
-      '',                       // ExitAddress
-      '',                       // ExitGPS
-      '',                       // ExitDistanceMeters
-      ''                        // Duration
+      generateId('a'),           // AttendanceID
+      body.userId,               // UserID
+      user.FullName,             // FullName
+      user.Email,                // Email
+      '',                        // SessionID
+      body.subject || 'General', // Subject
+      now.toISOString(),         // EntryTimestamp
+      dateStr,                   // Date  ← plain string, never a Date object
+      timeStr,                   // EntryTime
+      body.method || 'password', // Method
+      latStr,                    // EntryLat
+      lngStr,                    // EntryLng
+      entryAddr,                 // EntryAddress
+      entryGPS,                  // EntryGPS
+      entryDist,                 // EntryDistanceMeters
+      '',                        // ExitTime
+      '',                        // ExitLat
+      '',                        // ExitLng
+      '',                        // ExitAddress
+      '',                        // ExitGPS
+      '',                        // ExitDistanceMeters
+      ''                         // Duration
     ]);
 
     return {
-      success:  true,
-      message:  '✓ Attendance marked at ' + timeStr,
-      name:     user.FullName,
-      date:     dateStr,
-      time:     timeStr,
-      location: entryAddr || entryGPS || 'not captured',
-      gps:      entryGPS,
+      success:        true,
+      message:        '✓ Attendance marked at ' + timeStr,
+      name:           user.FullName,
+      date:           dateStr,
+      time:           timeStr,
+      location:       entryAddr || entryGPS || 'not captured',
+      gps:            entryGPS,
       distanceMeters: entryDist
     };
   } catch(err) { return { success:false, message:'markAttendance: '+err.toString() }; }
@@ -361,15 +386,7 @@ function markExit(body) {
     // Find today's attendance row for this user
     for (var i = 1; i < data.length; i++) {
       var rowUserId = String(data[i][userIdCol - 1] || '').trim();
-
-      // Date cell may be a Date object (Sheets auto-converts) or a plain string
-      var rawDate = data[i][dateCol - 1];
-      var rowDate;
-      if (rawDate instanceof Date) {
-        rowDate = Utilities.formatDate(rawDate, tz, 'yyyy-MM-dd');
-      } else {
-        rowDate = String(rawDate || '').trim().substring(0, 10);
-      }
+      var rowDate   = normalizeDate(data[i][dateCol - 1], tz);
 
       if (rowUserId !== String(body.userId).trim()) continue;
       if (rowDate   !== dateStr) continue;
@@ -426,11 +443,20 @@ function markExit(body) {
       };
     }
 
-    // Row not found — include debug info to help diagnose
+    // Row not found — collect debug info showing what dates ARE in the sheet for this user
+    var userDates = [];
+    for (var d2 = 1; d2 < data.length; d2++) {
+      if (String(data[d2][userIdCol-1]||'').trim() === String(body.userId).trim()) {
+        userDates.push(normalizeDate(data[d2][dateCol-1], tz));
+      }
+    }
     return {
       success: false,
-      message: 'No attendance entry found for today. Did you mark attendance first?',
-      debug:   'userId=' + body.userId + ', date=' + dateStr + ', headers=' + headers.join('|')
+      message: 'No attendance entry found for today (' + dateStr + '). ' +
+               (userDates.length > 0
+                 ? 'Your attendance dates in sheet: ' + userDates.join(', ')
+                 : 'No attendance rows found for your account at all.'),
+      debug: 'userId=' + body.userId + ', todayStr=' + dateStr + ', tz=' + tz
     };
   } catch(err) { return { success:false, message:'markExit: ' + err.toString() }; }
 }
