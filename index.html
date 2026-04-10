@@ -462,61 +462,63 @@ let historyData      = [];
 
 // ── GPS + reverse geocode ─────────────────────────────────────
 
-// Step 1: Get fine location using GPS (falls back to coarse if GPS unavailable)
-// Uses watchPosition to get the BEST reading within a time window, then stops.
+// Step 1: Get fine location using watchPosition
+// Collects the best reading within 10s, accepts immediately at ≤50m accuracy
 function getLocation() {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
-      resolve({ lat:'', lng:'', address:'', accuracy:null });
+      resolve({ lat:'', lng:'', accuracy:null, denied:false });
       return;
     }
 
-    let bestResult  = null;   // best reading collected so far
-    let watchId     = null;
-    let settled     = false;
+    let bestResult = null;
+    let watchId    = null;
+    let settled    = false;
 
-    const FINE_ACCURACY_TARGET = 50;   // meters — accept immediately if this good
-    const MAX_WAIT_MS          = 9000; // max time to keep trying
+    const FINE_ACCURACY_TARGET = 50;   // metres — accept immediately if this good
+    const MAX_WAIT_MS          = 10000; // 10s max wait
 
     function finish(result) {
       if (settled) return;
       settled = true;
-      if (watchId !== null) navigator.geolocation.clearWatch(watchId); // stop tracking
-      resolve(result || { lat:'', lng:'', address:'', accuracy:null });
+      if (watchId !== null) {
+        try { navigator.geolocation.clearWatch(watchId); } catch(e) {}
+      }
+      resolve(result || { lat:'', lng:'', accuracy:null, denied:false });
     }
 
-    // watchPosition keeps firing as accuracy improves (GPS lock gets better)
     watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const reading = {
           lat:      pos.coords.latitude,
           lng:      pos.coords.longitude,
-          accuracy: pos.coords.accuracy, // meters — lower is better (fine location)
-          address:  ''
+          accuracy: pos.coords.accuracy,
+          address:  '',
+          denied:   false
         };
-
-        // Always keep the most accurate reading we've seen
         if (!bestResult || reading.accuracy < bestResult.accuracy) {
           bestResult = reading;
         }
-
-        // If we've hit fine accuracy target, no need to wait longer
         if (reading.accuracy <= FINE_ACCURACY_TARGET) {
           finish(bestResult);
         }
       },
       (err) => {
-        // GPS failed — resolve with best we have (could be coarse/Wi-Fi fix)
-        finish(bestResult);
+        if (err.code === 1) {
+          // PERMISSION_DENIED — user blocked location
+          finish({ lat:'', lng:'', accuracy:null, denied:true, error:'Permission denied' });
+        } else {
+          // POSITION_UNAVAILABLE or TIMEOUT — use best we have
+          finish(bestResult || { lat:'', lng:'', accuracy:null, denied:false, error:err.message });
+        }
       },
       {
-        enableHighAccuracy: true,  // request fine location (GPS)
-        timeout:            9000,  // each individual fix attempt timeout
-        maximumAge:         0      // never use cached position
+        enableHighAccuracy: true,
+        timeout:            10000,
+        maximumAge:         0
       }
     );
 
-    // Hard deadline — use best result collected so far, even if coarse
     setTimeout(() => finish(bestResult), MAX_WAIT_MS);
   });
 }
@@ -524,12 +526,23 @@ function getLocation() {
 // Step 2: Get location + reverse geocode address
 async function getLocationWithAddress() {
   const loc = await getLocation();
+
+  // Show clear message if permission was denied
+  if (loc.denied) {
+    showLocBar('fail',
+      'Location blocked — please allow location in browser settings and try again');
+    return loc;
+  }
+
   if (!loc.lat) return loc;
+
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json`;
     const res = await fetch(url, { headers:{ 'Accept-Language':'en' } });
     const d   = await res.json();
-    loc.address = d.display_name ? d.display_name.split(',').slice(0,3).join(',').trim() : '';
+    loc.address = d.display_name
+      ? d.display_name.split(',').slice(0,3).join(',').trim()
+      : '';
   } catch(e) {
     loc.address = '';
   }
@@ -722,6 +735,18 @@ async function handleBiometricSignIn() {
   if (!email) { toast('Enter your email first, then tap biometric', 'error'); return; }
 
   try {
+    // 0. Pre-check location permission state
+    if (navigator.permissions) {
+      try {
+        const perm = await navigator.permissions.query({ name: 'geolocation' });
+        if (perm.state === 'denied') {
+          showLocBar('fail', 'Location is blocked — go to browser Settings → Site permissions → Allow location, then try again');
+          toast('📍 Location is blocked in browser settings. Please allow it and try again.', 'error');
+          return;
+        }
+      } catch(e) { /* permissions API not available — continue */ }
+    }
+
     // 1. Get stored credential
     const info = await api({ action:'getBiometric', email });
     if (!info.success || !info.credentialId) {
@@ -738,11 +763,18 @@ async function handleBiometricSignIn() {
       timeout:          60000
     }});
 
-    // 3. Get location silently
+    // 3. Get fine GPS location
     showLocBar('getting', 'Getting your location…');
     const loc = await getLocationWithAddress();
+
+    // Block if location permission explicitly denied
+    if (loc.denied) {
+      toast('📍 Location permission is blocked. Allow location in browser settings and try again.', 'error');
+      return;
+    }
+
     if (loc.lat) showLocBar('ok', loc.address || `${loc.lat}, ${loc.lng}`, loc.accuracy);
-    else showLocBar('fail', 'Location not captured — marked without GPS');
+    else showLocBar('fail', 'Location not captured — attendance marked without GPS');
 
     // 4. Mark attendance
     const att = await api({
@@ -755,10 +787,12 @@ async function handleBiometricSignIn() {
     });
 
     if (att.success) {
+      // Use name from getBiometric if server didn't return one
+      if (!att.name || att.name === att.email) att.name = info.name || att.name;
       toast('✓ ' + att.message, 'success');
       try {
         sessionStorage.setItem('bioattend_marked_uid', info.userId);
-        sessionStorage.setItem('bioattend_name',     att.name     || '');
+        sessionStorage.setItem('bioattend_name',     att.name     || info.name || '');
         sessionStorage.setItem('bioattend_date',     att.date     || '');
         sessionStorage.setItem('bioattend_time',     att.time     || '');
         sessionStorage.setItem('bioattend_location', att.location || '');
@@ -766,7 +800,7 @@ async function handleBiometricSignIn() {
         sessionStorage.setItem('bioattend_gps',      att.gps      || '');
         sessionStorage.setItem('bioattend_distance', att.distanceMeters != null ? att.distanceMeters : '');
       } catch(e) {}
-      showAttendanceCard({ ...att, method:'biometric' }, info.userId);
+      showAttendanceCard({ ...att, name: att.name || info.name, method:'biometric' }, info.userId);
 
     } else if (att.code === 'TOO_FAR') {
       showLocBar('fail', `You are ${att.distance}m from the lab. Must be within 200m.`);
