@@ -214,7 +214,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="form-body">
 
     <!-- ══════════════════════════════════════════
-         SIGN IN PANE
+         SIGN IN PANE — Biometric only
     ══════════════════════════════════════════ -->
     <div class="pane" id="pane-signin">
 
@@ -224,30 +224,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <!-- Attendance success card (shown after marking) -->
       <div id="att-success-card" style="display:none"></div>
 
+      <div class="info-box blue" style="margin-bottom:14px">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+        <span>Enter your email then use your fingerprint or Face ID to mark attendance.</span>
+      </div>
+
       <div class="field">
-        <label>Email</label>
+        <label>Email <span class="req">*</span></label>
         <input type="email" id="si-email" placeholder="usn@sit.ac.in"/>
       </div>
-      <div class="field">
-        <label>Password</label>
-        <div class="pw-wrap">
-          <input type="password" id="si-password" placeholder="••••••••"/>
-          <button class="pw-eye" onclick="togglePw('si-password')" type="button">
-            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-      </div>
 
-      <button class="btn btn-primary" id="btn-signin" onclick="handleSignIn()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
-        Sign In &amp; Mark Attendance
-      </button>
-
-      <div class="divider">or use biometric</div>
-
-      <button class="btn btn-secondary" id="btn-bio-signin" onclick="handleBiometricSignIn()">
-        <svg width="17" height="17" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
-        Sign in with Fingerprint / Face ID
+      <button class="btn btn-primary" id="btn-bio-signin" onclick="handleBiometricSignIn()">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+        Mark Attendance with Fingerprint / Face ID
       </button>
     </div>
 
@@ -453,7 +442,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <script>
   //url done
 // ── CONFIG ────────────────────────────────────────────────────
-const API = 'https://script.google.com/macros/s/AKfycbw5L7iq1rKshQRvDms1Bumv_mEN28b-VvQUnAMjxqj1W3XYC75daoWDMFguGk1VWXg01w/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzs9ji-oB1hOXQWPyDlfaiVw7Ov-bDPtDLppy7riuEYdFOAtLzqa6NboHJDkRSqSiEjkw/exec';
              
 // ── State ─────────────────────────────────────────────────────
 let currentUserId    = null;
@@ -582,17 +571,13 @@ function showAttendanceCard(data, userId) {
       Mark Exit (leaving classroom)
     </button>`;
 
-  // Hide sign-in fields while session is active — keep only the card + exit btn
-  ['si-email','si-password'].forEach(id => {
-    const f = document.getElementById(id);
-    if (f && f.closest('.field')) f.closest('.field').style.display = 'none';
-  });
-  const btnSignin = document.getElementById('btn-signin');
-  if (btnSignin) btnSignin.style.display = 'none';
+  // Hide sign-in fields while card is shown
+  const emailField = document.getElementById('si-email');
+  if (emailField && emailField.closest('.field')) emailField.closest('.field').style.display = 'none';
+  const infoBox = document.querySelector('#pane-signin .info-box');
+  if (infoBox) infoBox.style.display = 'none';
   const btnBio = document.getElementById('btn-bio-signin');
   if (btnBio) btnBio.style.display = 'none';
-  const div = document.querySelector('#pane-signin .divider');
-  if (div) div.style.display = 'none';
 }
 
 // ── Device fingerprint ────────────────────────────────────────
@@ -667,61 +652,6 @@ function fmtTime(secs) {
 }
 
 // ══════════════════════════════════════════
-// SIGN IN — simple: email+password → mark attendance
-// ══════════════════════════════════════════
-async function handleSignIn() {
-  const email    = document.getElementById('si-email').value.trim();
-  const password = document.getElementById('si-password').value;
-  if (!email || !password) { toast('Please enter email and password', 'error'); return; }
-
-  setLoading('btn-signin', true);
-  try {
-    // 1. Sign in
-    const auth = await api({ action:'signIn', email, password });
-    if (!auth.success) { toast(auth.message, 'error'); setLoading('btn-signin', false); return; }
-
-    // 2. Get fine GPS location
-    showLocBar('getting', 'Getting your location…');
-    const loc = await getLocationWithAddress();
-    if (loc.lat) showLocBar('ok', loc.address || `${loc.lat}, ${loc.lng}`, loc.accuracy);
-    else         showLocBar('fail', 'Location not captured — attendance will be marked without GPS');
-
-    // 3. Mark attendance with location
-    const att = await api({
-      action:  'markAttendance',
-      userId:  auth.userId,
-      method:  'password',
-      lat:     loc.lat,
-      lng:     loc.lng,
-      address: loc.address
-    });
-
-    if (att.success) {
-      toast('✓ ' + att.message, 'success');
-      try {
-        sessionStorage.setItem('bioattend_marked_uid', auth.userId);
-        sessionStorage.setItem('bioattend_name',     att.name           || '');
-        sessionStorage.setItem('bioattend_date',     att.date           || '');
-        sessionStorage.setItem('bioattend_time',     att.time           || '');
-        sessionStorage.setItem('bioattend_location', att.location       || '');
-        sessionStorage.setItem('bioattend_method',   'password');
-        sessionStorage.setItem('bioattend_gps',      att.gps            || '');
-        sessionStorage.setItem('bioattend_distance', att.distanceMeters != null ? att.distanceMeters : '');
-      } catch(e) {}
-      showAttendanceCard({ ...att, method:'password' }, auth.userId);
-
-    } else if (att.code === 'TOO_FAR') {
-      // 200m geofence blocked — show clear message
-      showLocBar('fail', `You are ${att.distance}m from the lab. Must be within 200m.`);
-      toast(`📍 Too far from lab (${att.distance}m). Move closer and try again.`, 'error');
-
-    } else {
-      toast(att.message, 'error');
-    }
-  } catch(e) { toast('Error: ' + e.message, 'error'); }
-  setLoading('btn-signin', false);
-}
-
 // ══════════════════════════════════════════
 // REGISTER
 // ══════════════════════════════════════════
@@ -919,28 +849,24 @@ function restoreSignInForm() {
   // Clear location bar
   const loc = document.getElementById('loc-status-bar');
   if (loc) loc.innerHTML = '';
-  // Show form fields again
-  ['si-email','si-password'].forEach(id => {
-    const f = document.getElementById(id);
-    if (f && f.closest('.field')) f.closest('.field').style.display = '';
-  });
-  const btnSignin = document.getElementById('btn-signin');
-  if (btnSignin) { btnSignin.style.display = ''; btnSignin.disabled = false; }
+  // Show email field again
+  const emailField = document.getElementById('si-email');
+  if (emailField && emailField.closest('.field')) emailField.closest('.field').style.display = '';
+  // Show info box again
+  const infoBox = document.querySelector('#pane-signin .info-box');
+  if (infoBox) infoBox.style.display = '';
+  // Show biometric button again
   const btnBio = document.getElementById('btn-bio-signin');
-  if (btnBio) btnBio.style.display = '';
-  const div = document.querySelector('#pane-signin .divider');
-  if (div) div.style.display = '';
-  // Clear session so next student starts fresh
+  if (btnBio) { btnBio.style.display = ''; btnBio.disabled = false; }
+  // Clear email for next student
+  if (emailField) emailField.value = '';
+  // Clear session
   try {
     ['bioattend_marked_uid','bioattend_name','bioattend_date',
-     'bioattend_time','bioattend_location','bioattend_method'
+     'bioattend_time','bioattend_location','bioattend_method',
+     'bioattend_gps','bioattend_distance'
     ].forEach(k => sessionStorage.removeItem(k));
   } catch(e) {}
-  // Clear email/password fields for next student
-  const email = document.getElementById('si-email');
-  const pass  = document.getElementById('si-password');
-  if (email) email.value = '';
-  if (pass)  pass.value  = '';
 }
 
 // ── Device badge ──────────────────────────────────────────────
