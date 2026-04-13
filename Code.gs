@@ -1,873 +1,911 @@
 // ============================================================
-//  BioAttend – Google Apps Script Backend
+//  BioAttend v5 – Google Apps Script Backend
 //  College : Siddaganga Institute of Technology, Tumkur
+//  Schema  : Normalized, production-grade, optimized for Sheets
 //  Deploy  : Web App → Execute as Me → Access: Anyone
 // ============================================================
+//
+//  SHEET STRUCTURE (normalized schema):
+//  ┌──────────────────────────────────────────────────────┐
+//  │  Roles         | role_id, name                       │
+//  │  Departments   | dept_id, name, incharge, email      │
+//  │  Locations     | loc_id, name, lat, lng              │
+//  │  Users         | user_id, inst_id, dept_id, role_id, │
+//  │                │ full_name, dob, mobile, email,       │
+//  │                │ password_hash, biometric_code,       │
+//  │                │ device_id                           │
+//  │  UserLocMap    | map_id, user_id, loc_id, allowed_m  │
+//  │  Sessions      | sess_id, teacher_id, subject, date, │
+//  │                │ start_time, end_time, status, win_m │
+//  │  Attendance    | att_id, user_id, sess_id,           │
+//  │                │ att_type, att_date, att_time,       │
+//  │                │ login_method, loc_id, lat, lng,     │
+//  │                │ address, dist_from_centre           │
+//  │  _Cache        | key, value, expires_at              │
+//  └──────────────────────────────────────────────────────┘
+//
+//  KEY OPTIMIZATIONS:
+//  • full_name removed from Attendance (JOIN via user_id)
+//  • Duplicate att_time column eliminated
+//  • Entry+Exit merged via att_type ('entry'|'exit')
+//  • _Cache sheet used for short-lived server-side caching
+//  • Single getDataRange() per operation (no repeated reads)
+//  • In-memory maps replace O(n) loops where possible
+//  • All date cells stored as yyyy-MM-dd strings (no Date objects)
+// ============================================================
 
-var SHEET_USERS      = 'Users';
-var SHEET_ATTENDANCE = 'Attendance';
-var SHEET_SESSIONS   = 'Sessions';
+// ── Sheet names ───────────────────────────────────────────────
+var S_ROLES     = 'Roles';
+var S_DEPTS     = 'Departments';
+var S_LOCS      = 'Locations';
+var S_USERS     = 'Users';
+var S_USERLOCMAP= 'UserLocMap';
+var S_SESSIONS  = 'Sessions';
+var S_ATTENDANCE= 'Attendance';
+var S_CACHE     = '_Cache';
 
-// ── Lab / Classroom GPS anchor ────────────────────────────────
-var LAB_LAT = 13.32603;
-var LAB_LNG = 77.12621;
+// ── Default college GPS anchor (fallback) ────────────────────
+var DEFAULT_LAT = 13.32603;
+var DEFAULT_LNG = 77.12621;
+var DEFAULT_LOC_ID = 'loc_default';
 
-// ── Haversine distance (returns metres) ──────────────────────
+// ── Header definitions ────────────────────────────────────────
+var HEADERS = {};
+HEADERS[S_ROLES]      = ['role_id','name'];
+HEADERS[S_DEPTS]      = ['dept_id','name','incharge','email'];
+HEADERS[S_LOCS]       = ['loc_id','name','lat','lng'];
+HEADERS[S_USERS]      = ['user_id','inst_id','dept_id','role_id','full_name','dob','mobile','email','password_hash','biometric_code','device_id'];
+HEADERS[S_USERLOCMAP] = ['map_id','user_id','loc_id','allowed_distance_m'];
+HEADERS[S_SESSIONS]   = ['sess_id','teacher_id','subject','date','start_time','end_time','status','window_minutes'];
+HEADERS[S_ATTENDANCE] = ['att_id','user_id','sess_id','att_type','att_date','att_time','login_method','loc_id','lat','lng','address','dist_from_centre'];
+HEADERS[S_CACHE]      = ['cache_key','value','expires_at'];
+
+// ── Haversine distance (metres) ───────────────────────────────
 function haversineMeters(lat1, lng1, lat2, lng2) {
-  var R  = 6371000; // Earth radius in metres
-  var φ1 = lat1 * Math.PI / 180;
-  var φ2 = lat2 * Math.PI / 180;
-  var Δφ = (lat2 - lat1) * Math.PI / 180;
-  var Δλ = (lng2 - lng1) * Math.PI / 180;
-  var a  = Math.sin(Δφ/2)*Math.sin(Δφ/2) +
-           Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)*Math.sin(Δλ/2);
-  var c  = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return Math.round(R * c);
+  var R  = 6371000;
+  var p1 = lat1 * Math.PI / 180, p2 = lat2 * Math.PI / 180;
+  var dp = (lat2 - lat1) * Math.PI / 180;
+  var dl = (lng2 - lng1) * Math.PI / 180;
+  var a  = Math.sin(dp/2)*Math.sin(dp/2) + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+  return Math.round(6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
-// ── JSON output (no setHeader — not supported in Apps Script) ─
+// ── JSON output ───────────────────────────────────────────────
 function jsonOut(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
+  return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
 // ── Entry points ──────────────────────────────────────────────
 function doGet(e) {
   try {
-    var param = (e && e.parameter) ? e.parameter : {};
-    if (!param.data) return jsonOut({ status: 'BioAttend API v4 running', time: new Date().toString() });
-    var body = JSON.parse(decodeURIComponent(param.data));
-    return jsonOut(route(body));
-  } catch (err) {
-    return jsonOut({ success: false, message: 'doGet error: ' + err.toString() });
-  }
+    var p = (e && e.parameter) ? e.parameter : {};
+    if (!p.data) return jsonOut({ status:'BioAttend API v5', time: new Date().toISOString() });
+    return jsonOut(route(JSON.parse(decodeURIComponent(p.data))));
+  } catch(err) { return jsonOut({ success:false, message:'doGet: '+err }); }
 }
-
 function doPost(e) {
-  try {
-    var body = JSON.parse(e.postData.contents);
-    return jsonOut(route(body));
-  } catch (err) {
-    return jsonOut({ success: false, message: 'doPost error: ' + err.toString() });
-  }
+  try { return jsonOut(route(JSON.parse(e.postData.contents))); }
+  catch(err) { return jsonOut({ success:false, message:'doPost: '+err }); }
 }
 
 // ── Router ────────────────────────────────────────────────────
 function route(body) {
   switch (body.action) {
-    case 'register':         return registerUser(body);
-    case 'signIn':           return signInUser(body);
-    case 'markAttendance':   return markAttendance(body);
-    case 'markExit':         return markExit(body);
-    case 'saveBiometric':    return saveBiometric(body);
-    case 'getBiometric':     return getBiometric(body);
-    case 'createSession':    return createSession(body);
-    case 'closeSession':     return closeSession(body);
-    case 'getActiveSession': return getActiveSession(body);
-    case 'getSessions':      return getSessions(body);
-    case 'getAttendance':    return getAttendance(body);
-    case 'getStudents':      return getStudents(body);
-    case 'getDashboard':     return getDashboard(body);
-    case 'exportAttendance': return exportAttendance(body);
-    case 'registerDevice':   return registerDevice(body);
-    case 'checkDevice':      return checkDevice(body);
-    case 'fixRows':          return fixExistingRows();
-    case 'fixSheetHeaders':  return fixSheetHeaders();
-    case 'resetUsersSheet':      return resetUsersSheet();
-    case 'resetAttendanceSheet': return resetAttendanceSheet();
-    case 'debug':            return debugInfo();
-    default: return { success: false, message: 'Unknown action: ' + body.action };
+    // Auth
+    case 'register':          return registerUser(body);
+    case 'signIn':            return signInUser(body);
+    // Biometric & Device
+    case 'saveBiometric':     return saveBiometric(body);
+    case 'getBiometric':      return getBiometric(body);
+    case 'registerDevice':    return registerDevice(body);
+    case 'checkDevice':       return checkDevice(body);
+    // Attendance
+    case 'markAttendance':    return markAttendance(body);
+    case 'markExit':          return markExit(body);
+    // Sessions
+    case 'createSession':     return createSession(body);
+    case 'closeSession':      return closeSession(body);
+    case 'getActiveSession':  return getActiveSession(body);
+    case 'getSessions':       return getSessions(body);
+    // Reporting
+    case 'getAttendance':     return getAttendance(body);
+    case 'getDashboard':      return getDashboard(body);
+    case 'getStudents':       return getStudents(body);
+    case 'exportAttendance':  return exportAttendance(body);
+    // Lookup tables (for front-end dropdowns)
+    case 'getDepartments':    return getDepartments();
+    case 'getRoles':          return getRoles();
+    case 'getLocations':      return getLocations();
+    // Admin / Setup
+    case 'setupSheets':       return setupAllSheets();
+    case 'seedDefaults':      return seedDefaultData();
+    case 'clearCache':        return clearCache();
+    case 'debug':             return debugInfo();
+    default: return { success:false, message:'Unknown action: '+body.action };
   }
 }
 
-// ── Sheet helpers ─────────────────────────────────────────────
-// Clean 9-column Users sheet — no MarkFromAnywhere, no DeviceId confusion.
-// DeviceId is stored by registerDevice() dynamically after registration.
-// Col:  1        2          3       4              5     6        7              8             9
-// Name: UserID   FullName   Email   PasswordHash   DOB   Mobile   Institution   Department   Role
-var USER_HEADERS = ['UserID','FullName','Email','PasswordHash','DOB','Mobile','Institution','Department','Role'];
+// ════════════════════════════════════════════════════════════
+//  SHEET / DATA HELPERS
+// ════════════════════════════════════════════════════════════
 
+// Get or create sheet with correct headers
 function getSheet(name) {
   var ss    = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    var initHeaders = {
-      Users:      USER_HEADERS,
-      Attendance: [
-        'AttendanceID','UserID','FullName','Email',
-        'SessionID','Subject',
-        'EntryTimestamp','Date','EntryTime','Method',
-        'EntryLat','EntryLng','EntryAddress','EntryGPS','EntryDistanceMeters',
-        'ExitTime','ExitLat','ExitLng','ExitAddress','ExitGPS','ExitDistanceMeters','Duration'
-      ],
-      Sessions:   ['SessionID','TeacherID','TeacherName','Subject','Date','StartTime','EndTime','Status','WindowMinutes']
-    };
-    if (initHeaders[name]) {
-      var h = initHeaders[name];
+    var h = HEADERS[name] || [];
+    if (h.length) {
       sheet.appendRow(h);
-      sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
+      sheet.getRange(1,1,1,h.length)
+        .setFontWeight('bold')
+        .setBackground('#1a2a52')
+        .setFontColor('#ffffff');
+      sheet.setFrozenRows(1);
     }
-  } else if (name === SHEET_USERS) {
-    // Auto-add missing columns to existing sheets without touching existing data
-    var existing = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
-    ['BiometricCredentialId','DeviceId'].forEach(function(col) {
-      if (existing.indexOf(col) === -1) {
-        var c = sheet.getLastColumn() + 1;
-        sheet.getRange(1,c).setValue(col).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
-      }
-    });
-  } else if (name === SHEET_ATTENDANCE) {
-    // Handle existing attendance sheets — rename old columns and add new ones
-    var existingAtt = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
-
-    // Rename old column names to new names
-    var renames = {
-      'Timestamp':           'EntryTimestamp',
-      'Time':                'EntryTime',
-      'Lat':                 'EntryLat',
-      'Lng':                 'EntryLng',
-      'DistanceFromCollege': 'EntryAddress',
-      'Column 1':            'SessionID',
-      'Column 2':            'Subject'
-    };
-    existingAtt.forEach(function(h, i) {
-      if (renames[h]) {
-        sheet.getRange(1, i+1).setValue(renames[h]);
-        existingAtt[i] = renames[h]; // update local copy too
-      }
-    });
-
-    // Add any still-missing new columns
-    var needed = ['EntryLat','EntryLng','EntryAddress','EntryGPS','EntryDistanceMeters','ExitTime','ExitLat','ExitLng','ExitAddress','ExitGPS','ExitDistanceMeters','Duration'];
-    needed.forEach(function(col) {
-      if (existingAtt.indexOf(col) === -1) {
-        var c = sheet.getLastColumn() + 1;
-        sheet.getRange(1,c).setValue(col).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
-        existingAtt.push(col);
-      }
-    });
   }
   return sheet;
 }
 
-// Maps rows to objects using the ACTUAL header row (immune to column order)
+// Returns array of row objects keyed by header.
+// OPTIMIZATION: single getDataRange() call per sheet per operation.
 function getRows(sheet) {
   var data = sheet.getDataRange().getValues();
   if (data.length <= 1) return [];
-  var headers = data[0];
+  var h = data[0];
   return data.slice(1).map(function(row) {
     var obj = {};
-    headers.forEach(function(h, i) { obj[h] = row[i]; });
+    h.forEach(function(col, i) { obj[col] = row[i]; });
     return obj;
   });
 }
 
-// Finds 1-indexed column number by header name
-function colIndex(sheet, headerName) {
-  var headers = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
-  var idx = headers.indexOf(headerName);
-  return idx === -1 ? -1 : idx + 1;
+// Build an in-memory index map: { fieldValue -> row }
+// Use instead of O(n) loops when looking up single records.
+function buildIndex(rows, field) {
+  var map = {};
+  rows.forEach(function(r) { map[String(r[field]||'').trim()] = r; });
+  return map;
 }
 
-function generateId(prefix) {
-  return (prefix||'id') + '_' + new Date().getTime() + '_' + Math.random().toString(36).substr(2,5);
+// Find 1-based column index by header name
+function colIndex(sheet, name) {
+  var h = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
+  var i = h.indexOf(name);
+  return i === -1 ? -1 : i + 1;
 }
 
-function hashPassword(pw) {
-  var raw = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, pw, Utilities.Charset.UTF_8);
-  return raw.map(function(b){ return ('0'+(b&0xff).toString(16)).slice(-2); }).join('');
+// Update a single cell in a row where keyField === keyValue
+function updateCell(sheet, keyField, keyValue, targetField, newValue) {
+  var data = sheet.getDataRange().getValues();
+  var h    = data[0];
+  var keyCol = h.indexOf(keyField);
+  var tgtCol = h.indexOf(targetField);
+  if (keyCol < 0 || tgtCol < 0) return false;
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][keyCol]) === String(keyValue)) {
+      sheet.getRange(i+1, tgtCol+1).setValue(newValue);
+      return true;
+    }
+  }
+  return false;
 }
 
+// ID generator
+function genId(prefix) {
+  return (prefix||'id')+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+}
 
-// ── 1. Register ───────────────────────────────────────────────
+// SHA-256 password hash
+function hashPw(pw) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, pw, Utilities.Charset.UTF_8)
+    .map(function(b){ return ('0'+(b&0xff).toString(16)).slice(-2); }).join('');
+}
+
+// Normalize any date value to yyyy-MM-dd string
+function normDate(raw) {
+  if (!raw && raw !== 0) return '';
+  var tz = Session.getScriptTimeZone();
+  if (raw instanceof Date) return Utilities.formatDate(raw, tz, 'yyyy-MM-dd');
+  var s = String(raw).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  if (s.length > 10 && s.indexOf('T') > 0) return s.substring(0,10);
+  var d = new Date(s);
+  if (!isNaN(d.getTime())) return Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+  return s.substring(0,10);
+}
+
+// ════════════════════════════════════════════════════════════
+//  SERVER-SIDE CACHE  (_Cache sheet)
+//  TTL-based, keyed strings. Keeps dashboard fast.
+// ════════════════════════════════════════════════════════════
+
+function cacheGet(key) {
+  try {
+    var sheet = getSheet(S_CACHE);
+    var rows  = getRows(sheet);
+    var now   = Date.now();
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].cache_key === key) {
+        if (rows[i].expires_at && Number(rows[i].expires_at) > now) {
+          return JSON.parse(rows[i].value);
+        }
+        return null; // expired
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+function cacheSet(key, value, ttlSeconds) {
+  try {
+    var sheet   = getSheet(S_CACHE);
+    var data    = sheet.getDataRange().getValues();
+    var h       = data[0];
+    var keyCol  = h.indexOf('cache_key');
+    var expires = Date.now() + (ttlSeconds||30)*1000;
+
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][keyCol]) === key) {
+        sheet.getRange(i+1, 2).setValue(JSON.stringify(value));
+        sheet.getRange(i+1, 3).setValue(expires);
+        return;
+      }
+    }
+    sheet.appendRow([key, JSON.stringify(value), expires]);
+  } catch(e) {}
+}
+
+function clearCache() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var s  = ss.getSheetByName(S_CACHE);
+    if (s) {
+      var last = s.getLastRow();
+      if (last > 1) s.deleteRows(2, last-1);
+    }
+    return { success:true, message:'Cache cleared' };
+  } catch(e) { return { success:false, message:e.toString() }; }
+}
+
+// ════════════════════════════════════════════════════════════
+//  LOOKUP HELPERS — resolve IDs to names in-memory
+// ════════════════════════════════════════════════════════════
+
+function loadUserMap() {
+  return buildIndex(getRows(getSheet(S_USERS)), 'user_id');
+}
+
+function loadDeptMap() {
+  return buildIndex(getRows(getSheet(S_DEPTS)), 'dept_id');
+}
+
+function loadLocMap() {
+  return buildIndex(getRows(getSheet(S_LOCS)), 'loc_id');
+}
+
+// Find allowed locations for a user (from UserLocMap)
+// Returns array of { loc_id, name, lat, lng, allowed_distance_m }
+function getUserLocations(userId) {
+  var maps  = getRows(getSheet(S_USERLOCMAP)).filter(function(r){ return r.user_id === userId; });
+  var locMap= loadLocMap();
+  if (!maps.length) {
+    // Fallback: use default lab location
+    var defLoc = locMap[DEFAULT_LOC_ID];
+    if (defLoc) return [{ loc_id:DEFAULT_LOC_ID, name:defLoc.name, lat:parseFloat(defLoc.lat), lng:parseFloat(defLoc.lng), allowed_distance_m:200 }];
+    return [{ loc_id:DEFAULT_LOC_ID, name:'Lab', lat:DEFAULT_LAT, lng:DEFAULT_LNG, allowed_distance_m:200 }];
+  }
+  return maps.map(function(m) {
+    var loc = locMap[m.loc_id] || {};
+    return { loc_id:m.loc_id, name:loc.name||m.loc_id, lat:parseFloat(loc.lat||0), lng:parseFloat(loc.lng||0), allowed_distance_m:parseInt(m.allowed_distance_m)||200 };
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  1. REGISTER USER
+// ════════════════════════════════════════════════════════════
 function registerUser(body) {
   try {
-    if (!body.name || !body.email || !body.password)
-      return { success:false, message:'Name, email and password required' };
+    if (!body.full_name || !body.email || !body.password)
+      return { success:false, message:'full_name, email and password required' };
 
-    var sheet = getSheet(SHEET_USERS);
+    var sheet = getSheet(S_USERS);
     var rows  = getRows(sheet);
-    for (var i=0; i<rows.length; i++) {
-      if (String(rows[i].Email).toLowerCase() === String(body.email).toLowerCase())
+    // O(n) email dupe check — acceptable for registration
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i].email).toLowerCase() === String(body.email).toLowerCase())
         return { success:false, message:'Email already registered' };
     }
 
-    var userId = generateId('u');
-    var role   = body.role || 'student';
+    // Resolve role_id
+    var roleRows = getRows(getSheet(S_ROLES));
+    var roleMap  = buildIndex(roleRows, 'name');
+    var roleName = body.role || 'student';
+    var roleRow  = roleMap[roleName];
+    if (!roleRow) return { success:false, message:'Invalid role: '+roleName };
 
-    // Write exactly 9 columns matching USER_HEADERS:
-    // UserID, FullName, Email, PasswordHash, DOB, Mobile, Institution, Department, Role
-    // BiometricCredentialId and DeviceId are added as extra columns by getSheet()
-    // and written separately by saveBiometric() and registerDevice()
+    var userId = genId('u');
     sheet.appendRow([
-      userId,                       // 1 UserID
-      body.name,                    // 2 FullName
-      body.email,                   // 3 Email
-      hashPassword(body.password),  // 4 PasswordHash
-      body.dob     || '',           // 5 DOB
-      body.mobile  || '',           // 6 Mobile
-      'SIT Tumkur',                 // 7 Institution
-      body.department || '',        // 8 Department
-      role                          // 9 Role
+      userId,
+      body.inst_id    || 'SIT_Tumkur',
+      body.dept_id    || '',
+      roleRow.role_id,
+      body.full_name,
+      body.dob        || '',
+      body.mobile     || '',
+      body.email,
+      hashPw(body.password),
+      '',   // biometric_code (set later)
+      ''    // device_id (set later)
     ]);
-    return { success:true, userId:userId, role:role, message:'Account created' };
-  } catch(err) { return { success:false, message:'register: '+err.toString() }; }
+
+    return { success:true, user_id:userId, role:roleName, message:'Account created' };
+  } catch(e) { return { success:false, message:'register: '+e }; }
 }
 
-// ── 2. Sign In ────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  2. SIGN IN
+// ════════════════════════════════════════════════════════════
 function signInUser(body) {
   try {
-    var sheet = getSheet(SHEET_USERS);
-    var rows  = getRows(sheet);
-    var hash  = hashPassword(body.password || '');
-    for (var i=0; i<rows.length; i++) {
+    var rows = getRows(getSheet(S_USERS));
+    var hash = hashPw(body.password || '');
+    var roleMap = buildIndex(getRows(getSheet(S_ROLES)), 'role_id');
+
+    for (var i = 0; i < rows.length; i++) {
       var r = rows[i];
-      if (String(r.Email).toLowerCase() === String(body.email).toLowerCase() && r.PasswordHash === hash) {
-        var role = String(r.Role || '').trim() || 'student';
-        return { success:true, userId:r.UserID, name:r.FullName, role:role };
+      if (String(r.email).toLowerCase() === String(body.email||'').toLowerCase() && r.password_hash === hash) {
+        var roleName = (roleMap[r.role_id]||{}).name || 'student';
+        return { success:true, user_id:r.user_id, name:r.full_name, role:roleName, dept_id:r.dept_id };
       }
     }
     return { success:false, message:'Invalid email or password' };
-  } catch(err) { return { success:false, message:'signIn: '+err.toString() }; }
+  } catch(e) { return { success:false, message:'signIn: '+e }; }
 }
 
-// ── Normalize a date cell to yyyy-MM-dd string ────────────────
-// Handles: Date objects, ISO strings, plain date strings, spreadsheet serials
-function normalizeDate(raw, tz) {
-  if (!raw && raw !== 0) return '';
-  if (raw instanceof Date) {
-    return Utilities.formatDate(raw, tz, 'yyyy-MM-dd');
-  }
-  var s = String(raw).trim();
-  // Already yyyy-MM-dd
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // ISO with time
-  if (s.length > 10 && s.indexOf('T') > 0) return s.substring(0, 10);
-  // Try parsing as date
-  var d = new Date(s);
-  if (!isNaN(d.getTime())) return Utilities.formatDate(d, tz, 'yyyy-MM-dd');
-  return s.substring(0, 10);
-}
-
-// ── 3. Mark Attendance (entry with location + 200m geofence) ──
+// ════════════════════════════════════════════════════════════
+//  3. MARK ATTENDANCE  (att_type = 'entry')
+//  OPTIMIZATION: resolves geofence against user's assigned
+//  locations from UserLocMap — falls back to default if none.
+// ════════════════════════════════════════════════════════════
 function markAttendance(body) {
   try {
-    if (!body.userId) return { success:false, message:'userId required' };
+    if (!body.user_id) return { success:false, message:'user_id required' };
 
-    var now = new Date();
-    var tz  = Session.getScriptTimeZone();
+    var now   = new Date();
+    var tz    = Session.getScriptTimeZone();
+    var today = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+    var timeStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
 
-    // A. Get user
-    var users = getRows(getSheet(SHEET_USERS));
-    var user  = null;
-    for (var k=0; k<users.length; k++) {
-      if (users[k].UserID === body.userId) { user = users[k]; break; }
-    }
+    // Load user — single pass
+    var userMap = loadUserMap();
+    var user    = userMap[body.user_id];
     if (!user) return { success:false, message:'User not found' };
 
-    // B. 200m geofence — only enforce when GPS is provided
-    var entryLat = body.lat ? parseFloat(body.lat) : null;
-    var entryLng = body.lng ? parseFloat(body.lng) : null;
-    if (entryLat !== null && entryLng !== null && !isNaN(entryLat) && !isNaN(entryLng)) {
-      var distFromLab = haversineMeters(entryLat, entryLng, LAB_LAT, LAB_LNG);
-      if (distFromLab > 200) {
+    // Geofence check against user's assigned locations
+    var lat = body.lat !== undefined && body.lat !== '' ? parseFloat(body.lat) : null;
+    var lng = body.lng !== undefined && body.lng !== '' ? parseFloat(body.lng) : null;
+    var matchedLoc = null;
+    var distFromCentre = '';
+
+    if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
+      var allowedLocs = getUserLocations(body.user_id);
+      var minDist = Infinity, closestLoc = null;
+      for (var k = 0; k < allowedLocs.length; k++) {
+        var d = haversineMeters(lat, lng, allowedLocs[k].lat, allowedLocs[k].lng);
+        if (d < minDist) { minDist = d; closestLoc = allowedLocs[k]; }
+        if (d <= allowedLocs[k].allowed_distance_m) { matchedLoc = allowedLocs[k]; distFromCentre = d; break; }
+      }
+      if (!matchedLoc) {
         return {
           success:  false,
           code:     'TOO_FAR',
-          distance: distFromLab,
-          message:  'You are ' + distFromLab + 'm from the lab. You must be within 200m to mark attendance.'
+          distance: minDist,
+          location: closestLoc ? closestLoc.name : 'lab',
+          message:  'You are '+minDist+'m from '+((closestLoc||{}).name||'the lab')+'. Must be within '+(closestLoc ? closestLoc.allowed_distance_m : 200)+'m.'
         };
       }
+      distFromCentre = minDist;
     }
 
-    // C. Prevent duplicate on same calendar date
-    var attSheet = getSheet(SHEET_ATTENDANCE);
+    // Duplicate check for today — only read Attendance once
+    var attSheet = getSheet(S_ATTENDANCE);
     var existing = getRows(attSheet);
-    var dateStr  = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
-    for (var j=0; j<existing.length; j++) {
-      var rowUserId = String(existing[j].UserID || '').trim();
-      var rowDate   = normalizeDate(existing[j].Date, tz);
-      if (rowUserId === String(body.userId).trim() && rowDate === dateStr) {
-        return { success:false, message:'Attendance already marked for today at ' + String(existing[j].EntryTime || '') };
+    for (var j = 0; j < existing.length; j++) {
+      var row = existing[j];
+      if (String(row.user_id) === String(body.user_id) &&
+          row.att_type === 'entry' &&
+          normDate(row.att_date) === today) {
+        return { success:false, message:'Entry already marked today at '+row.att_time };
       }
     }
 
-    // D. Record entry
-    var timeStr   = Utilities.formatDate(now, tz, 'HH:mm:ss');
-    var latStr    = entryLat  !== null ? String(entryLat)  : '';
-    var lngStr    = entryLng  !== null ? String(entryLng)  : '';
-    var entryAddr = body.address || '';
-    var entryGPS  = (latStr && lngStr) ? latStr + ', ' + lngStr : '';
-    var entryDist = (latStr && lngStr) ? haversineMeters(entryLat, entryLng, LAB_LAT, LAB_LNG) : '';
+    // Determine sess_id from active session (optional)
+    var sessId = body.sess_id || '';
+    if (!sessId) {
+      var active = _getActiveSessionData();
+      if (active) sessId = active.sess_id;
+    }
+
+    var locId = (matchedLoc && matchedLoc.loc_id) ? matchedLoc.loc_id : (body.loc_id || DEFAULT_LOC_ID);
 
     attSheet.appendRow([
-      generateId('a'),           // AttendanceID
-      body.userId,               // UserID
-      user.FullName,             // FullName
-      user.Email,                // Email
-      '',                        // SessionID
-      body.subject || 'General', // Subject
-      now.toISOString(),         // EntryTimestamp
-      dateStr,                   // Date  ← plain string, never a Date object
-      timeStr,                   // EntryTime
-      body.method || 'password', // Method
-      latStr,                    // EntryLat
-      lngStr,                    // EntryLng
-      entryAddr,                 // EntryAddress
-      entryGPS,                  // EntryGPS
-      entryDist,                 // EntryDistanceMeters
-      '',                        // ExitTime
-      '',                        // ExitLat
-      '',                        // ExitLng
-      '',                        // ExitAddress
-      '',                        // ExitGPS
-      '',                        // ExitDistanceMeters
-      ''                         // Duration
+      genId('att'),            // att_id
+      body.user_id,            // user_id (FK — no full_name redundancy)
+      sessId,                  // sess_id
+      'entry',                 // att_type
+      today,                   // att_date  (string, never Date object)
+      timeStr,                 // att_time
+      body.login_method || 'biometric', // login_method
+      locId,                   // loc_id (FK)
+      lat !== null ? lat : '', // lat
+      lng !== null ? lng : '', // lng
+      body.address || '',      // address
+      distFromCentre           // dist_from_centre
     ]);
 
     return {
-      success:        true,
-      message:        '✓ Attendance marked at ' + timeStr,
-      name:           user.FullName,
-      date:           dateStr,
-      time:           timeStr,
-      location:       entryAddr || entryGPS || 'not captured',
-      gps:            entryGPS,
-      distanceMeters: entryDist
+      success:           true,
+      message:           '✓ Entry marked at '+timeStr,
+      name:              user.full_name,
+      date:              today,
+      time:              timeStr,
+      location:          body.address || (matchedLoc ? matchedLoc.name : ''),
+      dist_from_centre:  distFromCentre
     };
-  } catch(err) { return { success:false, message:'markAttendance: '+err.toString() }; }
+  } catch(e) { return { success:false, message:'markAttendance: '+e }; }
 }
 
-// ── 3b. Mark Exit (with location) ────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  4. MARK EXIT  (att_type = 'exit')
+//  Inserts a NEW row instead of updating — cleaner audit trail
+//  and avoids slow row-scanning updates.
+// ════════════════════════════════════════════════════════════
 function markExit(body) {
   try {
-    if (!body.userId) return { success:false, message:'userId required' };
+    if (!body.user_id) return { success:false, message:'user_id required' };
 
     var now     = new Date();
     var tz      = Session.getScriptTimeZone();
-    var dateStr = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+    var today   = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
     var timeStr = Utilities.formatDate(now, tz, 'HH:mm:ss');
 
-    // Call getSheet() first to ensure all exit columns exist before reading
-    var sheet   = getSheet(SHEET_ATTENDANCE);
-    var data    = sheet.getDataRange().getValues();
-    var headers = data[0];
+    var attSheet = getSheet(S_ATTENDANCE);
+    var rows     = getRows(attSheet);
 
-    // Helper: find col index (1-based), try multiple possible names
-    function col(names) {
-      if (typeof names === 'string') names = [names];
-      for (var n=0; n<names.length; n++) {
-        var idx = headers.indexOf(names[n]);
-        if (idx !== -1) return idx + 1;
-      }
-      return -1;
+    var entryRow = null, exitExists = false;
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (String(r.user_id) !== String(body.user_id)) continue;
+      if (normDate(r.att_date) !== today) continue;
+      if (r.att_type === 'entry') entryRow = r;
+      if (r.att_type === 'exit')  exitExists = true;
     }
 
-    var userIdCol   = col('UserID');
-    var dateCol     = col('Date');
-    var entryTsCol  = col(['EntryTimestamp','Timestamp']); // support old name
-    var exitTimeCol = col('ExitTime');
-    var exitLatCol  = col('ExitLat');
-    var exitLngCol  = col('ExitLng');
-    var exitAddrCol = col('ExitAddress');
-    var exitGPSCol  = col('ExitGPS');
-    var exitDistCol = col('ExitDistanceMeters');
-    var durationCol = col('Duration');
+    if (!entryRow)   return { success:false, message:'No entry record found for today. Mark entry first.' };
+    if (exitExists)  return { success:false, message:'Exit already recorded today.' };
 
-    if (userIdCol < 1 || dateCol < 1) {
-      return { success:false, message:'Sheet missing UserID/Date columns. Run resetAttendanceSheet from the script editor.' };
-    }
-    if (exitTimeCol < 1) {
-      return { success:false, message:'ExitTime column missing. Run resetAttendanceSheet from the script editor, then re-mark attendance today.' };
-    }
+    // Duration calculation
+    var entryDt  = new Date(today+'T'+entryRow.att_time);
+    var diffMins = Math.max(0, Math.round((now - entryDt) / 60000));
+    var duration = Math.floor(diffMins/60)+'h '+( diffMins%60)+'m';
 
-    // Find today's attendance row for this user
-    for (var i = 1; i < data.length; i++) {
-      var rowUserId = String(data[i][userIdCol - 1] || '').trim();
-      var rowDate   = normalizeDate(data[i][dateCol - 1], tz);
+    var lat = body.lat !== undefined && body.lat !== '' ? parseFloat(body.lat) : '';
+    var lng = body.lng !== undefined && body.lng !== '' ? parseFloat(body.lng) : '';
+    var dist = (lat !== '' && lng !== '') ? haversineMeters(lat, lng, DEFAULT_LAT, DEFAULT_LNG) : '';
 
-      if (rowUserId !== String(body.userId).trim()) continue;
-      if (rowDate   !== dateStr) continue;
+    attSheet.appendRow([
+      genId('att'),
+      body.user_id,
+      entryRow.sess_id || '',
+      'exit',
+      today,
+      timeStr,
+      body.login_method || 'biometric',
+      entryRow.loc_id || DEFAULT_LOC_ID,
+      lat, lng,
+      body.address || '',
+      dist
+    ]);
 
-      // Found the row — check if already exited
-      var existingExit = String(data[i][exitTimeCol - 1] || '').trim();
-      if (existingExit) {
-        return { success:false, message:'Exit already recorded at ' + existingExit };
-      }
-
-      // Calculate duration
-      var duration = '';
-      if (entryTsCol > 0) {
-        var rawTs    = data[i][entryTsCol - 1];
-        var entryDt  = (rawTs instanceof Date) ? rawTs : new Date(rawTs);
-        if (!isNaN(entryDt.getTime())) {
-          var diffMins = Math.round((now.getTime() - entryDt.getTime()) / 60000);
-          if (diffMins < 0) diffMins = 0;
-          var hrs  = Math.floor(diffMins / 60);
-          var mins = diffMins % 60;
-          duration = hrs > 0 ? hrs + 'h ' + mins + 'm' : mins + 'm';
-        }
-      }
-
-      // Write exit columns — ExitTime is guaranteed to exist (validated above)
-      var exitLat  = (body.lat  !== undefined && body.lat  !== '') ? body.lat  : '';
-      var exitLng  = (body.lng  !== undefined && body.lng  !== '') ? body.lng  : '';
-      var exitAddr = body.address || '';
-
-      var exitGPS  = (exitLat !== '' && exitLng !== '') ? exitLat + ', ' + exitLng : '';
-      var exitDist = (exitLat !== '' && exitLng !== '')
-                     ? haversineMeters(parseFloat(exitLat), parseFloat(exitLng), LAB_LAT, LAB_LNG)
-                     : '';
-
-      sheet.getRange(i+1, exitTimeCol).setValue(timeStr);
-      if (exitLatCol  > 0) sheet.getRange(i+1, exitLatCol).setValue(exitLat);
-      if (exitLngCol  > 0) sheet.getRange(i+1, exitLngCol).setValue(exitLng);
-      if (exitAddrCol > 0) sheet.getRange(i+1, exitAddrCol).setValue(exitAddr);
-      if (exitGPSCol  > 0) sheet.getRange(i+1, exitGPSCol).setValue(exitGPS);
-      if (exitDistCol > 0) sheet.getRange(i+1, exitDistCol).setValue(exitDist);
-      if (durationCol > 0) sheet.getRange(i+1, durationCol).setValue(duration);
-
-      // Flush writes to the sheet immediately
-      SpreadsheetApp.flush();
-
-      return {
-        success:  true,
-        message:  '✓ Exit recorded at ' + timeStr + (duration ? ' · Duration: ' + duration : ''),
-        exitTime: timeStr,
-        duration: duration,
-        location: exitAddr || exitGPS || 'not captured',
-        gps:      exitGPS,
-        distanceMeters: exitDist
-      };
-    }
-
-    // Row not found — collect debug info showing what dates ARE in the sheet for this user
-    var userDates = [];
-    for (var d2 = 1; d2 < data.length; d2++) {
-      if (String(data[d2][userIdCol-1]||'').trim() === String(body.userId).trim()) {
-        userDates.push(normalizeDate(data[d2][dateCol-1], tz));
-      }
-    }
-    return {
-      success: false,
-      message: 'No attendance entry found for today (' + dateStr + '). ' +
-               (userDates.length > 0
-                 ? 'Your attendance dates in sheet: ' + userDates.join(', ')
-                 : 'No attendance rows found for your account at all.'),
-      debug: 'userId=' + body.userId + ', todayStr=' + dateStr + ', tz=' + tz
-    };
-  } catch(err) { return { success:false, message:'markExit: ' + err.toString() }; }
+    return { success:true, message:'✓ Exit recorded at '+timeStr+' · Duration: '+duration, exit_time:timeStr, duration:duration };
+  } catch(e) { return { success:false, message:'markExit: '+e }; }
 }
 
-// ── 4. Create Session ─────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  5. SESSIONS
+// ════════════════════════════════════════════════════════════
 function createSession(body) {
   try {
-    if (body.role!=='teacher'&&body.role!=='admin')
+    if (!body.subject || !body.window_minutes)
+      return { success:false, message:'subject and window_minutes required' };
+
+    // Role check via role lookup
+    var userRows = getRows(getSheet(S_USERS));
+    var roleMap  = buildIndex(getRows(getSheet(S_ROLES)), 'role_id');
+    var user     = buildIndex(userRows,'user_id')[body.user_id];
+    if (!user) return { success:false, message:'User not found' };
+    var roleName = (roleMap[user.role_id]||{}).name||'student';
+    if (roleName !== 'teacher' && roleName !== 'admin')
       return { success:false, message:'Only teachers can create sessions' };
-    if (!body.subject||!body.windowMinutes)
-      return { success:false, message:'Subject and window required' };
 
-    var sheet=getSheet(SHEET_SESSIONS), now=new Date(), tz=Session.getScriptTimeZone();
-    var dateStr=Utilities.formatDate(now,tz,'yyyy-MM-dd');
-    var startStr=Utilities.formatDate(now,tz,'HH:mm:ss');
-    var end=new Date(now.getTime()+parseInt(body.windowMinutes)*60000);
-    var endStr=Utilities.formatDate(end,tz,'HH:mm:ss');
-    var sessId=generateId('sess');
+    var now   = new Date(), tz = Session.getScriptTimeZone();
+    var date  = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+    var start = Utilities.formatDate(now, tz, 'HH:mm:ss');
+    var end   = Utilities.formatDate(new Date(now.getTime()+parseInt(body.window_minutes)*60000), tz, 'HH:mm:ss');
+    var sessId= genId('sess');
 
-    // Close existing open sessions by this teacher
-    var data=sheet.getDataRange().getValues();
-    for (var i=1;i<data.length;i++){
-      if (data[i][1]===body.userId&&data[i][7]==='open')
-        sheet.getRange(i+1,8).setValue('closed');
+    // Close any open sessions by this teacher
+    var sessSheet = getSheet(S_SESSIONS);
+    var sessData  = sessSheet.getDataRange().getValues();
+    var statusCol = sessData[0].indexOf('status');
+    var tidCol    = sessData[0].indexOf('teacher_id');
+    for (var i = 1; i < sessData.length; i++) {
+      if (sessData[i][tidCol] === body.user_id && sessData[i][statusCol] === 'open')
+        sessSheet.getRange(i+1, statusCol+1).setValue('closed');
     }
-    sheet.appendRow([sessId,body.userId,body.teacherName||'',body.subject,dateStr,startStr,endStr,'open',body.windowMinutes]);
-    return { success:true, sessionId:sessId, subject:body.subject, startTime:startStr, endTime:endStr, message:'Session opened for '+body.windowMinutes+' min' };
-  } catch(err) { return { success:false, message:'createSession: '+err.toString() }; }
+
+    sessSheet.appendRow([sessId, body.user_id, body.subject, date, start, end, 'open', body.window_minutes]);
+    return { success:true, sess_id:sessId, subject:body.subject, start_time:start, end_time:end, message:'Session opened for '+body.window_minutes+' min' };
+  } catch(e) { return { success:false, message:'createSession: '+e }; }
 }
 
-// ── 5. Close Session ──────────────────────────────────────────
 function closeSession(body) {
   try {
-    var sheet=getSheet(SHEET_SESSIONS), data=sheet.getDataRange().getValues();
-    for (var i=1;i<data.length;i++){
-      if (data[i][0]===body.sessionId){ sheet.getRange(i+1,8).setValue('closed'); return { success:true }; }
+    var sheet = getSheet(S_SESSIONS);
+    var data  = sheet.getDataRange().getValues();
+    var h     = data[0], idCol = h.indexOf('sess_id'), stCol = h.indexOf('status');
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][idCol] === body.sess_id) {
+        sheet.getRange(i+1, stCol+1).setValue('closed');
+        return { success:true };
+      }
     }
     return { success:false, message:'Session not found' };
-  } catch(err) { return { success:false, message:'closeSession: '+err.toString() }; }
+  } catch(e) { return { success:false, message:'closeSession: '+e }; }
 }
 
-// ── 6. Get Active Session ─────────────────────────────────────
+// Internal helper — avoids double sheet load
+function _getActiveSessionData() {
+  var now    = new Date(), tz = Session.getScriptTimeZone();
+  var today  = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+  var rows   = getRows(getSheet(S_SESSIONS));
+  for (var i = 0; i < rows.length; i++) {
+    var s = rows[i];
+    if (s.status === 'open' && normDate(s.date) === today) {
+      var st = new Date(s.date+'T'+s.start_time);
+      var en = new Date(s.date+'T'+s.end_time);
+      if (now >= st && now <= en) return s;
+    }
+  }
+  return null;
+}
+
 function getActiveSession(body) {
   try {
-    var sheet=getSheet(SHEET_SESSIONS), rows=getRows(sheet), now=new Date();
-    var todayStr=Utilities.formatDate(now,Session.getScriptTimeZone(),'yyyy-MM-dd');
-    for (var i=0;i<rows.length;i++){
-      var s=rows[i];
-      if (s.Status==='open'&&String(s.Date)===todayStr){
-        var st=new Date(s.Date+'T'+s.StartTime), en=new Date(s.Date+'T'+s.EndTime);
-        if (now>=st&&now<=en){
-          return { success:true, active:true, session:s, secondsLeft:Math.max(0,Math.round((en-now)/1000)) };
-        }
-      }
-    }
-    return { success:true, active:false };
-  } catch(err) { return { success:false, message:'getActiveSession: '+err.toString() }; }
+    var s = _getActiveSessionData();
+    if (!s) return { success:true, active:false };
+    var en   = new Date(s.date+'T'+s.end_time);
+    var secs = Math.max(0, Math.round((en - new Date()) / 1000));
+    return { success:true, active:true, session:s, seconds_left:secs };
+  } catch(e) { return { success:false, message:'getActiveSession: '+e }; }
 }
 
-// ── 7. Get Sessions list ──────────────────────────────────────
 function getSessions(body) {
   try {
-    var sheet=getSheet(SHEET_SESSIONS), rows=getRows(sheet);
-    if (body.userId) rows=rows.filter(function(r){ return r.TeacherID===body.userId; });
-    var attRows=getRows(getSheet(SHEET_ATTENDANCE));
-    rows.forEach(function(s){ s.presentCount=attRows.filter(function(a){ return a.SessionID===s.SessionID; }).length; });
+    var rows = getRows(getSheet(S_SESSIONS));
+    if (body.user_id) rows = rows.filter(function(r){ return r.teacher_id === body.user_id; });
+
+    // Count present students per session — batch in-memory
+    var attRows = getRows(getSheet(S_ATTENDANCE)).filter(function(r){ return r.att_type === 'entry'; });
+    var sessCounts = {};
+    attRows.forEach(function(a){ sessCounts[a.sess_id] = (sessCounts[a.sess_id]||0)+1; });
+    rows.forEach(function(s){ s.present_count = sessCounts[s.sess_id]||0; });
+
     rows.reverse();
-    return { success:true, sessions:rows.slice(0,20) };
-  } catch(err) { return { success:false, message:'getSessions: '+err.toString() }; }
+    return { success:true, sessions:rows.slice(0,30) };
+  } catch(e) { return { success:false, message:'getSessions: '+e }; }
 }
 
-// ── 8. Get Attendance list ────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  6. ATTENDANCE QUERIES
+// ════════════════════════════════════════════════════════════
 function getAttendance(body) {
   try {
-    var rows=getRows(getSheet(SHEET_ATTENDANCE));
-    if (body.sessionId) rows=rows.filter(function(r){ return r.SessionID===body.sessionId; });
-    if (body.date)      rows=rows.filter(function(r){ return r.Date===body.date; });
+    var rows = getRows(getSheet(S_ATTENDANCE));
+    if (body.sess_id)   rows = rows.filter(function(r){ return r.sess_id   === body.sess_id; });
+    if (body.att_date)  rows = rows.filter(function(r){ return normDate(r.att_date) === body.att_date; });
+    if (body.user_id)   rows = rows.filter(function(r){ return r.user_id   === body.user_id; });
+    if (body.att_type)  rows = rows.filter(function(r){ return r.att_type  === body.att_type; });
+
+    // JOIN full_name & dept in-memory (no redundant storage)
+    var userMap = loadUserMap(), deptMap = loadDeptMap(), locMap = loadLocMap();
+    rows.forEach(function(r) {
+      var u = userMap[r.user_id]||{};
+      r.full_name = u.full_name||'';
+      r.email     = u.email||'';
+      r.dept_name = (deptMap[u.dept_id]||{}).name||'';
+      r.loc_name  = (locMap[r.loc_id]||{}).name||'';
+    });
+
     return { success:true, attendance:rows };
-  } catch(err) { return { success:false, message:'getAttendance: '+err.toString() }; }
+  } catch(e) { return { success:false, message:'getAttendance: '+e }; }
 }
 
-// ── 9. Get Students ───────────────────────────────────────────
-function getStudents(body) {
-  try {
-    var rows=getRows(getSheet(SHEET_USERS)).filter(function(r){ return String(r.Role||'student')==='student'; });
-    rows.forEach(function(r){ delete r.PasswordHash; delete r.BiometricCredentialId; });
-    return { success:true, students:rows };
-  } catch(err) { return { success:false, message:'getStudents: '+err.toString() }; }
-}
-
-// ── 9b. Get Dashboard (live stats for a session) ─────────────
-// Returns present students + absent students for a session
+// ════════════════════════════════════════════════════════════
+//  7. DASHBOARD  — cached for 30 seconds to handle rapid
+//     refreshes without hammering the sheet API.
+// ════════════════════════════════════════════════════════════
 function getDashboard(body) {
   try {
-    if (!body.sessionId) return { success:false, message:'sessionId required' };
+    if (!body.sess_id) return { success:false, message:'sess_id required' };
 
-    // All students enrolled (all users with role=student)
-    var allStudents = getRows(getSheet(SHEET_USERS)).filter(function(r){
-      return String(r.Role||'student').trim() === 'student';
+    var cacheKey = 'dashboard_'+body.sess_id;
+    var cached   = cacheGet(cacheKey);
+    if (cached)  return cached;
+
+    // All students (role = student)
+    var roleRows = getRows(getSheet(S_ROLES));
+    var roleMap  = buildIndex(roleRows, 'name');
+    var studentRoleId = (roleMap['student']||{}).role_id || '';
+
+    var userRows = getRows(getSheet(S_USERS));
+    var deptMap  = loadDeptMap();
+    var students = userRows.filter(function(r){ return r.role_id === studentRoleId; });
+
+    // Entry records for this session — one pass
+    var attRows = getRows(getSheet(S_ATTENDANCE));
+    var presentMap = {};
+    attRows.forEach(function(r){
+      if (r.sess_id === body.sess_id && r.att_type === 'entry')
+        presentMap[r.user_id] = r;
+    });
+    // Exit records
+    var exitMap = {};
+    attRows.forEach(function(r){
+      if (r.sess_id === body.sess_id && r.att_type === 'exit')
+        exitMap[r.user_id] = r;
     });
 
-    // Who marked attendance for this session
-    var attRows = getRows(getSheet(SHEET_ATTENDANCE)).filter(function(r){
-      return r.SessionID === body.sessionId;
-    });
-
-    var presentIds = {};
-    attRows.forEach(function(a){ presentIds[a.UserID] = a; });
-
-    var present = [];
-    var absent  = [];
-
-    allStudents.forEach(function(s) {
-      if (presentIds[s.UserID]) {
+    var present = [], absent = [];
+    students.forEach(function(s) {
+      var deptName = (deptMap[s.dept_id]||{}).name||'';
+      if (presentMap[s.user_id]) {
+        var pr  = presentMap[s.user_id];
+        var ex  = exitMap[s.user_id];
         present.push({
-          userId:     s.UserID,
-          name:       s.FullName,
-          email:      s.Email,
-          department: s.Department,
-          time:       presentIds[s.UserID].EntryTime || presentIds[s.UserID].Time,
-          method:     presentIds[s.UserID].Method,
-          gps:        presentIds[s.UserID].EntryGPS || '',
-          distanceMeters: presentIds[s.UserID].EntryDistanceMeters || ''
+          user_id:         s.user_id,
+          name:            s.full_name,
+          email:           s.email,
+          dept:            deptName,
+          att_time:        pr.att_time,
+          login_method:    pr.login_method,
+          dist_from_centre:pr.dist_from_centre,
+          lat:             pr.lat,
+          lng:             pr.lng,
+          exit_time:       ex ? ex.att_time : null
         });
       } else {
-        absent.push({
-          userId:     s.UserID,
-          name:       s.FullName,
-          email:      s.Email,
-          department: s.Department
-        });
+        absent.push({ user_id:s.user_id, name:s.full_name, email:s.email, dept:deptName });
       }
     });
 
-    return {
-      success:      true,
-      total:        allStudents.length,
-      presentCount: present.length,
-      absentCount:  absent.length,
-      present:      present,
-      absent:       absent
+    var result = {
+      success:       true,
+      total:         students.length,
+      present_count: present.length,
+      absent_count:  absent.length,
+      pct:           students.length ? Math.round(present.length/students.length*100) : 0,
+      present:       present,
+      absent:        absent
     };
-  } catch(err) { return { success:false, message:'getDashboard: '+err.toString() }; }
+
+    cacheSet(cacheKey, result, 30); // cache for 30 seconds
+    return result;
+  } catch(e) { return { success:false, message:'getDashboard: '+e }; }
 }
 
-// ── 9c. Export Attendance as CSV data ─────────────────────────
+// ════════════════════════════════════════════════════════════
+//  8. STUDENTS LIST
+// ════════════════════════════════════════════════════════════
+function getStudents(body) {
+  try {
+    var roleMap  = buildIndex(getRows(getSheet(S_ROLES)), 'name');
+    var studRoleId = (roleMap['student']||{}).role_id||'';
+    var deptMap  = loadDeptMap();
+    var students = getRows(getSheet(S_USERS))
+      .filter(function(r){ return r.role_id === studRoleId; })
+      .map(function(r) {
+        return {
+          user_id:   r.user_id,
+          full_name: r.full_name,
+          email:     r.email,
+          dept:      (deptMap[r.dept_id]||{}).name||'',
+          mobile:    r.mobile,
+          has_bio:   !!r.biometric_code,
+          has_device:!!r.device_id
+        };
+      });
+    return { success:true, students:students };
+  } catch(e) { return { success:false, message:'getStudents: '+e }; }
+}
+
+// ════════════════════════════════════════════════════════════
+//  9. EXPORT CSV
+// ════════════════════════════════════════════════════════════
 function exportAttendance(body) {
   try {
-    var rows = getRows(getSheet(SHEET_ATTENDANCE));
-    if (body.sessionId) rows = rows.filter(function(r){ return r.SessionID === body.sessionId; });
-    if (body.date)      rows = rows.filter(function(r){ return r.Date === body.date; });
-    if (body.subject)   rows = rows.filter(function(r){ return r.Subject === body.subject; });
+    var rows = getRows(getSheet(S_ATTENDANCE));
+    if (body.sess_id)  rows = rows.filter(function(r){ return r.sess_id === body.sess_id; });
+    if (body.att_date) rows = rows.filter(function(r){ return normDate(r.att_date) === body.att_date; });
 
-    // Build CSV string
-    var headers = ['Name','Email','Department','Date','EntryTime','Subject','Method','EntryGPS','EntryDistanceMeters(m)'];
-    var lines   = [headers.join(',')];
-
-    // Get department from users sheet
-    var userMap = {};
-    getRows(getSheet(SHEET_USERS)).forEach(function(u){ userMap[u.UserID] = u.Department || ''; });
+    var userMap = loadUserMap(), deptMap = loadDeptMap(), locMap = loadLocMap();
+    var header  = ['Name','Email','Department','Date','Time','Type','Method','Location','Distance(m)'];
+    var lines   = [header.join(',')];
 
     rows.forEach(function(r) {
+      var u = userMap[r.user_id]||{};
       lines.push([
-        '"'+(r.FullName||'')+'"',
-        '"'+(r.Email||'')+'"',
-        '"'+(userMap[r.UserID]||'')+'"',
-        r.Date || '',
-        r.EntryTime || r.Time || '',
-        '"'+(r.Subject||'')+'"',
-        r.Method || '',
-        '"'+(r.EntryGPS||'')+'"',
-        r.EntryDistanceMeters || ''
+        '"'+(u.full_name||'')+'"',
+        '"'+(u.email||'')+'"',
+        '"'+((deptMap[u.dept_id]||{}).name||'')+'"',
+        r.att_date||'',
+        r.att_time||'',
+        r.att_type||'',
+        r.login_method||'',
+        '"'+((locMap[r.loc_id]||{}).name||'')+'"',
+        r.dist_from_centre||''
       ].join(','));
     });
 
-    return { success:true, csv:lines.join('\n'), rowCount:rows.length };
-  } catch(err) { return { success:false, message:'exportAttendance: '+err.toString() }; }
+    return { success:true, csv:lines.join('\n'), row_count:rows.length };
+  } catch(e) { return { success:false, message:'exportAttendance: '+e }; }
 }
+
+// ════════════════════════════════════════════════════════════
+//  10. BIOMETRIC & DEVICE
+// ════════════════════════════════════════════════════════════
 function saveBiometric(body) {
   try {
-    var sheet=getSheet(SHEET_USERS), data=sheet.getDataRange().getValues(), headers=data[0];
-    var col=headers.indexOf('BiometricCredentialId')+1;
-    if (col<1) return { success:false, message:'BiometricCredentialId column missing' };
-    for (var i=1;i<data.length;i++){
-      if (data[i][0]===body.userId){ sheet.getRange(i+1,col).setValue(body.credentialId); return { success:true }; }
-    }
-    return { success:false, message:'User not found' };
-  } catch(err) { return { success:false, message:'saveBiometric: '+err.toString() }; }
+    if (!body.user_id||!body.credential_id) return { success:false, message:'user_id and credential_id required' };
+    var ok = updateCell(getSheet(S_USERS),'user_id',body.user_id,'biometric_code',body.credential_id);
+    return ok ? { success:true } : { success:false, message:'User not found' };
+  } catch(e) { return { success:false, message:'saveBiometric: '+e }; }
 }
 
-// ── 11. Get Biometric ─────────────────────────────────────────
 function getBiometric(body) {
   try {
-    var rows=getRows(getSheet(SHEET_USERS));
-    for (var i=0;i<rows.length;i++){
-      var r=rows[i];
-      if (String(r.Email).toLowerCase()===String(body.email).toLowerCase()){
-        if (!r.BiometricCredentialId) return { success:false, message:'No biometric registered' };
-        return { success:true, credentialId:r.BiometricCredentialId, userId:r.UserID };
+    var rows = getRows(getSheet(S_USERS));
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i].email).toLowerCase() === String(body.email||'').toLowerCase()) {
+        if (!rows[i].biometric_code) return { success:false, message:'No biometric registered' };
+        return { success:true, credential_id:rows[i].biometric_code, user_id:rows[i].user_id, name:rows[i].full_name };
       }
     }
     return { success:false, message:'User not found' };
-  } catch(err) { return { success:false, message:'getBiometric: '+err.toString() }; }
+  } catch(e) { return { success:false, message:'getBiometric: '+e }; }
 }
 
-// ── 12. Register Device ───────────────────────────────────────
 function registerDevice(body) {
   try {
-    if (!body.userId||!body.deviceId) return { success:false, message:'userId and deviceId required' };
-    var sheet=getSheet(SHEET_USERS), data=sheet.getDataRange().getValues(), headers=data[0];
-    var col=headers.indexOf('DeviceId')+1;
-    if (col<1) return { success:false, message:'DeviceId column not found' };
-    for (var i=1;i<data.length;i++){
-      if (data[i][0]===body.userId){
-        var existing=String(data[i][col-1]||'').trim();
-        if (existing && existing!==String(body.deviceId).trim())
-          return { success:false, alreadyBound:true, message:'Account already bound to another device.' };
-        sheet.getRange(i+1,col).setValue(body.deviceId);
-        return { success:true, alreadyBound:false, message:existing?'Device confirmed':'Device registered' };
+    if (!body.user_id||!body.device_id) return { success:false, message:'user_id and device_id required' };
+    var sheet = getSheet(S_USERS);
+    var data  = sheet.getDataRange().getValues();
+    var h     = data[0];
+    var uidCol= h.indexOf('user_id'), devCol = h.indexOf('device_id');
+    if (uidCol<0||devCol<0) return { success:false, message:'Column not found' };
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][uidCol] === body.user_id) {
+        var existing = String(data[i][devCol]||'').trim();
+        if (existing && existing !== String(body.device_id).trim())
+          return { success:false, already_bound:true, message:'Account bound to another device.' };
+        sheet.getRange(i+1, devCol+1).setValue(body.device_id);
+        return { success:true, already_bound:false, message: existing?'Device confirmed':'Device registered' };
       }
     }
     return { success:false, message:'User not found' };
-  } catch(err) { return { success:false, message:'registerDevice: '+err.toString() }; }
+  } catch(e) { return { success:false, message:'registerDevice: '+e }; }
 }
 
-// ── 13. Check Device ─────────────────────────────────────────
 function checkDevice(body) {
   try {
-    if (!body.userId||!body.deviceId) return { success:false, message:'userId and deviceId required' };
-    var rows=getRows(getSheet(SHEET_USERS));
-    for (var i=0;i<rows.length;i++){
-      if (rows[i].UserID===body.userId){
-        var stored=String(rows[i].DeviceId||'').trim();
-        if (!stored) return { success:true, status:'unbound' };
-        if (stored===String(body.deviceId).trim()) return { success:true, status:'match' };
+    if (!body.user_id||!body.device_id) return { success:false, message:'user_id and device_id required' };
+    var rows = getRows(getSheet(S_USERS));
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].user_id === body.user_id) {
+        var stored = String(rows[i].device_id||'').trim();
+        if (!stored)                              return { success:true,  status:'unbound' };
+        if (stored === String(body.device_id).trim()) return { success:true,  status:'match' };
         return { success:false, status:'mismatch', message:'Account registered to a different device.' };
       }
     }
     return { success:false, message:'User not found' };
-  } catch(err) { return { success:false, message:'checkDevice: '+err.toString() }; }
+  } catch(e) { return { success:false, message:'checkDevice: '+e }; }
 }
 
-
-// ── 15. Reset Users Sheet (run once from editor to fix corruption) ──
-// Deletes the old Users sheet and creates a fresh clean one.
-// ALL existing user rows are deleted — re-register after running this.
-function resetUsersSheet() {
-  try {
-    var ss    = SpreadsheetApp.getActiveSpreadsheet();
-    var old   = ss.getSheetByName(SHEET_USERS);
-    if (old) ss.deleteSheet(old);
-    // Re-create with clean headers
-    var sheet = ss.insertSheet(SHEET_USERS);
-    var h = USER_HEADERS.concat(['BiometricCredentialId','DeviceId']);
-    sheet.appendRow(h);
-    sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
-    return { success:true, message:'Users sheet reset. Headers: ' + h.join(', ') + '. Please re-register all users.' };
-  } catch(err) { return { success:false, message:'resetUsersSheet: '+err.toString() }; }
+// ════════════════════════════════════════════════════════════
+//  11. LOOKUP TABLES (for front-end dropdowns)
+// ════════════════════════════════════════════════════════════
+function getDepartments() {
+  try { return { success:true, departments:getRows(getSheet(S_DEPTS)) }; }
+  catch(e) { return { success:false, message:e.toString() }; }
+}
+function getRoles() {
+  try { return { success:true, roles:getRows(getSheet(S_ROLES)) }; }
+  catch(e) { return { success:false, message:e.toString() }; }
+}
+function getLocations() {
+  try { return { success:true, locations:getRows(getSheet(S_LOCS)) }; }
+  catch(e) { return { success:false, message:e.toString() }; }
 }
 
-// ── Reset Attendance Sheet ────────────────────────────────────
-// Deletes old Attendance sheet and recreates with correct columns.
-// Run once from Apps Script editor after deploying this update.
-function resetAttendanceSheet() {
+// ════════════════════════════════════════════════════════════
+//  12. SETUP — creates all sheets with correct headers
+//  Run once from Apps Script editor: setupAllSheets()
+// ════════════════════════════════════════════════════════════
+function setupAllSheets() {
   try {
-    var ss  = SpreadsheetApp.getActiveSpreadsheet();
-    var old = ss.getSheetByName(SHEET_ATTENDANCE);
-    if (old) ss.deleteSheet(old);
-    var sheet = ss.insertSheet(SHEET_ATTENDANCE);
-    var h = [
-      'AttendanceID','UserID','FullName','Email',
-      'SessionID','Subject',
-      'EntryTimestamp','Date','EntryTime','Method',
-      'EntryLat','EntryLng','EntryAddress','EntryGPS','EntryDistanceMeters',
-      'ExitTime','ExitLat','ExitLng','ExitAddress','ExitGPS','ExitDistanceMeters','Duration'
-    ];
-    sheet.appendRow(h);
-    sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
-    // Freeze header row
-    sheet.setFrozenRows(1);
-    return { success:true, message:'Attendance sheet reset with ' + h.length + ' columns: ' + h.join(', ') };
-  } catch(err) { return { success:false, message:'resetAttendanceSheet: '+err.toString() }; }
-}
-function fixExistingRows() {
-  try {
-    var sheet   = getSheet(SHEET_USERS);
-    var data    = sheet.getDataRange().getValues();
-    var headers = data[0];
-    var roleCol = headers.indexOf('Role')+1;
-    var mfaCol  = headers.indexOf('MarkFromAnywhere')+1;
-    if (roleCol < 1) return { success:false, message:'Role column not found' };
-    var fixed = 0;
-    for (var i=1; i<data.length; i++) {
-      var role = String(data[i][roleCol-1]||'').trim();
-      var mfa  = mfaCol>0 ? String(data[i][mfaCol-1]||'').trim() : '';
-      // If Role is blank but MarkFromAnywhere has a role value
-      if (!role && (mfa==='teacher'||mfa==='student')) {
-        sheet.getRange(i+1,roleCol).setValue(mfa);
-        if (mfaCol>0) sheet.getRange(i+1,mfaCol).setValue('NO');
-        fixed++;
-      }
-      // If Role is blank entirely
-      if (!role && mfa!=='teacher' && mfa!=='student') {
-        sheet.getRange(i+1,roleCol).setValue('student');
-        fixed++;
-      }
-    }
-    return { success:true, message:'Fixed '+fixed+' rows' };
-  } catch(err) { return { success:false, message:'fixExistingRows: '+err.toString() }; }
+    [S_ROLES, S_DEPTS, S_LOCS, S_USERS, S_USERLOCMAP, S_SESSIONS, S_ATTENDANCE, S_CACHE]
+      .forEach(function(name){ getSheet(name); });
+    return { success:true, message:'All sheets created/verified.' };
+  } catch(e) { return { success:false, message:e.toString() }; }
 }
 
-// ── 17. Fix Sheet Headers + corrupted data rows ───────────────
-// Run this once if your Attendance sheet has "Column 1"/"Column 2" headers
-// or rows where Date contains "General" and EntryTimestamp is blank.
-function fixSheetHeaders() {
+// ════════════════════════════════════════════════════════════
+//  13. SEED DEFAULT DATA  (run once after setupSheets)
+// ════════════════════════════════════════════════════════════
+function seedDefaultData() {
   try {
-    var ss    = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName(SHEET_ATTENDANCE);
-    if (!sheet) return { success:false, message:'Attendance sheet not found' };
-
-    var tz      = Session.getScriptTimeZone();
-    var data    = sheet.getDataRange().getValues();
-    var headers = data[0];
-
-    // ── Step 1: Fix header row ──────────────────────────────
-    var headerFixes = {
-      'Column 1': 'SessionID',
-      'Column 2': 'Subject'
-    };
-    var headerChanged = false;
-    headers.forEach(function(h, i) {
-      if (headerFixes[h]) {
-        sheet.getRange(1, i+1).setValue(headerFixes[h])
-          .setFontWeight('bold').setBackground('#1a2a52').setFontColor('#ffffff');
-        headers[i] = headerFixes[h];
-        headerChanged = true;
-      }
-    });
-
-    // ── Step 2: Find column positions after header fix ──────
-    function colIdx(name) {
-      var idx = headers.indexOf(name);
-      return idx === -1 ? -1 : idx + 1;
-    }
-    var sessionIdCol    = colIdx('SessionID');
-    var subjectCol      = colIdx('Subject');
-    var entryTsCol      = colIdx('EntryTimestamp');
-    var dateCol         = colIdx('Date');
-    var entryTimeCol    = colIdx('EntryTime');
-    var methodCol       = colIdx('Method');
-
-    // ── Step 3: Fix data rows where columns were shifted ────
-    // Symptom: Date cell = "General" (the Subject value got written there)
-    // Cause:   appendRow wrote positionally into wrong columns
-    // Fix:     Read EntryTimestamp ISO string to recover Date+EntryTime
-    var rowsFixed = 0;
-    for (var i = 1; i < data.length; i++) {
-      var dateVal = String(data[i][dateCol - 1] || '').trim();
-
-      // If Date column doesn't look like a date, the row is corrupted
-      if (dateVal && !/^\d{4}-\d{2}-\d{2}$/.test(dateVal) && !(data[i][dateCol-1] instanceof Date)) {
-        // Try to recover from EntryTimestamp
-        var tsVal = data[i][entryTsCol - 1];
-        var entryDt = (tsVal instanceof Date) ? tsVal : new Date(tsVal);
-
-        if (!isNaN(entryDt.getTime())) {
-          var fixedDate = Utilities.formatDate(entryDt, tz, 'yyyy-MM-dd');
-          var fixedTime = Utilities.formatDate(entryDt, tz, 'HH:mm:ss');
-
-          // The current "Date" cell actually has Subject value — move it
-          var wrongSubject = dateVal; // e.g. "General"
-          if (subjectCol > 0 && !String(data[i][subjectCol-1]||'').trim()) {
-            sheet.getRange(i+1, subjectCol).setValue(wrongSubject);
-          }
-          sheet.getRange(i+1, dateCol).setValue(fixedDate);
-          if (entryTimeCol > 0 && !String(data[i][entryTimeCol-1]||'').trim()) {
-            sheet.getRange(i+1, entryTimeCol).setValue(fixedTime);
-          }
-          rowsFixed++;
-        } else {
-          // No EntryTimestamp to recover from — write today's date as fallback
-          var now = new Date();
-          sheet.getRange(i+1, dateCol).setValue(Utilities.formatDate(now, tz, 'yyyy-MM-dd'));
-          rowsFixed++;
-        }
-      }
+    // Roles
+    var rSheet = getSheet(S_ROLES);
+    if (getRows(rSheet).length === 0) {
+      rSheet.appendRow(['role_student', 'student']);
+      rSheet.appendRow(['role_teacher', 'teacher']);
+      rSheet.appendRow(['role_admin',   'admin']);
     }
 
-    SpreadsheetApp.flush();
+    // Default location (lab)
+    var lSheet = getSheet(S_LOCS);
+    if (getRows(lSheet).length === 0) {
+      lSheet.appendRow([DEFAULT_LOC_ID, 'Main Lab – SIT Tumkur', DEFAULT_LAT, DEFAULT_LNG]);
+    }
 
-    return {
-      success:      true,
-      headerFixed:  headerChanged,
-      rowsFixed:    rowsFixed,
-      message:      'Headers fixed: ' + headerChanged + ', data rows repaired: ' + rowsFixed +
-                    '. New headers: ' + headers.join(' | ')
-    };
-  } catch(err) { return { success:false, message:'fixSheetHeaders: '+err.toString() }; }
+    // Sample departments
+    var dSheet = getSheet(S_DEPTS);
+    if (getRows(dSheet).length === 0) {
+      var depts = [
+        ['dept_cse','Computer Science & Engineering','',''],
+        ['dept_ise','Information Science & Engineering','',''],
+        ['dept_ece','Electronics & Communication','',''],
+        ['dept_eee','Electrical & Electronics','',''],
+        ['dept_mech','Mechanical Engineering','',''],
+        ['dept_civil','Civil Engineering','',''],
+        ['dept_chem','Chemical Engineering','',''],
+        ['dept_bio','Biotechnology','',''],
+        ['dept_mba','MBA','',''],
+        ['dept_mca','MCA','','']
+      ];
+      depts.forEach(function(d){ dSheet.appendRow(d); });
+    }
+
+    return { success:true, message:'Default data seeded.' };
+  } catch(e) { return { success:false, message:e.toString() }; }
 }
 
-// ── 16. Debug ─────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  14. DEBUG
+// ════════════════════════════════════════════════════════════
 function debugInfo() {
   try {
-    var ss=SpreadsheetApp.getActiveSpreadsheet();
-    var userSheet=getSheet(SHEET_USERS);
-    var headers=userSheet.getRange(1,1,1,userSheet.getLastColumn()).getValues()[0];
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
     return {
-      success:true,
-      spreadsheetName:ss.getName(),
-      sheets:ss.getSheets().map(function(s){ return s.getName(); }),
-      userHeaders:headers,
+      success:    true,
+      name:       ss.getName(),
+      sheets:     ss.getSheets().map(function(s){ return { name:s.getName(), rows:s.getLastRow()-1 }; }),
+      tz:         Session.getScriptTimeZone(),
+      schema_ver: 'v5'
     };
-  } catch(err) { return { success:false, message:'debug: '+err.toString() }; }
+  } catch(e) { return { success:false, message:'debug: '+e }; }
 }
