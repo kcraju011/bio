@@ -25,9 +25,11 @@
 body{font-family:'Sora',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(79,110,247,.18) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 110%,rgba(124,58,237,.14) 0%,transparent 55%);pointer-events:none;z-index:0}
 
+/* ── Card ── */
 .card{position:relative;width:100%;max-width:440px;background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.6);z-index:1;animation:slideUp .5s cubic-bezier(.22,1,.36,1) both;margin:0 auto}
 @keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
 
+/* ── Header ── */
 .header{padding:28px 24px 18px;background:linear-gradient(160deg,#0d1a40 0%,#080f2a 100%);text-align:center}
 .logo-ring{width:58px;height:58px;margin:0 auto 12px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;box-shadow:0 0 28px rgba(79,110,247,.5);animation:pulse 3s ease-in-out infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 18px rgba(79,110,247,.4)}50%{box-shadow:0 0 36px rgba(79,110,247,.7)}}
@@ -36,16 +38,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tagline{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.8px;text-transform:uppercase}
 .college-badge{display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:3px 10px;background:rgba(79,110,247,.15);border:1px solid rgba(79,110,247,.3);border-radius:20px;font-size:10.5px;color:var(--acc);letter-spacing:.3px}
 
+/* ── Tabs ── */
 .tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)}
 .tab-btn{padding:12px 0;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:12px;font-weight:500;color:var(--muted);transition:color .2s,background .2s;position:relative}
 .tab-btn.active{color:var(--acc);background:var(--tab-act)}
 .tab-btn.active::after{content:'';position:absolute;bottom:0;left:12px;right:12px;height:2px;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:2px 2px 0 0}
 
+/* ── Panes ── */
 .form-body{padding:20px 20px 24px}
 .pane{display:none}
 .pane.active{display:block;animation:fadeIn .3s ease both}
 @keyframes fadeIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
 
+/* ── Fields ── */
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:10px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
@@ -56,11 +61,23 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .field select option{background:#1a2a52}
 .field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.4)}
 
+/* pw toggle */
 .pw-wrap{position:relative}
 .pw-wrap input{padding-right:40px}
 .pw-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;transition:color .2s}
 .pw-eye:hover{color:var(--text)}
 
+/* toggle switch */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--inp);border:1px solid var(--border);border-radius:var(--rad);padding:11px 13px;margin-bottom:16px}
+.toggle-row span{font-size:13px;color:var(--text)}
+.toggle{position:relative;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:background .3s}
+.slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .3s}
+.toggle input:checked+.slider{background:var(--acc)}
+.toggle input:checked+.slider::before{transform:translateX(20px)}
+
+/* buttons */
 .btn{width:100%;padding:12px;border:none;border-radius:var(--rad);font-family:'Sora',sans-serif;font-size:14.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .1s,box-shadow .2s}
 .btn-primary{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 4px 18px rgba(79,110,247,.35)}
 .btn-primary:hover{opacity:.91;box-shadow:0 6px 26px rgba(79,110,247,.5)}
@@ -78,6 +95,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .hint{text-align:center;font-size:11px;color:var(--muted);margin-top:7px}
 
+/* ── Info boxes ── */
 .info-box{border-radius:12px;padding:11px 13px;font-size:12.5px;margin-bottom:14px;display:flex;align-items:flex-start;gap:9px}
 .info-box.blue{background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.25);color:#a5b4fc}
 .info-box.green{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#86efac}
@@ -85,52 +103,62 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .info-box.orange{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fcd34d}
 .info-box svg{flex-shrink:0;margin-top:1px}
 
+/* ── Session badge ── */
 .session-card{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:14px;padding:14px;margin-bottom:14px}
 .session-card .subj{font-size:15px;font-weight:600;color:var(--success);margin-bottom:4px}
 .session-card .meta{font-size:11.5px;color:var(--muted)}
+.session-card .timer{font-size:20px;font-weight:700;color:var(--success);font-variant-numeric:tabular-nums;margin-top:6px}
 .no-session{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:14px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:14px}
 
+/* ── Attendance list ── */
 .att-list{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;margin-top:12px}
 .att-item{background:var(--inp);border:1px solid var(--border);border-radius:10px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between}
 .att-item .name{font-size:13px;font-weight:500;color:var(--text)}
 .att-item .meta{font-size:11px;color:var(--muted)}
 .att-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;background:rgba(34,197,94,.15);color:var(--success);border:1px solid rgba(34,197,94,.3)}
 
+/* ── Toast ── */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(50px);background:#1a2a52;border:1px solid var(--acc);color:var(--text);padding:10px 20px;border-radius:40px;font-size:12.5px;opacity:0;transition:opacity .3s,transform .3s;z-index:999;white-space:nowrap;max-width:90vw;text-align:center}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.error{border-color:var(--danger)}
 #toast.success{border-color:var(--success)}
 #toast.warn{border-color:var(--warn)}
 
+/* ── Location status bar ── */
 .loc-bar{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:10px;font-size:11.5px;margin-bottom:12px}
 .loc-bar.getting{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:var(--warn)}
 .loc-bar.ok{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:var(--success)}
 .loc-bar.fail{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:var(--danger)}
 
+/* ── Attendance success card ── */
 .att-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);border-radius:14px;padding:14px 16px;margin-bottom:14px}
 .att-card .att-name{font-size:15px;font-weight:600;color:var(--success);margin-bottom:6px}
 .att-card .att-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);padding:3px 0;border-bottom:1px solid rgba(34,197,94,.1)}
 .att-card .att-row:last-child{border:none}
 .att-card .att-val{color:var(--text);font-weight:500}
 
+/* ── Exit button ── */
 .btn-exit{width:100%;padding:11px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);border-radius:var(--rad);color:var(--danger);font-family:'Sora',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;transition:background .2s}
 .btn-exit:hover{background:rgba(239,68,68,.2)}
 .btn-exit:disabled{opacity:.45;cursor:not-allowed}
 .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── Teacher dashboard layout ── */
 .dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .dash-name{font-size:14px;font-weight:600;color:var(--text)}
 .dash-sub{font-size:10.5px;color:var(--muted);margin-top:2px}
 .dash-logout{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;transition:color .2s,border-color .2s}
 .dash-logout:hover{color:var(--danger);border-color:var(--danger)}
 
+/* ── Sub-tabs ── */
 .sub-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--inp);border-radius:10px;padding:3px;margin-bottom:14px;gap:2px}
 .sub-tab{padding:7px 0;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:11px;font-weight:500;color:var(--muted);border-radius:8px;transition:all .2s}
 .sub-tab.active{background:var(--tab-act);color:var(--acc)}
 .sub-pane{display:none}
 .sub-pane.active{display:block;animation:fadeIn .25s ease both}
 
+/* ── Stats row ── */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 .stat-card{border-radius:12px;padding:10px 6px;text-align:center;border:1px solid}
 .stat-card.green{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25)}
@@ -140,46 +168,30 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stat-num{font-size:18px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 .stat-lbl{font-size:9.5px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.6px}
 
+/* ── Segment control ── */
 .seg-control{display:inline-flex;background:var(--inp);border-radius:8px;padding:2px;gap:2px}
 .seg{padding:5px 14px;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:11.5px;font-weight:500;color:var(--muted);border-radius:6px;transition:all .2s}
 .seg.active{background:var(--tab-act);color:var(--acc)}
 
+/* ── Export button ── */
 .export-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.3);border-radius:8px;color:var(--acc);font-size:11.5px;font-family:'Sora',sans-serif;cursor:pointer;float:right;transition:background .2s}
 .export-btn:hover{background:rgba(79,110,247,.2)}
 
+/* ── Live toggle row ── */
 #live-toggle-row{display:flex;align-items:center;justify-content:space-between}
 
+/* ── Student search ── */
 #student-search{background:var(--inp);border:1px solid var(--border);border-radius:var(--rad);color:var(--text);font-family:'Sora',sans-serif;font-size:13px;padding:9px 13px;width:100%;outline:none;transition:border-color .2s}
 #student-search:focus{border-color:var(--acc)}
 #student-search::placeholder{color:var(--muted)}
 
-/* ── Role chip toggle ── */
-.role-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0}
-.role-chip{position:relative}
-.role-chip input[type=radio]{position:absolute;opacity:0;width:0;height:0}
-.role-chip label{display:flex;align-items:center;gap:9px;padding:11px 13px;background:var(--inp);border:1.5px solid var(--border);border-radius:var(--rad);cursor:pointer;transition:border-color .2s,background .2s;font-size:13px;font-weight:500;color:var(--muted)}
-.role-chip label .chip-icon{font-size:18px;line-height:1}
-.role-chip label .chip-text small{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-top:1px}
-.role-chip input:checked + label{border-color:var(--acc);background:rgba(79,110,247,.1);color:var(--text)}
-.role-chip input:checked + label .chip-text small{color:var(--acc)}
-
-/* ── Dept pills grid ── */
-.dept-pills{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.dept-pill{position:relative}
-.dept-pill input[type=radio]{position:absolute;opacity:0;width:0;height:0}
-.dept-pill label{display:flex;flex-direction:column;align-items:flex-start;padding:9px 11px;background:var(--inp);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .18s,background .18s;font-size:11.5px;font-weight:500;color:var(--muted);line-height:1.3}
-.dept-pill label .pill-short{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
-.dept-pill input:checked + label{border-color:var(--acc);background:rgba(79,110,247,.1)}
-.dept-pill input:checked + label .pill-short{color:var(--acc)}
-
-/* ── Dept section label ── */
-.dept-section-title{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:12px 0 7px;display:flex;align-items:center;gap:6px}
-.dept-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+/* ── Location pill ── */
 </style>
 </head>
 <body>
 <div class="card">
 
+  <!-- Header -->
   <div class="header">
     <div class="logo-ring">
       <svg viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
@@ -192,86 +204,71 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
   </div>
 
+  <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn active" id="tab-signin"   onclick="switchTab('signin')">Sign In</button>
-    <button class="tab-btn"        id="tab-register" onclick="switchTab('register')">Register</button>
-    <button class="tab-btn"        id="tab-teacher"  onclick="switchTab('teacher')">Teacher</button>
+    <button class="tab-btn" id="tab-signin"   onclick="switchTab('signin')">Sign In</button>
+    <button class="tab-btn active" id="tab-register" onclick="switchTab('register')">Register</button>
+    <button class="tab-btn" id="tab-teacher"  onclick="switchTab('teacher')">Teacher</button>
   </div>
 
   <div class="form-body">
 
-    <!-- ══ SIGN IN PANE ══ -->
-    <div class="pane active" id="pane-signin">
+    <!-- ══════════════════════════════════════════
+         SIGN IN PANE — Biometric only
+    ══════════════════════════════════════════ -->
+    <div class="pane" id="pane-signin">
+
+      <!-- Location status pill -->
       <div id="loc-status-bar"></div>
+
+      <!-- Attendance success card (shown after marking) -->
       <div id="att-success-card" style="display:none"></div>
-      <div class="info-box blue">
+
+      <div class="info-box blue" style="margin-bottom:14px">
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
         <span>Enter your email then use your fingerprint or Face ID to mark attendance.</span>
       </div>
+
       <div class="field">
         <label>Email <span class="req">*</span></label>
         <input type="email" id="si-email" placeholder="usn@sit.ac.in"/>
       </div>
+
       <button class="btn btn-primary" id="btn-bio-signin" onclick="handleBiometricSignIn()">
         <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
         Mark Attendance with Fingerprint / Face ID
       </button>
     </div>
 
-    <!-- ══ REGISTER PANE ══ -->
-    <div class="pane" id="pane-register">
+    <!-- ══════════════════════════════════════════
+         REGISTER PANE
+    ══════════════════════════════════════════ -->
+    <div class="pane active" id="pane-register">
       <div class="row2">
         <div class="field"><label>Full Name <span class="req">*</span></label><input type="text" id="r-name" placeholder="Your name"/></div>
         <div class="field"><label>Date of Birth</label><input type="date" id="r-dob"/></div>
       </div>
       <div class="field"><label>Email <span class="req">*</span></label><input type="email" id="r-email" placeholder="usn@sit.ac.in"/></div>
       <div class="field"><label>Mobile</label><input type="tel" id="r-mobile" placeholder="+91 9876543210"/></div>
-
-      <!-- Institution field -->
-      <div class="field">
-        <label>Institution <span class="req">*</span></label>
-        <select id="r-institution" onchange="onInstitutionChange()">
-          <option value="">Select institution</option>
-          <option value="SIT Tumkur">Siddaganga Institute of Technology, Tumkur</option>
-          <option value="Other">Other</option>
-        </select>
-      </div>
-      <!-- Custom institution input (shown when "Other" selected) -->
-      <div class="field" id="r-institution-other-wrap" style="display:none">
-        <label>Institution Name <span class="req">*</span></label>
-        <input type="text" id="r-institution-other" placeholder="Enter your institution name"/>
-      </div>
-
-      <!-- Role selector — ABOVE department so dept list can react -->
-      <div class="field">
-        <label>Role <span class="req">*</span></label>
-        <select id="r-role" onchange="onRoleChange()">
-          <option value="">Select role</option>
-          <option value="student">Student</option>
-          <option value="teacher">Teacher / Staff</option>
-        </select>
-      </div>
-
-      <!-- Department — shown/hidden and repopulated based on role -->
-      <div class="field" id="r-dept-wrap" style="display:none">
-        <label id="r-dept-label">Department <span class="req">*</span></label>
+      <div class="field"><label>Department</label>
         <select id="r-dept">
           <option value="">Select department</option>
+          <option>Computer Science & Engineering</option>
+          <option>Information Science & Engineering</option>
+          <option>Electronics & Communication</option>
+          <option>Electrical & Electronics</option>
+          <option>Mechanical Engineering</option>
+          <option>Civil Engineering</option>
+          <option>Chemical Engineering</option>
+          <option>Biotechnology</option>
+          <option>MBA</option>
+          <option>MCA</option>
         </select>
       </div>
-
-      <!-- Staff designation — shown only for teacher role -->
-      <div class="field" id="r-designation-wrap" style="display:none">
-        <label>Designation <span class="req">*</span></label>
-        <select id="r-designation">
-          <option value="">Select designation</option>
-          <option value="Assistant Professor">Assistant Professor</option>
-          <option value="Associate Professor">Associate Professor</option>
-          <option value="Professor">Professor</option>
-          <option value="HOD">Head of Department (HOD)</option>
-          <option value="Principal">Principal</option>
-          <option value="Lab Instructor">Lab Instructor</option>
-          <option value="Administrative Staff">Administrative Staff</option>
+      <div class="field"><label>Role</label>
+        <select id="r-role" onchange="toggleRoleField()">
+          <option value="student">Student</option>
+          <option value="teacher">Teacher / Staff</option>
         </select>
       </div>
       <div class="field"><label>Password <span class="req">*</span></label>
@@ -282,11 +279,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           </button>
         </div>
       </div>
+
       <button class="btn btn-primary" id="btn-register" onclick="handleRegister()">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Create Account
       </button>
+
       <div class="divider">then register biometric</div>
+
       <button class="btn btn-secondary" id="btn-bio-reg" disabled onclick="handleBiometricRegister()">
         <svg width="17" height="17" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
         Register Fingerprint / Face ID
@@ -294,8 +294,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="hint" id="bio-hint">Create your account first, then register biometric</div>
     </div>
 
-    <!-- ══ TEACHER PANE ══ -->
+    <!-- ══════════════════════════════════════════
+         TEACHER PANE — Full Admin Panel
+    ══════════════════════════════════════════ -->
     <div class="pane" id="pane-teacher">
+
+      <!-- ── Login ── -->
       <div id="teacher-login-section">
         <div class="info-box blue">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
@@ -316,7 +320,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </button>
       </div>
 
+      <!-- ── Dashboard (after login) ── -->
       <div id="teacher-dashboard" style="display:none">
+
+        <!-- Header row -->
         <div class="dash-header">
           <div>
             <div class="dash-name" id="t-welcome"></div>
@@ -325,14 +332,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           <button class="dash-logout" onclick="teacherLogout()">Logout</button>
         </div>
 
+        <!-- Sub-tabs -->
         <div class="sub-tabs">
-          <button class="sub-tab active" id="stab-session"  onclick="switchSubTab('session')">Session</button>
-          <button class="sub-tab"        id="stab-live"     onclick="switchSubTab('live')">Live</button>
-          <button class="sub-tab"        id="stab-history"  onclick="switchSubTab('history')">History</button>
-          <button class="sub-tab"        id="stab-students" onclick="switchSubTab('students')">Students</button>
+          <button class="sub-tab active" id="stab-session" onclick="switchSubTab('session')">Session</button>
+          <button class="sub-tab" id="stab-live"    onclick="switchSubTab('live')">Live</button>
+          <button class="sub-tab" id="stab-history" onclick="switchSubTab('history')">History</button>
+          <button class="sub-tab" id="stab-students" onclick="switchSubTab('students')">Students</button>
         </div>
 
-        <!-- Session sub-pane -->
+        <!-- ── Sub-pane: Session ── -->
         <div class="sub-pane active" id="sp-session">
           <div id="active-session-display"></div>
           <div id="open-session-form">
@@ -355,15 +363,31 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           </div>
         </div>
 
-        <!-- Live sub-pane -->
+        <!-- ── Sub-pane: Live Dashboard ── -->
         <div class="sub-pane" id="sp-live">
           <div id="live-session-info" class="no-session" style="margin-bottom:12px">No active session</div>
+
+          <!-- Stats row -->
           <div class="stats-row" id="live-stats" style="display:none">
-            <div class="stat-card green"><div class="stat-num" id="stat-present">0</div><div class="stat-lbl">Present</div></div>
-            <div class="stat-card red"><div class="stat-num" id="stat-absent">0</div><div class="stat-lbl">Absent</div></div>
-            <div class="stat-card blue"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Total</div></div>
-            <div class="stat-card purple"><div class="stat-num" id="stat-pct">0%</div><div class="stat-lbl">Rate</div></div>
+            <div class="stat-card green">
+              <div class="stat-num" id="stat-present">0</div>
+              <div class="stat-lbl">Present</div>
+            </div>
+            <div class="stat-card red">
+              <div class="stat-num" id="stat-absent">0</div>
+              <div class="stat-lbl">Absent</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-num" id="stat-total">0</div>
+              <div class="stat-lbl">Total</div>
+            </div>
+            <div class="stat-card purple">
+              <div class="stat-num" id="stat-pct">0%</div>
+              <div class="stat-lbl">Attendance</div>
+            </div>
           </div>
+
+          <!-- Live toggle: present / absent -->
           <div id="live-toggle-row" style="display:none;margin-bottom:10px">
             <div class="seg-control">
               <button class="seg active" id="seg-present" onclick="showLiveTab('present')">Present</button>
@@ -374,14 +398,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
               Export CSV
             </button>
           </div>
+
           <div id="live-list" class="att-list"></div>
+
           <div id="live-refresh-row" style="display:none;text-align:center;margin-top:10px">
             <button onclick="refreshLive()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↻ Refresh</button>
             <div style="font-size:10px;color:var(--muted);margin-top:4px" id="live-updated"></div>
           </div>
         </div>
 
-        <!-- History sub-pane -->
+        <!-- ── Sub-pane: History ── -->
         <div class="sub-pane" id="sp-history">
           <div class="field" style="margin-bottom:10px">
             <label>Filter by date</label>
@@ -396,184 +422,231 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           </div>
         </div>
 
-        <!-- Students sub-pane -->
+        <!-- ── Sub-pane: Students ── -->
         <div class="sub-pane" id="sp-students">
           <div class="field" style="margin-bottom:10px">
-            <input type="text" id="student-search" placeholder="Search by name, email or dept…" oninput="filterStudents()"/>
+            <input type="text" id="student-search" placeholder="Search by name or email…" oninput="filterStudents()"/>
           </div>
           <div id="student-count" style="font-size:11px;color:var(--muted);margin-bottom:8px"></div>
           <div id="students-list" class="att-list"></div>
         </div>
 
       </div><!-- /teacher-dashboard -->
-    </div><!-- /pane-teacher -->
+    </div>
+
   </div><!-- /form-body -->
 </div><!-- /card -->
 
 <div id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════════════════════
-//  CONFIG — update to your new v5 deployed Apps Script URL
-// ══════════════════════════════════════════════════════════════
+  //url done
+// ── CONFIG ────────────────────────────────────────────────────
 const API = 'https://script.google.com/macros/s/AKfycbw6f0mGuYi7cNcDNXUV2V_7Kbib030O_IX6XPHhExw79pUPuVIbuSoi_GKgnPH3JK5u-Q/exec';
-
+             
 // ── State ─────────────────────────────────────────────────────
+let currentUserId    = null;
+let currentUserName  = null;
+let currentUserRole  = null;
 let registeredUserId = null;
-let markedUserId     = null;
+let markedUserId     = null; // set after successful attendance mark (for exit)
 let teacherData      = null;
 let sessionTimer     = null;
-let liveSessionId    = null;
+let activeSessionId  = null;
+let deviceId         = null;
 let liveData         = null;
 let liveTab          = 'present';
+let liveSessionId    = null;
 let allStudents      = [];
 let historyData      = [];
-let deviceId         = null;
-let deptCache        = [];  // client-side cache for departments
+// v5 master-data — loaded from API on init
+let deptMap          = {}; // department_id → name
+let locList          = []; // AttendanceLocations rows
+let activeLocId      = null; // location_id for current session
 
-// ── Client-side response cache (30s TTL) ─────────────────────
-const _memCache = {};
-function memGet(key) {
-  const e = _memCache[key];
-  return (e && e.expires > Date.now()) ? e.value : null;
-}
-function memSet(key, value, ttlMs) {
-  _memCache[key] = { value, expires: Date.now() + (ttlMs||30000) };
-}
+// ── GPS + reverse geocode ─────────────────────────────────────
 
-// ── API helper with deduplication ────────────────────────────
-const _inFlight = {};
-async function api(payload) {
-  const key = JSON.stringify(payload);
-
-  // Deduplicate identical in-flight requests (dashboard spam)
-  if (_inFlight[key]) return _inFlight[key];
-
-  const url = API + '?data=' + encodeURIComponent(key);
-  const p   = fetch(url, { redirect:'follow' })
-    .then(r => r.text())
-    .then(t => { try { return JSON.parse(t); } catch(e) { throw new Error('Server error'); } })
-    .finally(() => delete _inFlight[key]);
-
-  _inFlight[key] = p;
-  return p;
-}
-
-// ── GPS helpers ───────────────────────────────────────────────
+// Step 1: Get fine location using watchPosition
+// Collects the best reading within 10s, accepts immediately at ≤50m accuracy
 function getLocation() {
-  return new Promise(resolve => {
-    if (!navigator.geolocation) return resolve({ lat:'', lng:'', denied:false });
-    let best = null, watchId = null, done = false;
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({ lat:'', lng:'', accuracy:null, denied:false });
+      return;
+    }
 
-    function finish(r) {
-      if (done) return; done = true;
-      try { if (watchId !== null) navigator.geolocation.clearWatch(watchId); } catch(e){}
-      resolve(r || { lat:'', lng:'', denied:false });
+    let bestResult = null;
+    let watchId    = null;
+    let settled    = false;
+
+    const FINE_ACCURACY_TARGET = 50;   // metres — accept immediately if this good
+    const MAX_WAIT_MS          = 10000; // 10s max wait
+
+    function finish(result) {
+      if (settled) return;
+      settled = true;
+      if (watchId !== null) {
+        try { navigator.geolocation.clearWatch(watchId); } catch(e) {}
+      }
+      resolve(result || { lat:'', lng:'', accuracy:null, denied:false });
     }
 
     watchId = navigator.geolocation.watchPosition(
-      pos => {
-        const r = { lat:pos.coords.latitude, lng:pos.coords.longitude, accuracy:pos.coords.accuracy, denied:false };
-        if (!best || r.accuracy < best.accuracy) best = r;
-        if (r.accuracy <= 50) finish(best);
+      (pos) => {
+        const reading = {
+          lat:      pos.coords.latitude,
+          lng:      pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          address:  '',
+          denied:   false
+        };
+        if (!bestResult || reading.accuracy < bestResult.accuracy) {
+          bestResult = reading;
+        }
+        if (reading.accuracy <= FINE_ACCURACY_TARGET) {
+          finish(bestResult);
+        }
       },
-      err => {
-        if (err.code === 1) finish({ lat:'', lng:'', denied:true });
-        else                finish(best || { lat:'', lng:'', denied:false });
+      (err) => {
+        if (err.code === 1) {
+          // PERMISSION_DENIED — user blocked location
+          finish({ lat:'', lng:'', accuracy:null, denied:true, error:'Permission denied' });
+        } else {
+          // POSITION_UNAVAILABLE or TIMEOUT — use best we have
+          finish(bestResult || { lat:'', lng:'', accuracy:null, denied:false, error:err.message });
+        }
       },
-      { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+      {
+        enableHighAccuracy: true,
+        timeout:            10000,
+        maximumAge:         0
+      }
     );
-    setTimeout(() => finish(best), 10000);
+
+    setTimeout(() => finish(bestResult), MAX_WAIT_MS);
   });
 }
 
+// Step 2: Get location + reverse geocode address
 async function getLocationWithAddress() {
   const loc = await getLocation();
-  if (loc.denied) { showLocBar('fail','Location blocked — allow location in browser settings'); return loc; }
-  if (!loc.lat)   return loc;
+
+  // Show clear message if permission was denied
+  if (loc.denied) {
+    showLocBar('fail',
+      'Location blocked — please allow location in browser settings and try again');
+    return loc;
+  }
+
+  if (!loc.lat) return loc;
+
   try {
-    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json`,{ headers:{'Accept-Language':'en'} });
-    const d = await r.json();
-    loc.address = d.display_name ? d.display_name.split(',').slice(0,3).join(',').trim() : '';
-  } catch(e) { loc.address = ''; }
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json`;
+    const res = await fetch(url, { headers:{ 'Accept-Language':'en' } });
+    const d   = await res.json();
+    loc.address = d.display_name
+      ? d.display_name.split(',').slice(0,3).join(',').trim()
+      : '';
+  } catch(e) {
+    loc.address = '';
+  }
   return loc;
 }
 
-function showLocBar(state, msg, acc) {
+function showLocBar(state, msg, accuracy) {
   const el = document.getElementById('loc-status-bar');
   if (!el) return;
   const icons = { getting:'📡', ok:'📍', fail:'⚠️' };
-  const badge = (acc != null && state === 'ok') ? ` <span style="font-size:10px;opacity:.7">(±${Math.round(acc)}m)</span>` : '';
-  el.innerHTML = `<div class="loc-bar ${state}">${icons[state]||''} ${msg}${badge}</div>`;
+  // Show accuracy badge when we have a fix
+  const accBadge = (accuracy != null && state === 'ok')
+    ? ` <span style="font-size:10px;opacity:.75;margin-left:4px">(±${Math.round(accuracy)}m ${accuracy <= 50 ? '🎯 fine' : '📶 coarse'})</span>`
+    : '';
+  el.innerHTML = `<div class="loc-bar ${state}">${icons[state]||''} ${msg}${accBadge}</div>`;
 }
 
-// ── Attendance success card ───────────────────────────────────
 function showAttendanceCard(data, userId) {
   markedUserId = userId;
-  try { sessionStorage.setItem('ba_uid', userId); saveSession(data); } catch(e){}
+  // Persist so Exit button works even if state was lost
+  try { sessionStorage.setItem('bioattend_marked_uid', userId); } catch(e) {}
+
   const el = document.getElementById('att-success-card');
   if (!el) return;
   el.style.display = 'block';
-  const dist = data.dist_from_centre;
-  const distHtml = (dist !== '' && dist !== undefined)
-    ? `<div class="att-row"><span>Distance from lab</span><span class="att-val" style="color:${dist<=100?'var(--success)':dist<=300?'var(--warn)':'var(--danger)'}">${dist}m ${dist<=100?'✓ In lab':dist<=300?'⚠ Nearby':'✗ Far'}</span></div>`
-    : '';
   el.innerHTML = `
     <div class="att-card">
-      <div class="att-name">✓ Entry Marked</div>
+      <div class="att-name">✓ Attendance Marked</div>
       <div class="att-row"><span>Name</span><span class="att-val">${data.name||''}</span></div>
       <div class="att-row"><span>Date</span><span class="att-val">${data.date||''}</span></div>
-      <div class="att-row"><span>Time</span><span class="att-val">${data.time||''}</span></div>
+      <div class="att-row"><span>Entry time</span><span class="att-val">${data.time||''}</span></div>
       <div class="att-row"><span>Location</span><span class="att-val" style="max-width:160px;text-align:right;font-size:10.5px">${data.location||'not captured'}</span></div>
-      ${distHtml}
+      ${data.gps ? `<div class="att-row"><span>GPS</span><span class="att-val" style="max-width:160px;text-align:right;font-size:10px">${data.gps}</span></div>` : ''}
+      ${(data.distanceMeters !== '' && data.distanceMeters !== undefined) ? `<div class="att-row"><span>Distance from lab</span><span class="att-val" style="color:${data.distanceMeters <= 100 ? 'var(--success)' : data.distanceMeters <= 300 ? 'var(--warn)' : 'var(--danger)'}">${data.distanceMeters} m ${data.distanceMeters <= 100 ? '✓ In lab' : data.distanceMeters <= 300 ? '⚠ Nearby' : '✗ Far'}</span></div>` : ''}
+      <div class="att-row"><span>Method</span><span class="att-val">${data.method||'password'}</span></div>
     </div>
     <button class="btn-exit" id="btn-exit" onclick="handleExit()">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
       Mark Exit (leaving classroom)
     </button>`;
-  // hide sign-in form elements
-  ['si-email'].forEach(id => { const f = document.getElementById(id)?.closest('.field'); if (f) f.style.display='none'; });
-  document.querySelector('#pane-signin .info-box').style.display = 'none';
-  document.getElementById('btn-bio-signin').style.display = 'none';
-}
 
-// SessionStorage helpers
-function saveSession(d) {
-  const keys = { ba_name:d.name, ba_date:d.date, ba_time:d.time, ba_loc:d.location, ba_dist:d.dist_from_centre };
-  Object.entries(keys).forEach(([k,v]) => { try { sessionStorage.setItem(k,v||''); } catch(e){} });
-}
-function clearSession() {
-  ['ba_uid','ba_name','ba_date','ba_time','ba_loc','ba_dist'].forEach(k => { try { sessionStorage.removeItem(k); } catch(e){} });
+  // Hide sign-in fields while card is shown
+  const emailField = document.getElementById('si-email');
+  if (emailField && emailField.closest('.field')) emailField.closest('.field').style.display = 'none';
+  const infoBox = document.querySelector('#pane-signin .info-box');
+  if (infoBox) infoBox.style.display = 'none';
+  const btnBio = document.getElementById('btn-bio-signin');
+  if (btnBio) btnBio.style.display = 'none';
 }
 
 // ── Device fingerprint ────────────────────────────────────────
 async function getDeviceId() {
   if (deviceId) return deviceId;
-  try { const s = localStorage.getItem('ba_device'); if (s) { deviceId=s; return s; } } catch(e){}
+  try {
+    const stored = localStorage.getItem('bioattend_device_id');
+    if (stored) { deviceId = stored; return deviceId; }
+  } catch(e) {}
   const canvas = document.createElement('canvas');
   const ctx    = canvas.getContext('2d');
-  ctx.textBaseline='top'; ctx.font='14px Arial'; ctx.fillText('BioAttend-SIT',2,2);
-  const raw = [navigator.userAgent, navigator.language, screen.width+'x'+screen.height,
-               screen.colorDepth, new Date().getTimezoneOffset(), navigator.hardwareConcurrency||'',
-               canvas.toDataURL().slice(-50)].join('|');
+  ctx.textBaseline = 'top'; ctx.font = '14px Arial';
+  ctx.fillText('BioAttend-SIT', 2, 2);
+  const raw = [
+    navigator.userAgent, navigator.language,
+    screen.width+'x'+screen.height, screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency||'',
+    navigator.maxTouchPoints||'',
+    canvas.toDataURL().slice(-60)
+  ].join('|');
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
-  deviceId  = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,16);
-  try { localStorage.setItem('ba_device', deviceId); } catch(e){}
+  const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  deviceId  = hex.slice(0,16);
+  try { localStorage.setItem('bioattend_device_id', deviceId); } catch(e) {}
   return deviceId;
+}
+
+// ── API helper ────────────────────────────────────────────────
+async function api(payload) {
+  const url = API + '?data=' + encodeURIComponent(JSON.stringify(payload));
+  const res = await fetch(url, { redirect:'follow' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  try { return JSON.parse(text); }
+  catch(e) { console.error('Non-JSON:', text); throw new Error('Server error'); }
 }
 
 // ── Toast ─────────────────────────────────────────────────────
 function toast(msg, type='') {
   const t = document.getElementById('toast');
-  t.textContent=msg; t.className='show '+type;
-  clearTimeout(t._t); t._t=setTimeout(()=>t.className='',3500);
+  t.textContent = msg; t.className = 'show '+type;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = '', 3500);
 }
 
-// ── Loading state ─────────────────────────────────────────────
+// ── Loading ───────────────────────────────────────────────────
 function setLoading(id, on) {
-  const b = document.getElementById(id); if (!b) return;
-  if (on) { b._html=b.innerHTML; b.innerHTML='<span class="spin"></span> Please wait…'; b.disabled=true; }
-  else    { b.innerHTML=b._html||b.innerHTML; b.disabled=false; }
+  const b = document.getElementById(id);
+  if (!b) return;
+  if (on) { b._html = b.innerHTML; b.innerHTML = '<span class="spin"></span> Please wait…'; b.disabled = true; }
+  else    { b.innerHTML = b._html || b.innerHTML; b.disabled = false; }
 }
 
 // ── Tabs ──────────────────────────────────────────────────────
@@ -582,466 +655,465 @@ function switchTab(tab) {
     document.getElementById('pane-'+t).classList.toggle('active', t===tab);
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
   });
-  if (tab === 'register') { /* dept pills rendered on role change */ }
 }
 
-function togglePw(id) { const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; }
-function fmtTime(s) { const m=Math.floor(Math.max(0,s)/60),sec=Math.max(0,s)%60; return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'); }
-
-// ── Department data — role-segmented ─────────────────────────
-const DEPT_DATA = {
-  student: [
-    { group: 'Engineering',
-      depts: [
-        { id:'dept_cse',   short:'CSE',   name:'Computer Science & Engineering' },
-        { id:'dept_ise',   short:'ISE',   name:'Information Science & Engineering' },
-        { id:'dept_aids',  short:'AI&DS', name:'Artificial Intelligence & Data Science' },
-        { id:'dept_aiml',  short:'AI&ML', name:'Artificial Intelligence & Machine Learning' },
-        { id:'dept_ece',   short:'ECE',   name:'Electronics & Communication Engineering' },
-        { id:'dept_eee',   short:'EEE',   name:'Electrical & Electronics Engineering' },
-        { id:'dept_mech',  short:'MECH',  name:'Mechanical Engineering' },
-        { id:'dept_civil', short:'CIVIL', name:'Civil Engineering' },
-        { id:'dept_chem',  short:'CHEM',  name:'Chemical Engineering' },
-        { id:'dept_biotech',short:'BT',   name:'Biotechnology' },
-      ]
-    },
-    { group: 'Postgraduate',
-      depts: [
-        { id:'dept_mtech_cse', short:'M.Tech CSE', name:'M.Tech – Computer Science' },
-        { id:'dept_mtech_ece', short:'M.Tech ECE',  name:'M.Tech – Electronics' },
-        { id:'dept_mba',       short:'MBA',          name:'Master of Business Administration' },
-        { id:'dept_mca',       short:'MCA',          name:'Master of Computer Applications' },
-      ]
-    }
-  ],
-  teacher: [
-    { group: 'Department / School',
-      depts: [
-        { id:'dept_cse',    short:'CSE',    name:'Computer Science & Engineering' },
-        { id:'dept_ise',    short:'ISE',    name:'Information Science & Engineering' },
-        { id:'dept_aids',   short:'AI&DS',  name:'Artificial Intelligence & Data Science' },
-        { id:'dept_aiml',   short:'AI&ML',  name:'Artificial Intelligence & Machine Learning' },
-        { id:'dept_ece',    short:'ECE',    name:'Electronics & Communication Engineering' },
-        { id:'dept_eee',    short:'EEE',    name:'Electrical & Electronics Engineering' },
-        { id:'dept_mech',   short:'MECH',   name:'Mechanical Engineering' },
-        { id:'dept_civil',  short:'CIVIL',  name:'Civil Engineering' },
-        { id:'dept_chem',   short:'CHEM',   name:'Chemical Engineering' },
-        { id:'dept_biotech',short:'BT',     name:'Biotechnology' },
-        { id:'dept_mba',    short:'MBA',    name:'MBA / Management Studies' },
-        { id:'dept_mca',    short:'MCA',    name:'MCA / Computer Applications' },
-        { id:'dept_maths',  short:'MATHS',  name:'Mathematics (Science Dept.)' },
-        { id:'dept_physics',short:'PHY',    name:'Physics (Science Dept.)' },
-        { id:'dept_admin',  short:'ADMIN',  name:'Administration / Central Office' },
-      ]
-    }
-  ]
-};
-
-// ── Institution change handler ────────────────────────────────
-function onInstitutionChange() {
-  const val  = document.getElementById('r-institution').value;
-  const wrap = document.getElementById('r-institution-other-wrap');
-  wrap.style.display = (val === 'Other') ? 'block' : 'none';
+function togglePw(id) {
+  const i = document.getElementById(id);
+  i.type = i.type === 'password' ? 'text' : 'password';
 }
 
-// ── Role change → repopulate department ──────────────────────
-function onRoleChange() {
-  const role      = document.getElementById('r-role').value;
-  const deptWrap  = document.getElementById('r-dept-wrap');
-  const desigWrap = document.getElementById('r-designation-wrap');
-  const deptLabel = document.getElementById('r-dept-label');
-
-  // Reset dept selection
-  document.getElementById('r-dept').value = '';
-
-  if (!role) {
-    deptWrap.style.display  = 'none';
-    desigWrap.style.display = 'none';
-    return;
-  }
-
-  // Always show dept
-  deptWrap.style.display = 'block';
-
-  if (role === 'student') {
-    deptLabel.innerHTML    = 'Department <span class="req">*</span>';
-    desigWrap.style.display= 'none';
-    renderDeptPills(DEPT_DATA.student);
-  } else {
-    deptLabel.innerHTML    = 'Department / School <span class="req">*</span>';
-    desigWrap.style.display= 'block';
-    renderDeptPills(DEPT_DATA.teacher);
-  }
+// ── Format time ───────────────────────────────────────────────
+function fmtTime(secs) {
+  const m = Math.floor(Math.max(0,secs)/60), s = Math.max(0,secs)%60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 }
 
-// Renders grouped pill grid inside #r-dept-wrap
-function renderDeptPills(groups) {
-  const wrap = document.getElementById('r-dept-wrap');
-  // Remove old pills container if any
-  const old = wrap.querySelector('.dept-pills-container');
-  if (old) old.remove();
-  // Hide native select (we use pills instead)
-  document.getElementById('r-dept').style.display = 'none';
-
-  const container = document.createElement('div');
-  container.className = 'dept-pills-container';
-
-  groups.forEach(group => {
-    const title = document.createElement('div');
-    title.className = 'dept-section-title';
-    title.textContent = group.group;
-    container.appendChild(title);
-
-    const grid = document.createElement('div');
-    grid.className = 'dept-pills';
-
-    group.depts.forEach(d => {
-      const pill = document.createElement('div');
-      pill.className = 'dept-pill';
-      pill.innerHTML = `
-        <input type="radio" name="dept_pill" id="dp_${d.id}" value="${d.id}"/>
-        <label for="dp_${d.id}">
-          <span class="pill-short">${d.short}</span>
-          ${d.name}
-        </label>`;
-      pill.querySelector('input').addEventListener('change', () => {
-        document.getElementById('r-dept').value = d.id;
+// ── Load master data (departments + locations) from API ──────
+async function loadMasterData() {
+  try {
+    const [dRes, lRes] = await Promise.all([
+      api({ action: 'getDepartments' }),
+      api({ action: 'getLocations'   })
+    ]);
+    // Populate dept dropdown
+    if (dRes.success && dRes.departments) {
+      const sel = document.getElementById('r-dept');
+      sel.innerHTML = '<option value="">Select department</option>';
+      dRes.departments.forEach(d => {
+        deptMap[d.department_id] = d.name;
+        const o = document.createElement('option');
+        o.value = d.department_id; o.textContent = d.name;
+        sel.appendChild(o);
       });
-      grid.appendChild(pill);
-    });
-
-    container.appendChild(grid);
-  });
-
-  wrap.appendChild(container);
+    }
+    // Store locations
+    if (lRes.success && lRes.locations) {
+      locList     = lRes.locations;
+      activeLocId = locList[0]?.location_id || null;
+    }
+  } catch(e) {
+    // Fallback static list so registration still works if API is slow
+    const sel = document.getElementById('r-dept');
+    if (sel && sel.options.length <= 1) {
+      ['Computer Science & Engineering','Information Science & Engineering',
+       'Electronics & Communication','Electrical & Electronics',
+       'Mechanical Engineering','Civil Engineering',
+       'Chemical Engineering','Biotechnology','MBA','MCA'
+      ].forEach(n => {
+        const o = document.createElement('option');
+        o.value = n; o.textContent = n; sel.appendChild(o);
+      });
+    }
+  }
 }
 
-// ── Get institution value (handles "Other" custom input) ──────
-function getInstitutionValue() {
-  const sel = document.getElementById('r-institution').value;
-  if (sel === 'Other') return document.getElementById('r-institution-other').value.trim();
-  return sel;
-}
-
-// ══ REGISTER ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
+// REGISTER
+// ══════════════════════════════════════════
 async function handleRegister() {
-  const full_name   = document.getElementById('r-name').value.trim();
-  const email       = document.getElementById('r-email').value.trim();
-  const password    = document.getElementById('r-password').value;
-  const dob         = document.getElementById('r-dob').value;
-  const mobile      = document.getElementById('r-mobile').value.trim();
-  const role        = document.getElementById('r-role').value;
-  const dept_id     = document.getElementById('r-dept').value;
-  const institution = getInstitutionValue();
-  const designation = role === 'teacher' ? (document.getElementById('r-designation').value||'') : '';
+  const name    = document.getElementById('r-name').value.trim();
+  const email   = document.getElementById('r-email').value.trim();
+  const pass    = document.getElementById('r-password').value;
+  const dob     = document.getElementById('r-dob').value;
+  const mobile  = document.getElementById('r-mobile').value.trim();
+  const deptSel = document.getElementById('r-dept');
+  const role    = document.getElementById('r-role').value;
 
-  if (!full_name)    { toast('Full name is required','error'); return; }
-  if (!email)        { toast('Email is required','error'); return; }
-  if (!password)     { toast('Password is required','error'); return; }
-  if (password.length < 8) { toast('Password must be at least 8 characters','error'); return; }
-  if (!institution)  { toast('Please select your institution','error'); return; }
-  if (!role)         { toast('Please select a role','error'); return; }
-  if (!dept_id)      { toast('Please select your department','error'); return; }
-  if (role === 'teacher' && !designation) { toast('Please select your designation','error'); return; }
+  // dept_id if loaded via API, otherwise plain name as fallback
+  const deptId   = deptSel.value || '';
+  const deptName = deptSel.options[deptSel.selectedIndex]?.text || '';
+
+  if (!name || !email || !pass) { toast('Name, email and password are required', 'error'); return; }
+  if (pass.length < 8)          { toast('Password must be at least 8 characters', 'error'); return; }
 
   setLoading('btn-register', true);
   try {
     const dId = await getDeviceId();
-    const d   = await api({ action:'register', full_name, email, password, dob, mobile, dept_id, role, inst_id:institution, designation });
-    if (!d.success) { toast(d.message,'error'); return; }
-
-    registeredUserId = d.user_id;
-    toast('✓ Account created! Now register your biometric.','success');
-    document.getElementById('btn-bio-reg').disabled = false;
-    document.getElementById('bio-hint').textContent  = 'Tap below to register your fingerprint / Face ID';
-
-    await api({ action:'registerDevice', user_id:d.user_id, device_id:dId });
-  } catch(e) { toast('Error: '+e.message,'error'); }
+    const d   = await api({
+      action: 'register', name, email, password: pass,
+      dob, mobile,
+      dept_id:    deptId,
+      department: deptName,  // fallback — server resolves by name if dept_id missing
+      role, deviceId: dId
+    });
+    if (d.success) {
+      registeredUserId = d.userId;
+      toast('✓ Account created! Now register your biometric.', 'success');
+      document.getElementById('btn-bio-reg').disabled = false;
+      document.getElementById('bio-hint').textContent = 'Tap below to register your fingerprint / Face ID';
+      showDeviceBadge(dId);
+      await api({ action: 'registerDevice', userId: d.userId, deviceId: dId });
+    } else {
+      toast(d.message, 'error');
+    }
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
   setLoading('btn-register', false);
 }
 
 // ── Biometric register ────────────────────────────────────────
 async function handleBiometricRegister() {
-  if (!registeredUserId) { toast('Create account first','error'); return; }
-  if (!window.PublicKeyCredential) { toast('WebAuthn not supported','error'); return; }
+  if (!registeredUserId) { toast('Create account first', 'error'); return; }
+  if (!window.PublicKeyCredential) { toast('WebAuthn not supported on this browser', 'error'); return; }
   try {
-    const cred = await navigator.credentials.create({ publicKey:{
-      challenge:  crypto.getRandomValues(new Uint8Array(32)),
-      rp:         { name:'BioAttend SIT', id:location.hostname },
-      user:       { id:Uint8Array.from(registeredUserId,c=>c.charCodeAt(0)), name:document.getElementById('r-email').value, displayName:document.getElementById('r-name').value },
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const cred = await navigator.credentials.create({ publicKey: {
+      challenge,
+      rp:   { name:'BioAttend SIT', id:location.hostname },
+      user: {
+        id:          Uint8Array.from(registeredUserId, c=>c.charCodeAt(0)),
+        name:        document.getElementById('r-email').value,
+        displayName: document.getElementById('r-name').value
+      },
       pubKeyCredParams:       [{ type:'public-key', alg:-7 }],
       authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
       timeout: 60000
     }});
-    // v5: field is credential_id
-    const credential_id = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
-    const d = await api({ action:'saveBiometric', user_id:registeredUserId, credential_id });
+    const credId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+    const d = await api({ action:'saveBiometric', userId:registeredUserId, credentialId:credId });
     if (d.success) {
-      toast('✓ Biometric registered! You can now sign in with fingerprint.','success');
+      toast('✓ Biometric registered! You can now sign in with fingerprint.', 'success');
       document.getElementById('bio-hint').textContent = '✓ Biometric saved — ready to use';
-    } else toast(d.message,'error');
-  } catch(e) { toast('Biometric error: '+e.message,'error'); }
+    } else {
+      toast(d.message, 'error');
+    }
+  } catch(e) { toast('Biometric error: ' + e.message, 'error'); }
 }
 
-// ══ BIOMETRIC SIGN IN ═════════════════════════════════════════
+// ── Biometric sign in — the main flow ────────────────────────
 async function handleBiometricSignIn() {
-  if (!window.PublicKeyCredential) { toast('WebAuthn not supported','error'); return; }
+  if (!window.PublicKeyCredential) { toast('WebAuthn not supported', 'error'); return; }
   const email = document.getElementById('si-email').value.trim();
-  if (!email) { toast('Enter your email first','error'); return; }
+  if (!email) { toast('Enter your email first, then tap biometric', 'error'); return; }
 
   try {
-    // Pre-check GPS permission
+    // 0. Pre-check location permission state
     if (navigator.permissions) {
       try {
-        const perm = await navigator.permissions.query({ name:'geolocation' });
+        const perm = await navigator.permissions.query({ name: 'geolocation' });
         if (perm.state === 'denied') {
-          showLocBar('fail','Location is blocked — allow it in browser settings then retry');
-          toast('📍 Location blocked. Allow in settings and try again.','error'); return;
+          showLocBar('fail', 'Location is blocked — go to browser Settings → Site permissions → Allow location, then try again');
+          toast('📍 Location is blocked in browser settings. Please allow it and try again.', 'error');
+          return;
         }
-      } catch(e){}
+      } catch(e) { /* permissions API not available — continue */ }
     }
 
-    // 1. Get biometric credential — v5 returns credential_id
+    // 1. Get stored credential
     const info = await api({ action:'getBiometric', email });
-    if (!info.success || !info.credential_id) { toast(info.message||'No biometric registered','error'); return; }
+    if (!info.success || !info.credentialId) {
+      toast(info.message || 'No biometric registered for this account', 'error'); return;
+    }
 
-    // 2. Fingerprint / Face ID prompt
-    const rawId = Uint8Array.from(atob(info.credential_id), c=>c.charCodeAt(0));
-    await navigator.credentials.get({ publicKey:{
-      challenge:        crypto.getRandomValues(new Uint8Array(32)),
+    // 2. Prompt fingerprint / Face ID
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const rawId     = Uint8Array.from(atob(info.credentialId), c=>c.charCodeAt(0));
+    await navigator.credentials.get({ publicKey: {
+      challenge,
       allowCredentials: [{ type:'public-key', id:rawId }],
       userVerification: 'required',
       timeout:          60000
     }});
 
-    // 3. Fine GPS
-    showLocBar('getting','Getting your location…');
+    // 3. Get fine GPS location
+    showLocBar('getting', 'Getting your location…');
     const loc = await getLocationWithAddress();
-    if (loc.denied) { toast('📍 Location blocked. Allow in settings and retry.','error'); return; }
-    if (loc.lat) showLocBar('ok', loc.address || `${loc.lat}, ${loc.lng}`, loc.accuracy);
-    else         showLocBar('fail','Location not captured — attendance marked without GPS');
 
-    // 4. Mark attendance — v5 field names
+    // Block if location permission explicitly denied
+    if (loc.denied) {
+      toast('📍 Location permission is blocked. Allow location in browser settings and try again.', 'error');
+      return;
+    }
+
+    if (loc.lat) showLocBar('ok', loc.address || `${loc.lat}, ${loc.lng}`, loc.accuracy);
+    else showLocBar('fail', 'Location not captured — attendance marked without GPS');
+
+    // 4. Mark attendance
     const att = await api({
-      action:       'markAttendance',
-      user_id:      info.user_id,
-      login_method: 'biometric',
-      lat:          loc.lat,
-      lng:          loc.lng,
-      address:      loc.address
+      action:      'markAttendance',
+      userId:      info.userId,
+      method:      'biometric',
+      location_id: activeLocId || undefined,
+      lat:         loc.lat,
+      lng:         loc.lng,
+      address:     loc.address
     });
 
     if (att.success) {
-      toast('✓ '+att.message,'success');
-      showAttendanceCard({ ...att, name:att.name||info.name }, info.user_id);
+      if (!att.name || att.name === att.email) att.name = info.name || att.name;
+      toast('✓ ' + att.message, 'success');
+      try {
+        sessionStorage.setItem('bioattend_marked_uid', info.userId);
+        sessionStorage.setItem('bioattend_name',     att.name     || info.name || '');
+        sessionStorage.setItem('bioattend_date',     att.date     || '');
+        sessionStorage.setItem('bioattend_time',     att.time     || '');
+        sessionStorage.setItem('bioattend_location', att.location || '');
+        sessionStorage.setItem('bioattend_method',   'biometric');
+        sessionStorage.setItem('bioattend_gps',      att.gps      || '');
+        sessionStorage.setItem('bioattend_distance', att.distanceMeters != null ? att.distanceMeters : '');
+      } catch(e) {}
+      showAttendanceCard({ ...att, name: att.name || info.name, method:'biometric' }, info.userId);
+
     } else if (att.code === 'TOO_FAR') {
-      showLocBar('fail',`You are ${att.distance}m from ${att.location||'the lab'}. Must be within range.`);
-      toast(`📍 Too far (${att.distance}m). Move closer and try again.`,'error');
+      const allowed = att.allowed || 200;
+      showLocBar('fail', `You are ${att.distance}m from ${locList[0]?.name||'the lab'}. Must be within ${allowed}m.`);
+      toast(`📍 Too far (${att.distance}m). Move within ${allowed}m and try again.`, 'error');
+
     } else {
-      toast(att.message,'error');
+      toast(att.message, 'error');
     }
   } catch(e) {
-    if (e.name==='NotAllowedError') toast('Biometric cancelled','warn');
-    else toast('Error: '+e.message,'error');
+    if (e.name === 'NotAllowedError') toast('Biometric cancelled', 'warn');
+    else toast('Biometric error: ' + e.message, 'error');
   }
 }
 
-// ══ MARK EXIT ════════════════════════════════════════════════
+// ── Mark Exit ─────────────────────────────────────────────────
 async function handleExit() {
+  // Recover userId from sessionStorage if in-memory state was lost
   if (!markedUserId) {
-    try { markedUserId = sessionStorage.getItem('ba_uid')||null; } catch(e){}
+    try { markedUserId = sessionStorage.getItem('bioattend_marked_uid') || null; } catch(e) {}
   }
-  if (!markedUserId) { toast('No active session. Sign in first.','error'); return; }
+  if (!markedUserId) { toast('No active attendance session. Sign in first.', 'error'); return; }
 
   const btn = document.getElementById('btn-exit');
-  if (btn) { btn.disabled=true; btn.textContent='Getting exit location…'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Getting exit location…'; }
 
   try {
-    showLocBar('getting','Getting exit location…');
+    showLocBar('getting', 'Getting exit location…');
     const loc = await getLocationWithAddress();
-    if (loc.lat) showLocBar('ok','Exit: '+(loc.address||`${loc.lat}, ${loc.lng}`), loc.accuracy);
-    else         showLocBar('fail','Exit location not captured');
+    if (loc.lat) showLocBar('ok', 'Exit: ' + (loc.address || `${loc.lat}, ${loc.lng}`), loc.accuracy);
+    else showLocBar('fail', 'Exit location not captured');
 
-    // v5 field names
-    const res = await api({ action:'markExit', user_id:markedUserId, lat:loc.lat, lng:loc.lng, address:loc.address });
+    const res = await api({
+      action:  'markExit',
+      userId:  markedUserId,
+      lat:     loc.lat,
+      lng:     loc.lng,
+      address: loc.address
+    });
 
     if (res.success) {
-      toast('✓ '+res.message,'success');
+      toast('✓ ' + res.message, 'success');
+
+      // Update card to show exit info
       const card = document.querySelector('.att-card');
       if (card) {
         card.querySelector('.att-name').textContent = '✓ Entry & Exit Recorded';
         card.innerHTML += `
-          <div class="att-row"><span>Exit time</span><span class="att-val">${res.exit_time||''}</span></div>
-          <div class="att-row"><span>Duration</span><span class="att-val">${res.duration||''}</span></div>`;
+          <div class="att-row"><span>Exit time</span><span class="att-val">${res.exitTime||''}</span></div>
+          <div class="att-row"><span>Duration</span><span class="att-val">${res.duration||''}</span></div>
+          <div class="att-row"><span>Exit location</span><span class="att-val" style="max-width:160px;text-align:right;font-size:10.5px">${res.location||'not captured'}</span></div>`;
       }
-      if (btn) { btn.textContent='✓ Exit recorded'; btn.style.opacity='.5'; btn.disabled=true; }
-      markedUserId=null; clearSession();
-      setTimeout(restoreSignInForm, 3000);
+
+      // Mark exit button as done
+      if (btn) { btn.textContent = '✓ Exit recorded'; btn.style.opacity = '.5'; btn.disabled = true; }
+
+      // Clear session
+      markedUserId = null;
+      try { sessionStorage.removeItem('bioattend_marked_uid'); } catch(e) {}
+
+      // Show sign-in form again after 3 seconds for next student
+      setTimeout(() => restoreSignInForm(), 3000);
+
     } else {
-      toast(res.message,'error');
-      if (btn) { btn.disabled=false; btn.innerHTML='<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> Mark Exit (leaving classroom)'; }
+      toast(res.message, 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> Mark Exit (leaving classroom)';
+      }
     }
   } catch(e) {
-    toast('Error: '+e.message,'error');
-    if (btn) { btn.disabled=false; btn.textContent='Mark Exit (leaving classroom)'; }
+    toast('Error: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Mark Exit (leaving classroom)'; }
   }
 }
 
 function restoreSignInForm() {
-  document.getElementById('att-success-card').style.display='none';
-  document.getElementById('loc-status-bar').innerHTML='';
-  const ef=document.getElementById('si-email');
-  if (ef?.closest('.field')) ef.closest('.field').style.display='';
-  const ib=document.querySelector('#pane-signin .info-box');
-  if (ib) ib.style.display='';
-  const bb=document.getElementById('btn-bio-signin');
-  if (bb) { bb.style.display=''; bb.disabled=false; }
-  if (ef) ef.value='';
-  clearSession();
+  // Hide success card
+  const card = document.getElementById('att-success-card');
+  if (card) card.style.display = 'none';
+  // Clear location bar
+  const loc = document.getElementById('loc-status-bar');
+  if (loc) loc.innerHTML = '';
+  // Show email field again
+  const emailField = document.getElementById('si-email');
+  if (emailField && emailField.closest('.field')) emailField.closest('.field').style.display = '';
+  // Show info box again
+  const infoBox = document.querySelector('#pane-signin .info-box');
+  if (infoBox) infoBox.style.display = '';
+  // Show biometric button again
+  const btnBio = document.getElementById('btn-bio-signin');
+  if (btnBio) { btnBio.style.display = ''; btnBio.disabled = false; }
+  // Clear email for next student
+  if (emailField) emailField.value = '';
+  // Clear session
+  try {
+    ['bioattend_marked_uid','bioattend_name','bioattend_date',
+     'bioattend_time','bioattend_location','bioattend_method',
+     'bioattend_gps','bioattend_distance'
+    ].forEach(k => sessionStorage.removeItem(k));
+  } catch(e) {}
 }
 
-// ══ TEACHER PANEL ════════════════════════════════════════════
+// ── Device badge ──────────────────────────────────────────────
+function showDeviceBadge(dId) {
+  const ex = document.getElementById('device-badge');
+  if (ex) ex.remove();
+  const badge = document.createElement('div');
+  badge.id = 'device-badge';
+  badge.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;margin-bottom:12px;font-size:11.5px;color:#86efac';
+  badge.innerHTML = `<svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5-4H7V4h10v12z"/></svg><span>Device bound: <code style="font-family:monospace">${dId}</code></span>`;
+  const btn = document.getElementById('btn-register');
+  btn.parentNode.insertBefore(badge, btn);
+}
+
+// ══════════════════════════════════════════
+// TEACHER ADMIN PANEL
+// ══════════════════════════════════════════
+
 async function handleTeacherLogin() {
-  const email = document.getElementById('t-email').value.trim();
+  const email    = document.getElementById('t-email').value.trim();
   const password = document.getElementById('t-password').value;
-  if (!email||!password) { toast('Enter email and password','error'); return; }
-  setLoading('btn-teacher-login',true);
+  if (!email || !password) { toast('Enter email and password', 'error'); return; }
+  setLoading('btn-teacher-login', true);
   try {
     const d = await api({ action:'signIn', email, password });
-    if (!d.success) { toast(d.message,'error'); return; }
-    if (d.role !== 'teacher' && d.role !== 'admin') { toast('Not a teacher account','error'); return; }
+    if (!d.success) { toast(d.message, 'error'); setLoading('btn-teacher-login', false); return; }
+    if (d.role !== 'teacher' && d.role !== 'admin') {
+      toast('This account is not a teacher account', 'error');
+      setLoading('btn-teacher-login', false); return;
+    }
     teacherData = d;
     showTeacherDashboard();
-  } catch(e) { toast('Error: '+e.message,'error'); }
-  setLoading('btn-teacher-login',false);
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+  setLoading('btn-teacher-login', false);
 }
 
 function showTeacherDashboard() {
-  document.getElementById('teacher-login-section').style.display='none';
-  document.getElementById('teacher-dashboard').style.display='block';
-  document.getElementById('t-welcome').textContent='Hello, '+teacherData.name;
+  document.getElementById('teacher-login-section').style.display = 'none';
+  document.getElementById('teacher-dashboard').style.display     = 'block';
+  document.getElementById('t-welcome').textContent = 'Hello, ' + teacherData.name;
   switchSubTab('session');
   checkActiveForTeacher();
 }
 
 function teacherLogout() {
-  teacherData=null; clearInterval(sessionTimer); liveSessionId=null;
-  document.getElementById('teacher-login-section').style.display='block';
-  document.getElementById('teacher-dashboard').style.display='none';
-  document.getElementById('t-email').value='';
-  document.getElementById('t-password').value='';
+  teacherData = null; clearInterval(sessionTimer); liveSessionId = null;
+  document.getElementById('teacher-login-section').style.display = 'block';
+  document.getElementById('teacher-dashboard').style.display     = 'none';
+  document.getElementById('t-email').value    = '';
+  document.getElementById('t-password').value = '';
 }
 
 function switchSubTab(tab) {
-  ['session','live','history','students'].forEach(t=>{
-    document.getElementById('sp-'+t).classList.toggle('active',t===tab);
-    document.getElementById('stab-'+t).classList.toggle('active',t===tab);
+  ['session','live','history','students'].forEach(t => {
+    document.getElementById('sp-'+t).classList.toggle('active', t===tab);
+    document.getElementById('stab-'+t).classList.toggle('active', t===tab);
   });
   if (tab==='live')     refreshLive();
-  if (tab==='history')  { document.getElementById('hist-date').value=new Date().toISOString().slice(0,10); loadHistory(); }
+  if (tab==='history')  { document.getElementById('hist-date').value = new Date().toISOString().slice(0,10); loadHistory(); }
   if (tab==='students') loadStudents();
 }
 
 async function checkActiveForTeacher() {
   try {
-    const d   = await api({ action:'getActiveSession' });
-    const el  = document.getElementById('active-session-display');
-    const frm = document.getElementById('open-session-form');
+    const d    = await api({ action:'getActiveSession' });
+    const el   = document.getElementById('active-session-display');
+    const form = document.getElementById('open-session-form');
     if (d.active) {
-      let secs = d.seconds_left;
-      // v5: sess_id
-      liveSessionId = d.session.sess_id;
+      let secs = d.secondsLeft;
+      liveSessionId = activeSessionId = d.session.session_id||d.session.SessionID;
       el.innerHTML = `
         <div class="session-card" style="margin-bottom:12px">
-          <div class="subj">🟢 ${d.session.subject} — LIVE</div>
+          <div class="subj" style="font-size:14px">🟢 ${d.session.subject||d.session.Subject} — LIVE</div>
           <div class="meta">Closes in <span id="t-timer" style="font-weight:700;color:var(--success)">${fmtTime(secs)}</span></div>
-          <button onclick="closeCurrentSession('${d.session.sess_id}')" class="btn btn-danger" style="margin-top:10px;padding:8px">Stop Session Early</button>
+          <button onclick="closeCurrentSession('${d.session.session_id||d.session.SessionID}')" class="btn btn-danger" style="margin-top:10px;padding:8px">Stop Session Early</button>
         </div>`;
-      frm.style.display='none';
+      form.style.display = 'none';
       clearInterval(sessionTimer);
-      sessionTimer = setInterval(()=>{
+      sessionTimer = setInterval(() => {
         secs--;
-        const t=document.getElementById('t-timer');
-        if (t) t.textContent=fmtTime(secs);
-        if (secs<=0){ clearInterval(sessionTimer); checkActiveForTeacher(); }
-      },1000);
+        const t = document.getElementById('t-timer');
+        if (t) t.textContent = fmtTime(secs);
+        if (secs <= 0) { clearInterval(sessionTimer); checkActiveForTeacher(); }
+      }, 1000);
     } else {
-      liveSessionId=null; el.innerHTML=''; frm.style.display='block';
+      liveSessionId = activeSessionId = null;
+      el.innerHTML  = ''; form.style.display = 'block';
     }
-  } catch(e){}
+  } catch(e) {}
 }
 
 async function openSession() {
-  const subject        = document.getElementById('t-subject').value.trim();
-  const window_minutes = document.getElementById('t-window').value;
-  if (!subject) { toast('Enter a subject name','error'); return; }
-  setLoading('btn-open-session',true);
+  const subject = document.getElementById('t-subject').value.trim();
+  const minutes = document.getElementById('t-window').value;
+  if (!subject) { toast('Enter a subject name', 'error'); return; }
+  setLoading('btn-open-session', true);
   try {
-    // v5 field names: user_id, window_minutes
-    const d = await api({ action:'createSession', user_id:teacherData.user_id, subject, window_minutes });
+    const d = await api({
+      action:      'createSession',
+      userId:      teacherData.userId,
+      teacherName: teacherData.name,
+      role:        teacherData.role,
+      location_id: activeLocId || undefined,
+      subject,
+      windowMinutes: minutes
+    });
     if (d.success) {
-      toast('✓ Session opened — students can mark attendance now','success');
-      document.getElementById('t-subject').value='';
+      toast('✓ Session opened — students can mark attendance now', 'success');
+      document.getElementById('t-subject').value = '';
       checkActiveForTeacher();
-    } else toast(d.message,'error');
-  } catch(e) { toast('Error: '+e.message,'error'); }
-  setLoading('btn-open-session',false);
+    } else toast(d.message, 'error');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+  setLoading('btn-open-session', false);
 }
 
-async function closeCurrentSession(sessId) {
+async function closeCurrentSession(sessionId) {
   try {
-    // v5: sess_id
-    await api({ action:'closeSession', sess_id:sessId });
-    toast('Session closed','success');
-    clearInterval(sessionTimer); liveSessionId=null;
+    await api({ action:'closeSession', sessionId });
+    toast('Session closed', 'success');
+    clearInterval(sessionTimer);
+    liveSessionId = activeSessionId = null;
     checkActiveForTeacher();
-  } catch(e) { toast('Error closing session','error'); }
+  } catch(e) { toast('Error closing session', 'error'); }
 }
 
-// ── Live dashboard ────────────────────────────────────────────
 async function refreshLive() {
   const listEl  = document.getElementById('live-list');
   const infoEl  = document.getElementById('live-session-info');
   const statsEl = document.getElementById('live-stats');
   const togEl   = document.getElementById('live-toggle-row');
   const refEl   = document.getElementById('live-refresh-row');
-
   try {
     const chk = await api({ action:'getActiveSession' });
-    if (chk.active) liveSessionId = chk.session.sess_id;
-  } catch(e){}
-
+    if (chk.active) liveSessionId = chk.session.session_id||chk.session.SessionID;
+  } catch(e) {}
   if (!liveSessionId) {
-    infoEl.className='no-session'; infoEl.style.display='block';
-    infoEl.textContent='No active session — open one from the Session tab';
+    infoEl.className = 'no-session'; infoEl.style.display = 'block';
+    infoEl.textContent = 'No active session — open one from the Session tab';
     statsEl.style.display='none'; togEl.style.display='none';
-    refEl.style.display='none';   listEl.innerHTML=''; return;
+    refEl.style.display='none'; listEl.innerHTML=''; return;
   }
-
-  // Client-side cache: skip re-fetch if same data within 15s
-  const cacheKey = 'dash_'+liveSessionId;
-  const cached   = memGet(cacheKey);
-  const d        = cached || await api({ action:'getDashboard', sess_id:liveSessionId });
-  if (!cached) memSet(cacheKey, d, 15000);
-
-  if (!d.success) { toast(d.message,'error'); return; }
-  liveData = d;
-
-  infoEl.style.display='none'; statsEl.style.display='grid';
-  togEl.style.display='flex';  refEl.style.display='block';
-  // v5: present_count, absent_count, pct
-  document.getElementById('stat-present').textContent = d.present_count;
-  document.getElementById('stat-absent').textContent  = d.absent_count;
-  document.getElementById('stat-total').textContent   = d.total;
-  document.getElementById('stat-pct').textContent     = (d.pct||0)+'%';
-  document.getElementById('live-updated').textContent = 'Updated '+new Date().toLocaleTimeString();
-  renderLiveList();
+  try {
+    const d = await api({ action:'getDashboard', sessionId:liveSessionId });
+    if (!d.success) { toast(d.message,'error'); return; }
+    liveData = d;
+    infoEl.style.display='none'; statsEl.style.display='grid';
+    togEl.style.display='flex'; refEl.style.display='block';
+    document.getElementById('stat-present').textContent = d.presentCount;
+    document.getElementById('stat-absent').textContent  = d.absentCount;
+    document.getElementById('stat-total').textContent   = d.total;
+    const pct = d.total ? Math.round(d.presentCount/d.total*100) : 0;
+    document.getElementById('stat-pct').textContent = pct+'%';
+    document.getElementById('live-updated').textContent = 'Updated '+new Date().toLocaleTimeString();
+    renderLiveList();
+  } catch(e) { toast('Error: '+e.message,'error'); }
 }
 
 function showLiveTab(tab) {
-  liveTab=tab;
-  document.getElementById('seg-present').classList.toggle('active',tab==='present');
-  document.getElementById('seg-absent').classList.toggle('active',tab==='absent');
+  liveTab = tab;
+  document.getElementById('seg-present').classList.toggle('active', tab==='present');
+  document.getElementById('seg-absent').classList.toggle('active', tab==='absent');
   renderLiveList();
 }
 
@@ -1049,75 +1121,73 @@ function renderLiveList() {
   if (!liveData) return;
   const el   = document.getElementById('live-list');
   const list = liveTab==='present' ? liveData.present : liveData.absent;
-  if (!list?.length) {
-    el.innerHTML=`<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px">${liveTab==='present'?'No one has marked yet':'Everyone is present! 🎉'}</div>`;
+  if (!list || !list.length) {
+    el.innerHTML = `<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px">${liveTab==='present'?'No one has marked yet':'Everyone is present! 🎉'}</div>`;
     return;
   }
   el.innerHTML = list.map((s,i) => liveTab==='present'
-    // v5: att_time, login_method, dist_from_centre, exit_time
-    ? `<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email}<br>${s.dept||'—'} · ${s.att_time} · ${s.login_method}${s.exit_time?` · out ${s.exit_time}`:''}</div></div><span class="att-badge">✓</span></div>`
-    : `<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email} · ${s.dept||'—'}</div></div><span class="att-badge" style="background:rgba(239,68,68,.15);color:var(--danger);border-color:rgba(239,68,68,.3)">✗</span></div>`
+    ? `<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email}<br>${s.department||'—'} · ${s.time} · ${s.method}</div></div><span class="att-badge" style="background:rgba(34,197,94,.15);color:var(--success);border-color:rgba(34,197,94,.3)">✓</span></div>`
+    : `<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email} · ${s.department||'—'}</div></div><span class="att-badge" style="background:rgba(239,68,68,.15);color:var(--danger);border-color:rgba(239,68,68,.3)">✗</span></div>`
   ).join('');
 }
 
 function exportCurrentSession() {
   if (!liveData) return;
-  const rows=[['Name','Email','Department','Time','Method','Exit','Status']];
-  liveData.present.forEach(s=>rows.push([s.name,s.email,s.dept||'',s.att_time,s.login_method,s.exit_time||'','Present']));
-  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.dept||'','','','','Absent']));
+  const rows=[['Name','Email','Department','Time','Method','Status']];
+  liveData.present.forEach(s=>rows.push([s.name,s.email,s.department||'',s.time,s.method,'Present']));
+  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.department||'','','','Absent']));
   downloadCSV(rows,'attendance_live.csv');
 }
 
 async function loadHistory() {
   const date = document.getElementById('hist-date').value;
   const el   = document.getElementById('history-list');
-  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">Loading…</div>';
+  el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">Loading…</div>';
   try {
-    const d = await api({ action:'getSessions', user_id:teacherData.user_id });
-    let sessions = d.sessions||[];
-    if (date) sessions=sessions.filter(s=>s.date===date);
-    historyData=sessions;
+    const d = await api({ action:'getSessions', userId:teacherData.userId });
+    let sessions = d.sessions || [];
+    if (date) sessions = sessions.filter(s=>(s.date||s.Date)===date);
+    historyData = sessions;
     if (!sessions.length) {
       el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">No sessions found</div>';
       document.getElementById('hist-export-row').style.display='none'; return;
     }
     document.getElementById('hist-export-row').style.display='block';
-    // v5: sess_id, subject, date, start_time, end_time, present_count
-    el.innerHTML=sessions.map(s=>`
-      <div class="att-item" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="toggleSessionDetail('${s.sess_id}','${(s.subject||'').replace(/'/g,"\\'")}')">
+    el.innerHTML = sessions.map(s=>`
+      <div class="att-item" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="toggleSessionDetail('${s.session_id||s.SessionID}','${(s.subject||s.Subject||'').replace(/'/g,"\\'")}')">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div class="name">${s.subject}</div><div class="meta">${s.date} · ${s.start_time}–${s.end_time}</div></div>
-          <div style="text-align:right"><span class="att-badge">${s.present_count||0} present</span><div style="font-size:10px;margin-top:3px;color:${s.status==='open'?'var(--success)':'var(--muted)'}">${s.status}</div></div>
+          <div><div class="name">${s.subject||s.Subject}</div><div class="meta">${s.date||s.Date} · ${s.start_time||s.StartTime}–${s.end_time||s.EndTime}</div></div>
+          <div style="text-align:right"><span class="att-badge">${s.presentCount||0} present</span><div style="font-size:10px;margin-top:3px;color:${(s.status||s.Status)==='open'?'var(--success)':'var(--muted)'}">${s.status||s.Status}</div></div>
         </div>
-        <div id="detail-${s.sess_id}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px"></div>
+        <div id="detail-${s.session_id||s.SessionID}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px"></div>
       </div>`).join('');
   } catch(e) { toast('Error: '+e.message,'error'); }
 }
 
-async function toggleSessionDetail(sessId, subject) {
-  const el = document.getElementById('detail-'+sessId);
+async function toggleSessionDetail(sessionId, subject) {
+  const el = document.getElementById('detail-'+sessionId);
   if (!el) return;
   if (el.style.display==='block') { el.style.display='none'; return; }
   el.style.display='block';
   el.innerHTML='<div style="color:var(--muted);font-size:11px">Loading…</div>';
   try {
-    const d = await api({ action:'getDashboard', sess_id:sessId });
+    const d = await api({ action:'getDashboard', sessionId });
     if (!d.success) { el.innerHTML='<div style="color:var(--danger);font-size:11px">'+d.message+'</div>'; return; }
     el.innerHTML=`
       <div style="display:flex;gap:12px;margin-bottom:8px;font-size:11px">
-        <span style="color:var(--success)">✓ ${d.present_count} present</span>
-        <span style="color:var(--danger)">✗ ${d.absent_count} absent</span>
-        <span style="color:var(--muted)">${d.total} total · ${d.pct||0}%</span>
+        <span style="color:var(--success)">✓ ${d.presentCount} present</span>
+        <span style="color:var(--danger)">✗ ${d.absentCount} absent</span>
+        <span style="color:var(--muted)">${d.total} total · ${d.total?Math.round(d.presentCount/d.total*100):0}%</span>
       </div>
-      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.att_time} · ${s.login_method}${s.dist_from_centre!==''&&s.dist_from_centre!==undefined?` · ${s.dist_from_centre}m`:''}</span></div>`).join('')}
+      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.time} · ${s.method}</span>${s.distanceMeters !== '' && s.distanceMeters !== undefined ? ` <span style="color:${s.distanceMeters<=100?'var(--success)':s.distanceMeters<=300?'var(--warn)':'var(--danger)'};font-size:10px"> · ${s.distanceMeters}m</span>` : ''}</div>`).join('')}
       ${!d.present.length?'<div style="font-size:11px;color:var(--muted)">No students marked</div>':''}
-      <button onclick="event.stopPropagation();exportOneSession('${sessId}','${subject}')" class="export-btn" style="float:none;margin-top:10px">Export CSV</button>`;
+      <button onclick="event.stopPropagation();exportOneSession('${sessionId}','${subject}')" class="export-btn" style="float:none;margin-top:10px">Export CSV</button>`;
   } catch(e) { el.innerHTML='<div style="color:var(--danger);font-size:11px">Error</div>'; }
 }
 
-async function exportOneSession(sessId, subject) {
+async function exportOneSession(sessionId, subject) {
   try {
-    const d = await api({ action:'exportAttendance', sess_id:sessId });
+    const d = await api({ action:'exportAttendance', sessionId });
     if (d.success) downloadCSV(null,'attendance_'+(subject||'export').replace(/\s+/g,'_')+'.csv',d.csv);
     else toast(d.message,'error');
   } catch(e) { toast('Export failed','error'); }
@@ -1126,8 +1196,8 @@ async function exportOneSession(sessId, subject) {
 async function exportHistory() {
   if (!historyData.length) return;
   try {
-    const date = historyData[0]?.date||'';
-    const d    = await api({ action:'exportAttendance', att_date:date });
+    const date = historyData[0]?.date||historyData[0]?.Date || '';
+    const d = await api({ action:'exportAttendance', date });
     if (d.success) downloadCSV(null,'attendance_'+date+'.csv',d.csv);
     else toast(d.message,'error');
   } catch(e) { toast('Export failed','error'); }
@@ -1138,59 +1208,64 @@ async function loadStudents() {
   el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">Loading…</div>';
   try {
     const d = await api({ action:'getStudents' });
-    allStudents = d.students||[];
-    document.getElementById('student-count').textContent=allStudents.length+' students registered';
+    allStudents = d.students || [];
+    document.getElementById('student-count').textContent = allStudents.length+' students registered';
     renderStudents(allStudents);
   } catch(e) { toast('Error loading students','error'); }
 }
 
 function filterStudents() {
   const q = document.getElementById('student-search').value.toLowerCase();
-  const f = allStudents.filter(s=>(s.full_name||'').toLowerCase().includes(q)||(s.email||'').toLowerCase().includes(q)||(s.dept||'').toLowerCase().includes(q));
-  document.getElementById('student-count').textContent=f.length+' of '+allStudents.length+' students';
+  const f = allStudents.filter(s=>(s.FullName||'').toLowerCase().includes(q)||(s.Email||'').toLowerCase().includes(q)||(s.Department||'').toLowerCase().includes(q));
+  document.getElementById('student-count').textContent = f.length+' of '+allStudents.length+' students';
   renderStudents(f);
 }
 
 function renderStudents(list) {
   const el = document.getElementById('students-list');
   if (!list.length) { el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">No students found</div>'; return; }
-  el.innerHTML=list.map((s,i)=>`
+  el.innerHTML = list.map((s,i)=>`
     <div class="att-item">
       <div>
-        <div class="name">${i+1}. ${s.full_name}</div>
-        <div class="meta">${s.email}<br>${s.dept||'No dept'}</div>
+        <div class="name">${i+1}. ${s.FullName}</div>
+        <div class="meta">${s.Email}<br>${s.Department||deptMap[s.dept_id]||'No dept'}</div>
       </div>
       <div style="text-align:right;font-size:10px;line-height:1.8">
-        <span style="color:${s.has_device?'var(--success)':'var(--muted)'}">${s.has_device?'📱 bound':'📱 none'}</span><br>
-        <span style="color:${s.has_bio?'var(--success)':'var(--muted)'}">${s.has_bio?'🔐 bio':'🔐 none'}</span>
+        <span style="color:${s.DeviceId?'var(--success)':'var(--muted)'}">${s.DeviceId?'📱 bound':'📱 none'}</span><br>
+        <span style="color:${s.BiometricCredentialId?'var(--success)':'var(--muted)'}">${s.BiometricCredentialId?'🔐 bio':'🔐 none'}</span>
       </div>
     </div>`).join('');
 }
 
 function downloadCSV(rows, filename, csvString) {
-  const content = csvString||rows.map(r=>r.map(c=>'"'+(c||'')+'"').join(',')).join('\n');
+  const content = csvString || rows.map(r=>r.map(c=>'"'+(c||'')+'"').join(',')).join('\n');
   const blob = new Blob([content],{type:'text/csv'});
   const a = document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download=filename; a.click();
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
 }
 
 // ── Init ──────────────────────────────────────────────────────
 switchTab('signin');
+// Load reference data from API (non-blocking — populates dept dropdown + locList)
+loadMasterData();
 
-// Restore session if student already marked today
+// If student already marked attendance in this browser session, show the card
 try {
-  const uid = sessionStorage.getItem('ba_uid');
-  if (uid) {
-    markedUserId = uid;
+  const savedUid = sessionStorage.getItem('bioattend_marked_uid');
+  if (savedUid) {
+    markedUserId = savedUid;
+    const savedDist = sessionStorage.getItem('bioattend_distance');
     showAttendanceCard({
-      name:            sessionStorage.getItem('ba_name')||'',
-      date:            sessionStorage.getItem('ba_date')||new Date().toISOString().slice(0,10),
-      time:            sessionStorage.getItem('ba_time')||'',
-      location:        sessionStorage.getItem('ba_loc')||'',
-      dist_from_centre:sessionStorage.getItem('ba_dist')!=null?parseInt(sessionStorage.getItem('ba_dist')):undefined
-    }, uid);
+      name:           sessionStorage.getItem('bioattend_name')     || '',
+      date:           sessionStorage.getItem('bioattend_date')     || new Date().toISOString().slice(0,10),
+      time:           sessionStorage.getItem('bioattend_time')     || '',
+      location:       sessionStorage.getItem('bioattend_location') || '',
+      method:         sessionStorage.getItem('bioattend_method')   || '',
+      gps:            sessionStorage.getItem('bioattend_gps')      || '',
+      distanceMeters: savedDist !== null && savedDist !== '' ? parseInt(savedDist) : undefined
+    }, savedUid);
   }
-} catch(e){}
+} catch(e) {}
 </script>
 </body>
 </html>
