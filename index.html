@@ -4,8 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <title>BioAttend – SIT Tumkur</title>
-
-<!-- PWA -->
 <link rel="manifest" href="/manifest.json"/>
 <meta name="theme-color" content="#4f6ef7"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -14,239 +12,244 @@
 <meta name="apple-mobile-web-app-title" content="BioAttend"/>
 <link rel="apple-touch-icon" href="/icon-192.png"/>
 <link rel="icon" type="image/png" href="/icon-192.png"/>
-
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --bg:#050a1a;--card:#0d1530;--inp:#111d3a;--tab:#1a2a52;
   --acc:#4f6ef7;--acc2:#7c3aed;--text:#e8eaf6;--muted:#6b7db3;
   --border:#1e2f5a;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b;
-  --rad:14px;
+  --rad:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Sora',sans-serif;background:var(--bg);min-height:100vh;
-  display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-x:hidden}
+  display:flex;flex-direction:column;align-items:center;padding:12px;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(79,110,247,.18) 0%,transparent 60%),
              radial-gradient(ellipse 60% 40% at 80% 110%,rgba(124,58,237,.14) 0%,transparent 55%)}
-
-.card{position:relative;width:100%;max-width:440px;background:var(--card);
-  border:1px solid var(--border);border-radius:24px;overflow:hidden;
-  box-shadow:0 32px 80px rgba(0,0,0,.6);z-index:1;margin:0 auto;
-  animation:slideUp .5s cubic-bezier(.22,1,.36,1) both}
-@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.card{position:relative;width:100%;max-width:460px;background:var(--card);
+  border:1px solid var(--border);border-radius:22px;overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,.6);z-index:1;margin-bottom:12px;
+  animation:up .45s cubic-bezier(.22,1,.36,1) both}
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── Header ── */
-.header{padding:28px 24px 18px;background:linear-gradient(160deg,#0d1a40 0%,#080f2a 100%);text-align:center}
-.logo-ring{width:58px;height:58px;margin:0 auto 12px;border-radius:50%;
+.header{padding:24px 20px 16px;background:linear-gradient(160deg,#0d1a40,#080f2a);text-align:center}
+.logo-ring{width:54px;height:54px;margin:0 auto 10px;border-radius:50%;
   background:linear-gradient(135deg,var(--acc),var(--acc2));
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 28px rgba(79,110,247,.5);animation:pulse 3s ease-in-out infinite}
-@keyframes pulse{0%,100%{box-shadow:0 0 18px rgba(79,110,247,.4)}50%{box-shadow:0 0 36px rgba(79,110,247,.7)}}
-.logo-ring svg{width:28px;height:28px;fill:#fff}
-.brand{font-size:21px;font-weight:700;color:#fff;letter-spacing:-.3px}
-.tagline{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.8px;text-transform:uppercase}
-.college-badge{display:inline-flex;align-items:center;gap:5px;margin-top:8px;
-  padding:3px 10px;background:rgba(79,110,247,.15);border:1px solid rgba(79,110,247,.3);
-  border-radius:20px;font-size:10.5px;color:var(--acc);letter-spacing:.3px}
+  box-shadow:0 0 26px rgba(79,110,247,.5);animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 16px rgba(79,110,247,.4)}50%{box-shadow:0 0 34px rgba(79,110,247,.7)}}
+.logo-ring svg{width:26px;height:26px;fill:#fff}
+.brand{font-size:20px;font-weight:700;color:#fff}
+.tagline{font-size:10.5px;color:var(--muted);margin-top:2px;letter-spacing:.8px;text-transform:uppercase}
+.college-badge{display:inline-flex;align-items:center;gap:4px;margin-top:7px;padding:3px 9px;
+  background:rgba(79,110,247,.15);border:1px solid rgba(79,110,247,.3);border-radius:20px;
+  font-size:10px;color:var(--acc)}
 
 /* ── Tabs ── */
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)}
-.tab-btn{padding:12px 0;background:transparent;border:none;cursor:pointer;
-  font-family:'Sora',sans-serif;font-size:12px;font-weight:500;color:var(--muted);
-  transition:color .2s,background .2s;position:relative}
-.tab-btn.active{color:var(--acc);background:var(--tab)}
-.tab-btn.active::after{content:'';position:absolute;bottom:0;left:12px;right:12px;
+.main-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.main-tabs::-webkit-scrollbar{display:none}
+.mtab{flex-shrink:0;padding:10px 14px;background:transparent;border:none;cursor:pointer;
+  font-family:'Sora',sans-serif;font-size:11.5px;font-weight:500;color:var(--muted);
+  transition:color .2s,background .2s;white-space:nowrap;position:relative}
+.mtab.active{color:var(--acc);background:var(--tab)}
+.mtab.active::after{content:'';position:absolute;bottom:0;left:8px;right:8px;
   height:2px;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:2px 2px 0 0}
 
-/* ── Panes ── */
-.form-body{padding:20px 20px 24px}
-.pane{display:none}.pane.active{display:block;animation:fadeIn .3s ease both}
-@keyframes fadeIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
-
-/* ── Fields ── */
+/* ── Form body ── */
+.form-body{padding:18px 18px 22px}
+.pane{display:none}.pane.active{display:block;animation:fadeIn .25s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.field{margin-bottom:12px}
-.field label{display:block;font-size:10px;font-weight:600;letter-spacing:.9px;
+@media(max-width:360px){.row2{grid-template-columns:1fr}}
+.section-label{font-size:10px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:10px;font-weight:600;letter-spacing:.8px;
   text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 .field label .req{color:var(--acc)}
-.field input,.field select{width:100%;padding:10px 13px;background:var(--inp);
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;background:var(--inp);
   border:1px solid var(--border);border-radius:var(--rad);color:var(--text);
-  font-family:'Sora',sans-serif;font-size:13.5px;outline:none;
+  font-family:'Sora',sans-serif;font-size:13px;outline:none;
   transition:border-color .2s,box-shadow .2s}
-.field input::placeholder{color:var(--muted);font-size:12.5px}
-.field input:focus,.field select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,110,247,.14)}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted);font-size:12px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,110,247,.13)}
 .field select option{background:#1a2a52}
 .field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.4)}
 .pw-wrap{position:relative}
-.pw-wrap input{padding-right:40px}
-.pw-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);
-  background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;transition:color .2s}
+.pw-wrap input{padding-right:38px}
+.pw-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center}
 .pw-eye:hover{color:var(--text)}
 
 /* ── Buttons ── */
-.btn{width:100%;padding:12px;border:none;border-radius:var(--rad);font-family:'Sora',sans-serif;
-  font-size:14.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;
-  justify-content:center;gap:8px;transition:opacity .2s,transform .1s}
+.btn{width:100%;padding:11px;border:none;border-radius:var(--rad);font-family:'Sora',sans-serif;
+  font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:7px;transition:opacity .2s,transform .1s}
 .btn-primary{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
-  box-shadow:0 4px 18px rgba(79,110,247,.35)}
-.btn-primary:hover{opacity:.91}
-.btn-primary:active{transform:scale(.98)}
-.btn-primary:disabled{opacity:.45;cursor:not-allowed}
-.btn-secondary{background:var(--inp);border:1px solid var(--border);color:var(--muted);margin-top:10px}
-.btn-secondary:not(:disabled):hover{border-color:var(--acc);color:var(--acc);background:rgba(79,110,247,.07)}
-.btn-secondary:disabled{opacity:.4;cursor:not-allowed}
-.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);
-  color:var(--danger);margin-top:8px}
-.btn-danger:hover{background:rgba(239,68,68,.2)}
+  box-shadow:0 4px 16px rgba(79,110,247,.3)}
+.btn-primary:hover{opacity:.9}.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-secondary{background:var(--inp);border:1px solid var(--border);color:var(--muted);margin-top:8px}
+.btn-secondary:not(:disabled):hover{border-color:var(--acc);color:var(--acc)}
+.btn-secondary:disabled{opacity:.38;cursor:not-allowed}
+.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--danger);margin-top:8px}
+.btn-danger:hover{background:rgba(239,68,68,.18)}
 .btn-success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--success)}
-.btn-success:hover{background:rgba(34,197,94,.2)}
-.btn-exit{width:100%;padding:11px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);
-  border-radius:var(--rad);color:var(--danger);font-family:'Sora',sans-serif;font-size:14px;
+.btn-success:hover{background:rgba(34,197,94,.18)}
+.btn-exit{width:100%;padding:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);
+  border-radius:var(--rad);color:var(--danger);font-family:'Sora',sans-serif;font-size:13.5px;
   font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  gap:8px;margin-top:10px;transition:background .2s}
+  gap:7px;margin-top:9px;transition:background .2s}
 .btn-exit:hover{background:rgba(239,68,68,.2)}
-.btn-exit:disabled{opacity:.45;cursor:not-allowed}
+.btn-exit:disabled{opacity:.42;cursor:not-allowed}
 
-.divider{display:flex;align-items:center;gap:10px;margin:12px 0;color:var(--muted);font-size:11px}
+.divider{display:flex;align-items:center;gap:8px;margin:10px 0;color:var(--muted);font-size:10.5px}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-.hint{text-align:center;font-size:11px;color:var(--muted);margin-top:7px}
+.hint{text-align:center;font-size:11px;color:var(--muted);margin-top:6px}
 
-/* ── Info / status boxes ── */
-.info-box{border-radius:12px;padding:10px 13px;font-size:12.5px;margin-bottom:12px;
-  display:flex;align-items:flex-start;gap:9px}
+/* ── Info / status ── */
+.info-box{border-radius:10px;padding:9px 12px;font-size:12px;margin-bottom:11px;
+  display:flex;align-items:flex-start;gap:8px}
 .info-box.blue{background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.25);color:#a5b4fc}
 .info-box.green{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#86efac}
-.info-box.red{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
 .info-box.orange{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fcd34d}
+.info-box.red{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
 .info-box svg{flex-shrink:0;margin-top:1px}
 
-.loc-bar{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:10px;
-  font-size:11.5px;margin-bottom:10px}
+.loc-bar{display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:9px;
+  font-size:11px;margin-bottom:9px}
 .loc-bar.getting{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:var(--warn)}
 .loc-bar.ok{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:var(--success)}
 .loc-bar.fail{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:var(--danger)}
 
 /* ── Attendance card ── */
-.att-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);border-radius:14px;padding:14px 16px;margin-bottom:14px}
-.att-card .att-name{font-size:15px;font-weight:600;color:var(--success);margin-bottom:6px}
-.att-card .att-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);
+.att-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);
+  border-radius:12px;padding:13px 15px;margin-bottom:12px}
+.att-card .att-name{font-size:14px;font-weight:600;color:var(--success);margin-bottom:5px}
+.att-card .att-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);
   padding:3px 0;border-bottom:1px solid rgba(34,197,94,.1)}
 .att-card .att-row:last-child{border:none}
-.att-card .att-val{color:var(--text);font-weight:500;text-align:right;max-width:200px;font-size:11px}
-
-/* ── Session card ── */
-.session-card{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);
-  border-radius:14px;padding:14px;margin-bottom:14px}
-.session-card .subj{font-size:15px;font-weight:600;color:var(--success);margin-bottom:4px}
-.session-card .meta{font-size:11.5px;color:var(--muted)}
-.session-card .timer{font-size:20px;font-weight:700;color:var(--success);
-  font-variant-numeric:tabular-nums;margin-top:6px}
-.no-session{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);
-  border-radius:14px;padding:14px;text-align:center;color:var(--muted);
-  font-size:13px;margin-bottom:14px}
+.att-card .att-val{color:var(--text);font-weight:500;text-align:right;max-width:55%;font-size:11px}
 
 /* ── Teacher dashboard ── */
 .dash-header{display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.dash-name{font-size:14px;font-weight:600;color:var(--text)}
-.dash-sub{font-size:10.5px;color:var(--muted);margin-top:2px}
-.dash-logout{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;
-  cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;transition:color .2s,border-color .2s}
+  margin-bottom:13px;padding-bottom:11px;border-bottom:1px solid var(--border)}
+.dash-name{font-size:13.5px;font-weight:600;color:var(--text)}
+.dash-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.dash-logout{background:none;border:1px solid var(--border);border-radius:7px;padding:4px 9px;
+  cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif}
 .dash-logout:hover{color:var(--danger);border-color:var(--danger)}
-.sub-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--inp);
-  border-radius:10px;padding:3px;margin-bottom:14px;gap:2px}
-.sub-tab{padding:7px 0;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;
-  font-size:11px;font-weight:500;color:var(--muted);border-radius:8px;transition:all .2s}
-.sub-tab.active{background:var(--tab);color:var(--acc)}
-.sub-pane{display:none}.sub-pane.active{display:block;animation:fadeIn .25s ease both}
 
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-.stat-card{border-radius:12px;padding:10px 6px;text-align:center;border:1px solid}
+.sub-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--inp);
+  border-radius:9px;padding:3px;margin-bottom:13px;gap:2px}
+.sub-tab{padding:6px 0;background:transparent;border:none;cursor:pointer;
+  font-family:'Sora',sans-serif;font-size:10.5px;font-weight:500;color:var(--muted);
+  border-radius:7px;transition:all .2s}
+.sub-tab.active{background:var(--tab);color:var(--acc)}
+.sub-pane{display:none}.sub-pane.active{display:block;animation:fadeIn .2s ease both}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:11px}
+.stat-card{border-radius:10px;padding:9px 5px;text-align:center;border:1px solid}
 .stat-card.green{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25)}
 .stat-card.red{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25)}
 .stat-card.blue{background:rgba(79,110,247,.08);border-color:rgba(79,110,247,.25)}
 .stat-card.purple{background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.25)}
-.stat-num{font-size:18px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
-.stat-lbl{font-size:9.5px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.6px}
+.stat-num{font-size:17px;font-weight:700;color:var(--text)}
+.stat-lbl{font-size:9px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
 
-.seg-control{display:inline-flex;background:var(--inp);border-radius:8px;padding:2px;gap:2px}
-.seg{padding:5px 14px;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;
-  font-size:11.5px;font-weight:500;color:var(--muted);border-radius:6px;transition:all .2s}
+.seg-control{display:inline-flex;background:var(--inp);border-radius:7px;padding:2px;gap:2px}
+.seg{padding:4px 12px;background:transparent;border:none;cursor:pointer;font-family:'Sora',sans-serif;
+  font-size:11px;font-weight:500;color:var(--muted);border-radius:5px;transition:all .2s}
 .seg.active{background:var(--tab);color:var(--acc)}
-.export-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;
-  background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.3);border-radius:8px;
-  color:var(--acc);font-size:11.5px;font-family:'Sora',sans-serif;cursor:pointer;float:right}
-.export-btn:hover{background:rgba(79,110,247,.2)}
-#live-toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.live-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.export-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;
+  background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.3);border-radius:7px;
+  color:var(--acc);font-size:11px;font-family:'Sora',sans-serif;cursor:pointer}
+.export-btn:hover{background:rgba(79,110,247,.18)}
 
-/* ── Attendance list ── */
-.att-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;margin-top:10px}
-.att-item{background:var(--inp);border:1px solid var(--border);border-radius:10px;
-  padding:10px 13px;display:flex;align-items:center;justify-content:space-between}
-.att-item .name{font-size:13px;font-weight:500;color:var(--text)}
-.att-item .meta{font-size:11px;color:var(--muted)}
-.att-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;
+/* ── Lists ── */
+.att-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow-y:auto;margin-top:9px}
+.att-item{background:var(--inp);border:1px solid var(--border);border-radius:9px;
+  padding:9px 12px;display:flex;align-items:center;justify-content:space-between}
+.att-item.clickable{cursor:pointer}.att-item.clickable:hover{border-color:var(--acc)}
+.att-item .iname{font-size:12.5px;font-weight:500;color:var(--text)}
+.att-item .imeta{font-size:10.5px;color:var(--muted);margin-top:2px}
+.badge{font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:20px;
   background:rgba(34,197,94,.15);color:var(--success);border:1px solid rgba(34,197,94,.3)}
-.att-badge.absent{background:rgba(239,68,68,.15);color:var(--danger);border-color:rgba(239,68,68,.3)}
+.badge.absent{background:rgba(239,68,68,.15);color:var(--danger);border-color:rgba(239,68,68,.3)}
+.badge.closed{background:rgba(107,125,179,.15);color:var(--muted);border-color:var(--border)}
 
 /* Student search */
-#student-search{background:var(--inp);border:1px solid var(--border);border-radius:var(--rad);
-  color:var(--text);font-family:'Sora',sans-serif;font-size:13px;padding:9px 13px;
-  width:100%;outline:none;transition:border-color .2s;margin-bottom:10px}
+#student-search{width:100%;background:var(--inp);border:1px solid var(--border);
+  border-radius:var(--rad);color:var(--text);font-family:'Sora',sans-serif;
+  font-size:12.5px;padding:8px 12px;outline:none;transition:border-color .2s;margin-bottom:9px}
 #student-search:focus{border-color:var(--acc)}
 #student-search::placeholder{color:var(--muted)}
 
-/* ── My attendance ── */
-.my-att-item{background:var(--inp);border:1px solid var(--border);border-radius:10px;
-  padding:10px 13px;margin-bottom:8px}
-.my-att-date{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
-.my-att-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:2px 0}
-.my-att-row span:last-child{color:var(--text)}
+/* My attendance */
+.my-item{background:var(--inp);border:1px solid var(--border);border-radius:9px;
+  padding:9px 12px;margin-bottom:7px}
+.my-date{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:4px}
+.my-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:2px 0}
+.my-row span:last-child{color:var(--text)}
+
+/* Session card */
+.sess-card{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);
+  border-radius:12px;padding:12px;margin-bottom:12px}
+.sess-subj{font-size:14px;font-weight:600;color:var(--success)}
+.sess-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.sess-timer{font-size:19px;font-weight:700;color:var(--success);margin-top:5px;
+  font-variant-numeric:tabular-nums}
+.no-session{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);
+  border-radius:12px;padding:12px;text-align:center;color:var(--muted);font-size:12.5px;margin-bottom:12px}
+
+/* ── Device badge ── */
+.device-badge{display:flex;align-items:center;gap:6px;padding:7px 11px;
+  background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);
+  border-radius:9px;margin-bottom:11px;font-size:11px;color:#86efac}
 
 /* ── Toast ── */
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(50px);
-  background:#1a2a52;border:1px solid var(--acc);color:var(--text);padding:10px 20px;
-  border-radius:40px;font-size:12.5px;opacity:0;transition:opacity .3s,transform .3s;
-  z-index:999;white-space:nowrap;max-width:90vw;text-align:center}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(50px);
+  background:#1a2a52;border:1px solid var(--acc);color:var(--text);padding:9px 18px;
+  border-radius:40px;font-size:12px;opacity:0;transition:opacity .3s,transform .3s;
+  z-index:9999;max-width:88vw;text-align:center}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.error{border-color:var(--danger)}
 #toast.success{border-color:var(--success)}
 #toast.warn{border-color:var(--warn)}
 
 /* ── Spinner ── */
-.spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);
   border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── Offline bar ── */
-#offline-bar{display:none;background:#7f1d1d;color:#fca5a5;font-size:12px;text-align:center;
-  padding:6px;font-family:'Sora',sans-serif;position:fixed;top:0;left:0;right:0;z-index:9999}
+/* ── Offline ── */
+#offline-bar{display:none;background:#7f1d1d;color:#fca5a5;font-size:11.5px;
+  text-align:center;padding:5px;font-family:'Sora',sans-serif;
+  position:fixed;top:0;left:0;right:0;z-index:9999}
 #offline-bar.show{display:block}
 
-/* ── PWA install ── */
+/* ── PWA banner ── */
 #pwa-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;
-  padding:12px 16px;background:#0d1530;border-top:1px solid var(--border)}
-#pwa-banner.show{display:flex;align-items:center;gap:12px}
-.pwa-icon{width:40px;height:40px;border-radius:10px;flex-shrink:0}
-.pwa-text{flex:1}.pwa-text strong{display:block;font-size:13px;color:var(--text);font-weight:600}
-.pwa-text span{font-size:11px;color:var(--muted)}
-.pwa-install-btn{padding:8px 16px;background:linear-gradient(135deg,var(--acc),var(--acc2));
-  border:none;border-radius:10px;color:#fff;font-family:'Sora',sans-serif;
-  font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0}
-.pwa-dismiss{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;flex-shrink:0}
-
-/* ── Device badge ── */
-#device-badge{display:flex;align-items:center;gap:6px;padding:8px 12px;
-  background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);
-  border-radius:10px;margin-bottom:12px;font-size:11.5px;color:#86efac}
+  padding:11px 15px;background:#0d1530;border-top:1px solid var(--border)}
+#pwa-banner.show{display:flex;align-items:center;gap:11px}
+.pwa-icon{width:38px;height:38px;border-radius:9px;flex-shrink:0}
+.pwa-text{flex:1}
+.pwa-text strong{display:block;font-size:12.5px;color:var(--text);font-weight:600}
+.pwa-text span{font-size:10.5px;color:var(--muted)}
+.pwa-install-btn{padding:7px 14px;background:linear-gradient(135deg,var(--acc),var(--acc2));
+  border:none;border-radius:9px;color:#fff;font-family:'Sora',sans-serif;
+  font-size:11.5px;font-weight:600;cursor:pointer;flex-shrink:0}
+.pwa-dismiss{background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px;flex-shrink:0}
 </style>
 </head>
 <body>
+
 <div id="offline-bar">📡 Offline — attendance requires internet</div>
 
 <div class="card">
-  <!-- Header -->
+  <!-- ── Header ── -->
   <div class="header">
     <div class="logo-ring">
       <svg viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
@@ -254,28 +257,31 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="brand">BioAttend</div>
     <div class="tagline">Biometric Attendance System</div>
     <div class="college-badge">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
       SIT Tumkur
     </div>
   </div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab-btn active" id="tab-signin"  onclick="switchTab('signin')">Sign In</button>
-    <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Register</button>
-    <button class="tab-btn" id="tab-teacher"  onclick="switchTab('teacher')">Teacher</button>
+  <!-- ── Main Tabs ── -->
+  <div class="main-tabs">
+    <button class="mtab active" id="mtab-signin"   onclick="switchMain('signin')">Sign In</button>
+    <button class="mtab" id="mtab-register" onclick="switchMain('register')">Register</button>
+    <button class="mtab" id="mtab-teacher"  onclick="switchMain('teacher')">Teacher</button>
+    <button class="mtab" id="mtab-admin"    onclick="switchMain('admin')">Admin</button>
   </div>
 
   <div class="form-body">
 
-    <!-- ══ SIGN IN ══ -->
+    <!-- ══════════════════════════════════════════════
+         SIGN IN — biometric only
+    ══════════════════════════════════════════════ -->
     <div class="pane active" id="pane-signin">
       <div id="loc-status-bar"></div>
       <div id="att-success-card" style="display:none"></div>
 
       <div class="info-box blue">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
-        <span>Enter your email then use fingerprint or Face ID.</span>
+        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+        <span>Enter your email then use fingerprint or Face ID to mark attendance.</span>
       </div>
 
       <div class="field">
@@ -284,73 +290,123 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
 
       <button class="btn btn-primary" id="btn-bio-signin" onclick="handleBiometricSignIn()">
-        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+        <svg width="17" height="17" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
         Mark Attendance with Fingerprint / Face ID
       </button>
 
-      <div style="margin-top:14px" id="my-att-section" style="display:none">
-        <button onclick="loadMyAttendance()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11.5px;font-family:'Sora',sans-serif;width:100%;text-align:center">View my attendance history ↓</button>
-        <div id="my-att-list" style="display:none;margin-top:10px"></div>
+      <div style="margin-top:12px;text-align:center">
+        <button onclick="toggleMyAtt()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif">
+          View my attendance history ↓
+        </button>
+        <div id="my-att-list" style="display:none;margin-top:9px;text-align:left"></div>
       </div>
     </div>
 
-    <!-- ══ REGISTER ══ -->
+    <!-- ══════════════════════════════════════════════
+         REGISTER — User table form
+         user_id(auto), institute_id, department_id, role_id,
+         full_name, dob, mobile, email, password_hash(auto),
+         biometric_code(post), device_identification(auto)
+    ══════════════════════════════════════════════ -->
     <div class="pane" id="pane-register">
+      <div class="section-label">New user registration</div>
+
       <div class="row2">
-        <div class="field"><label>Full Name <span class="req">*</span></label>
-          <input type="text" id="r-name" placeholder="Your full name"/></div>
-        <div class="field"><label>Date of Birth</label>
-          <input type="date" id="r-dob"/></div>
+        <div class="field">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="r-name" placeholder="Full name"/>
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="r-dob"/>
+        </div>
       </div>
-      <div class="field"><label>Email <span class="req">*</span></label>
-        <input type="email" id="r-email" placeholder="usn@sit.ac.in"/></div>
-      <div class="field"><label>Mobile</label>
-        <input type="tel" id="r-mobile" placeholder="+91 9876543210"/></div>
-      <div class="field"><label>Department</label>
-        <select id="r-dept">
-          <option value="">Select department</option>
-          <option value="CSE">Computer Science & Engineering</option>
-          <option value="ISE">Information Science & Engineering</option>
-          <option value="ECE">Electronics & Communication</option>
-          <option value="EEE">Electrical & Electronics</option>
-          <option value="MECH">Mechanical Engineering</option>
-          <option value="CIVIL">Civil Engineering</option>
-          <option value="MBA">MBA</option>
-          <option value="MCA">MCA</option>
-        </select>
+
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" id="r-email" placeholder="usn@sit.ac.in"/>
       </div>
-      <div class="field"><label>Role</label>
-        <select id="r-role">
-          <option value="student">Student</option>
-          <option value="teacher">Teacher / Staff</option>
-        </select>
+
+      <div class="field">
+        <label>Mobile</label>
+        <input type="tel" id="r-mobile" placeholder="+91 9876543210"/>
       </div>
-      <div class="field"><label>Password <span class="req">*</span></label>
+
+      <div class="row2">
+        <div class="field">
+          <label>Institute ID</label>
+          <input type="text" id="r-institute" value="SIT001" placeholder="SIT001"/>
+        </div>
+        <div class="field">
+          <label>Department <span class="req">*</span></label>
+          <select id="r-dept">
+            <option value="">Select…</option>
+            <option value="CSE">CSE</option>
+            <option value="ISE">ISE</option>
+            <option value="ECE">ECE</option>
+            <option value="EEE">EEE</option>
+            <option value="MECH">MECH</option>
+            <option value="CIVIL">CIVIL</option>
+            <option value="CHEM">CHEM</option>
+            <option value="BT">BT</option>
+            <option value="MBA">MBA</option>
+            <option value="MCA">MCA</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Role <span class="req">*</span></label>
+          <select id="r-role">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Attendance Location</label>
+          <select id="r-location">
+            <option value="LOC001">SIT Main Block</option>
+            <option value="LOC002">CS Lab Block</option>
+            <option value="LOC003">Seminar Hall</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Password <span class="req">*</span> <span style="font-weight:400;text-transform:none;letter-spacing:0">(min 8 chars)</span></label>
         <div class="pw-wrap">
           <input type="password" id="r-password" placeholder="Min 8 characters"/>
           <button class="pw-eye" onclick="togglePw('r-password')" type="button">
-            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
       </div>
 
       <button class="btn btn-primary" id="btn-register" onclick="handleRegister()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Create Account
       </button>
+
       <div class="divider">then register biometric</div>
+
       <button class="btn btn-secondary" id="btn-bio-reg" disabled onclick="handleBiometricRegister()">
-        <svg width="17" height="17" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
         Register Fingerprint / Face ID
       </button>
       <div class="hint" id="bio-hint">Create your account first, then register biometric</div>
     </div>
 
-    <!-- ══ TEACHER ══ -->
+    <!-- ══════════════════════════════════════════════
+         TEACHER PANEL
+    ══════════════════════════════════════════════ -->
     <div class="pane" id="pane-teacher">
-      <div id="teacher-login-section">
+
+      <!-- Login -->
+      <div id="t-login-section">
         <div class="info-box blue">
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
           <span>Sign in with your teacher account.</span>
         </div>
         <div class="field"><label>Email</label><input type="email" id="t-email" placeholder="teacher@sit.ac.in"/></div>
@@ -358,32 +414,33 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <div class="pw-wrap">
             <input type="password" id="t-password" placeholder="••••••••"/>
             <button class="pw-eye" onclick="togglePw('t-password')" type="button">
-              <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
         </div>
-        <button class="btn btn-primary" id="btn-teacher-login" onclick="handleTeacherLogin()">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+        <button class="btn btn-primary" id="btn-t-login" onclick="handleTeacherLogin()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
           Teacher Sign In
         </button>
       </div>
 
-      <div id="teacher-dashboard" style="display:none">
+      <!-- Dashboard -->
+      <div id="t-dashboard" style="display:none">
         <div class="dash-header">
           <div><div class="dash-name" id="t-welcome"></div><div class="dash-sub">Teacher Dashboard · SIT</div></div>
           <button class="dash-logout" onclick="teacherLogout()">Logout</button>
         </div>
         <div class="sub-tabs">
-          <button class="sub-tab active" id="stab-session"  onclick="switchSubTab('session')">Session</button>
-          <button class="sub-tab" id="stab-live"     onclick="switchSubTab('live')">Live</button>
-          <button class="sub-tab" id="stab-history"  onclick="switchSubTab('history')">History</button>
-          <button class="sub-tab" id="stab-students" onclick="switchSubTab('students')">Students</button>
+          <button class="sub-tab active" id="stab-session"  onclick="switchSub('session')">Session</button>
+          <button class="sub-tab" id="stab-live"     onclick="switchSub('live')">Live</button>
+          <button class="sub-tab" id="stab-history"  onclick="switchSub('history')">History</button>
+          <button class="sub-tab" id="stab-students" onclick="switchSub('students')">Students</button>
         </div>
 
         <!-- Session sub-pane -->
         <div class="sub-pane active" id="sp-session">
-          <div id="active-session-display"></div>
-          <div id="open-session-form">
+          <div id="active-sess-display"></div>
+          <div id="open-sess-form">
             <div class="field"><label>Subject / Class <span class="req">*</span></label>
               <input type="text" id="t-subject" placeholder="e.g. Data Structures – 3CSE-B"/></div>
             <div class="field"><label>Window</label>
@@ -395,8 +452,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
                 <option value="30">30 minutes</option>
               </select>
             </div>
-            <button class="btn btn-success" id="btn-open-session" onclick="openSession()">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <button class="btn btn-success" id="btn-open-sess" onclick="openSession()">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
               Open Attendance Session
             </button>
           </div>
@@ -404,52 +461,133 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
         <!-- Live sub-pane -->
         <div class="sub-pane" id="sp-live">
-          <div id="live-session-info" class="no-session">No active session</div>
+          <div id="live-info" class="no-session">No active session</div>
           <div class="stats-row" id="live-stats" style="display:none">
-            <div class="stat-card green"><div class="stat-num" id="stat-present">0</div><div class="stat-lbl">Present</div></div>
-            <div class="stat-card red"><div class="stat-num" id="stat-absent">0</div><div class="stat-lbl">Absent</div></div>
-            <div class="stat-card blue"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Total</div></div>
-            <div class="stat-card purple"><div class="stat-num" id="stat-pct">0%</div><div class="stat-lbl">Rate</div></div>
+            <div class="stat-card green"><div class="stat-num" id="sp">0</div><div class="stat-lbl">Present</div></div>
+            <div class="stat-card red"><div class="stat-num" id="sa">0</div><div class="stat-lbl">Absent</div></div>
+            <div class="stat-card blue"><div class="stat-num" id="st">0</div><div class="stat-lbl">Total</div></div>
+            <div class="stat-card purple"><div class="stat-num" id="spc">0%</div><div class="stat-lbl">Rate</div></div>
           </div>
-          <div id="live-toggle-row" style="display:none">
+          <div class="live-toolbar" id="live-toolbar" style="display:none">
             <div class="seg-control">
-              <button class="seg active" id="seg-present" onclick="showLiveTab('present')">Present</button>
-              <button class="seg" id="seg-absent" onclick="showLiveTab('absent')">Absent</button>
+              <button class="seg active" id="seg-p" onclick="showLive('present')">Present</button>
+              <button class="seg" id="seg-a" onclick="showLive('absent')">Absent</button>
             </div>
-            <button class="export-btn" onclick="exportCurrentSession()">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-              Export
-            </button>
+            <button class="export-btn" onclick="exportLive()">↓ Export</button>
           </div>
           <div id="live-list" class="att-list"></div>
-          <div id="live-refresh-row" style="display:none;text-align:center;margin-top:10px">
-            <button onclick="refreshLive()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↻ Refresh</button>
-            <div style="font-size:10px;color:var(--muted);margin-top:4px" id="live-updated"></div>
+          <div id="live-refresh" style="display:none;text-align:center;margin-top:9px">
+            <button onclick="refreshLive()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↻ Refresh</button>
+            <div id="live-updated" style="font-size:10px;color:var(--muted);margin-top:3px"></div>
           </div>
         </div>
 
         <!-- History sub-pane -->
         <div class="sub-pane" id="sp-history">
-          <div class="field"><label>Filter by date</label>
-            <input type="date" id="hist-date" onchange="loadHistory()"/></div>
-          <div id="history-list" class="att-list"></div>
-          <div style="text-align:center;margin-top:10px;display:none" id="hist-export-row">
-            <button class="export-btn" onclick="exportHistory()">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-              Export CSV
-            </button>
+          <div class="field"><label>Date</label>
+            <input type="date" id="hist-date" onchange="loadHistory()"/>
+          </div>
+          <div id="hist-list" class="att-list"></div>
+          <div style="text-align:right;margin-top:8px;display:none" id="hist-export">
+            <button class="export-btn" onclick="exportHistory()">↓ Export CSV</button>
           </div>
         </div>
 
         <!-- Students sub-pane -->
         <div class="sub-pane" id="sp-students">
-          <input type="text" id="student-search" placeholder="Search name, email or department…" oninput="filterStudents()"/>
-          <div id="student-count" style="font-size:11px;color:var(--muted);margin-bottom:8px"></div>
-          <div id="students-list" class="att-list"></div>
+          <input type="text" id="student-search" placeholder="Search name, email or dept…" oninput="filterStudents()"/>
+          <div id="stud-count" style="font-size:11px;color:var(--muted);margin-bottom:7px"></div>
+          <div id="stud-list" class="att-list"></div>
         </div>
       </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════
+         ADMIN — manage lookup tables
+    ══════════════════════════════════════════════ -->
+    <div class="pane" id="pane-admin">
+      <div class="section-label">Database administration</div>
+
+      <!-- Admin sub-tabs -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="seg active" id="atab-dept"    onclick="switchAdmin('dept')"   style="padding:5px 10px">Departments</button>
+        <button class="seg" id="atab-loc"     onclick="switchAdmin('loc')"    style="padding:5px 10px">Locations</button>
+        <button class="seg" id="atab-ulmap"   onclick="switchAdmin('ulmap')"  style="padding:5px 10px">User-Loc Map</button>
+        <button class="seg" id="atab-atttype" onclick="switchAdmin('atttype')" style="padding:5px 10px">Att. Type</button>
+      </div>
+
+      <!-- Departments form -->
+      <div id="ap-dept" class="sub-pane active">
+        <div class="section-label">Add Department</div>
+        <div class="row2">
+          <div class="field"><label>department_id <span class="req">*</span></label>
+            <input type="text" id="ad-id" placeholder="e.g. CSE"/></div>
+          <div class="field"><label>name <span class="req">*</span></label>
+            <input type="text" id="ad-name" placeholder="Dept name"/></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>in_charge</label>
+            <input type="text" id="ad-incharge" placeholder="HOD name"/></div>
+          <div class="field"><label>email</label>
+            <input type="email" id="ad-email" placeholder="hod@sit.ac.in"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="addDepartment()">Add Department</button>
+        <div id="dept-list" class="att-list" style="margin-top:12px"></div>
+        <button onclick="loadDepts()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">↻ Refresh list</button>
+      </div>
+
+      <!-- Attendance Locations form -->
+      <div id="ap-loc" class="sub-pane">
+        <div class="section-label">Add Attendance Location</div>
+        <div class="row2">
+          <div class="field"><label>attendance_location_id <span class="req">*</span></label>
+            <input type="text" id="al-id" placeholder="LOC004"/></div>
+          <div class="field"><label>name <span class="req">*</span></label>
+            <input type="text" id="al-name" placeholder="Lab / Room name"/></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>latitude <span class="req">*</span></label>
+            <input type="number" id="al-lat" step="0.00001" placeholder="13.32603"/></div>
+          <div class="field"><label>longitude <span class="req">*</span></label>
+            <input type="number" id="al-lng" step="0.00001" placeholder="77.12621"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="addLocation()">Add Location</button>
+        <div id="loc-list" class="att-list" style="margin-top:12px"></div>
+        <button onclick="loadLocs()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">↻ Refresh list</button>
+      </div>
+
+      <!-- User Attendance Location Map form -->
+      <div id="ap-ulmap" class="sub-pane">
+        <div class="section-label">Map User → Location</div>
+        <div class="field"><label>user_id <span class="req">*</span></label>
+          <input type="text" id="ulm-uid" placeholder="u_1234_abcde"/></div>
+        <div class="row2">
+          <div class="field"><label>attendance_location_id <span class="req">*</span></label>
+            <input type="text" id="ulm-lid" placeholder="LOC001"/></div>
+          <div class="field"><label>allowed_distance (m)</label>
+            <input type="number" id="ulm-dist" value="200" placeholder="200"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="addUserLocMap()">Add Mapping</button>
+        <div class="info-box orange" style="margin-top:10px">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span>user_id is auto-generated during registration. You can copy it from the Users sheet.</span>
+        </div>
+      </div>
+
+      <!-- Attendance Type form -->
+      <div id="ap-atttype" class="sub-pane">
+        <div class="section-label">Attendance Types (seeded automatically)</div>
+        <div class="att-list">
+          <div class="att-item"><div><div class="iname">ATT_TYPE_001</div><div class="imeta">type: entry</div></div><span class="badge">seeded</span></div>
+          <div class="att-item"><div><div class="iname">ATT_TYPE_002</div><div class="imeta">type: exit</div></div><span class="badge">seeded</span></div>
+        </div>
+        <div class="info-box blue" style="margin-top:10px">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span>Entry and Exit types are seeded automatically when you run setupSheets from Apps Script editor.</span>
+        </div>
+      </div>
+
+    </div><!-- /pane-admin -->
   </div><!-- /form-body -->
 </div><!-- /card -->
 
@@ -481,80 +619,88 @@ let deviceId      = null;
 // ── API ───────────────────────────────────────────────────────
 async function api(payload) {
   const url = API + '?data=' + encodeURIComponent(JSON.stringify(payload));
-  const res = await fetch(url, { redirect:'follow' });
+  const res = await fetch(url, { redirect: 'follow' });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const txt = await res.text();
-  try { return JSON.parse(txt); } catch(e) { throw new Error('Bad response'); }
+  try { return JSON.parse(txt); } catch(e) { throw new Error('Server returned invalid response'); }
 }
 
 // ── Toast ─────────────────────────────────────────────────────
-function toast(msg, type='') {
+function toast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'show ' + type;
   clearTimeout(t._t); t._t = setTimeout(() => t.className = '', 3500);
 }
 
-// ── Loading ───────────────────────────────────────────────────
 function setLoading(id, on) {
   const b = document.getElementById(id); if (!b) return;
-  if (on) { b._h = b.innerHTML; b.innerHTML = '<span class="spin"></span> Please wait…'; b.disabled=true; }
-  else { b.innerHTML = b._h || b.innerHTML; b.disabled=false; }
+  if (on) { b._h = b.innerHTML; b.innerHTML = '<span class="spin"></span> Please wait…'; b.disabled = true; }
+  else { b.innerHTML = b._h || b.innerHTML; b.disabled = false; }
 }
 
-// ── Tabs ──────────────────────────────────────────────────────
-function switchTab(tab) {
-  ['signin','register','teacher'].forEach(t => {
+function togglePw(id) { const i = document.getElementById(id); i.type = i.type === 'password' ? 'text' : 'password'; }
+function fmtTime(s) { const m = Math.floor(Math.max(0,s)/60), x = Math.max(0,s)%60; return String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'); }
+
+// ── Tab navigation ────────────────────────────────────────────
+function switchMain(tab) {
+  ['signin','register','teacher','admin'].forEach(t => {
     document.getElementById('pane-'+t).classList.toggle('active', t===tab);
-    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('mtab-'+t).classList.toggle('active', t===tab);
   });
 }
 
-function togglePw(id) { const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; }
-function fmtTime(s) { const m=Math.floor(Math.max(0,s)/60),x=Math.max(0,s)%60; return String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'); }
+function switchSub(tab) {
+  ['session','live','history','students'].forEach(t => {
+    document.getElementById('sp-'+t).classList.toggle('active', t===tab);
+    document.getElementById('stab-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab==='live')     refreshLive();
+  if (tab==='history')  { document.getElementById('hist-date').value = new Date().toISOString().slice(0,10); loadHistory(); }
+  if (tab==='students') loadStudents();
+}
+
+function switchAdmin(tab) {
+  ['dept','loc','ulmap','atttype'].forEach(t => {
+    document.getElementById('ap-'+t).classList.toggle('active', t===tab);
+    document.getElementById('atab-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab==='dept')   loadDepts();
+  if (tab==='loc')    loadLocs();
+}
 
 // ── Device fingerprint ────────────────────────────────────────
-// FIX: replaced undefined `canvas` variable with `cv` (the actual canvas element)
 async function getDeviceId() {
   if (deviceId) return deviceId;
-  try { const s=localStorage.getItem('bioattend_did'); if(s){deviceId=s;return s;} } catch(e){}
-  const cv = document.createElement('canvas');
-  const c  = cv.getContext('2d');
-  c.fillText('BioAttend', 2, 2);
-  let canvasData = '';
-  try { canvasData = cv.toDataURL().slice(-40); } catch(e) { canvasData = ''; }
-  const raw = [
-    navigator.userAgent,
-    navigator.language,
-    screen.width + 'x' + screen.height,
-    new Date().getTimezoneOffset(),
-    canvasData
-  ].join('|');
+  try { const s = localStorage.getItem('ba_did'); if(s){deviceId=s;return s;} } catch(e){}
+  const cv = document.createElement('canvas'), c = cv.getContext('2d');
+  c.fillText('BioAttend',2,2);
+  const raw = [navigator.userAgent,navigator.language,screen.width+'x'+screen.height,
+    new Date().getTimezoneOffset(),cv.toDataURL().slice(-40)].join('|');
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
-  deviceId = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('').slice(0,16);
-  try { localStorage.setItem('bioattend_did', deviceId); } catch(e) {}
+  deviceId = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,16);
+  try { localStorage.setItem('ba_did', deviceId); } catch(e) {}
   return deviceId;
 }
 
 // ── GPS (fine, watchPosition) ─────────────────────────────────
 function getLocation() {
   return new Promise(resolve => {
-    if (!navigator.geolocation) return resolve({lat:'',lng:'',accuracy:null,denied:false});
+    if (!navigator.geolocation) return resolve({latitude:'',longitude:'',accuracy:null,denied:false});
     let best=null, wid=null, done=false;
-    const finish=r=>{
+    const finish = r => {
       if(done)return; done=true;
       if(wid!==null)try{navigator.geolocation.clearWatch(wid);}catch(e){}
-      resolve(r||{lat:'',lng:'',accuracy:null,denied:false});
+      resolve(r||{latitude:'',longitude:'',accuracy:null,denied:false});
     };
-    wid=navigator.geolocation.watchPosition(
-      pos=>{
-        const r={lat:pos.coords.latitude,lng:pos.coords.longitude,
-                  accuracy:pos.coords.accuracy,denied:false,address:''};
+    wid = navigator.geolocation.watchPosition(
+      pos => {
+        const r={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,denied:false,address:''};
         if(!best||r.accuracy<best.accuracy)best=r;
         if(r.accuracy<=50)finish(best);
       },
-      err=>{
-        if(err.code===1)finish({lat:'',lng:'',accuracy:null,denied:true});
-        else finish(best||{lat:'',lng:'',accuracy:null,denied:false});
+      err => {
+        if(err.code===1)finish({latitude:'',longitude:'',accuracy:null,denied:true});
+        else finish(best||{latitude:'',longitude:'',accuracy:null,denied:false});
       },
       {enableHighAccuracy:true,timeout:10000,maximumAge:0}
     );
@@ -563,351 +709,368 @@ function getLocation() {
 }
 
 async function getLocationWithAddress() {
-  const loc=await getLocation();
+  const loc = await getLocation();
   if(loc.denied){showLocBar('fail','Location blocked — allow in browser settings and retry');return loc;}
-  if(!loc.lat)return loc;
+  if(!loc.latitude)return loc;
   try {
-    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json`,
-                        {headers:{'Accept-Language':'en'}});
-    const d=await r.json();
-    loc.address=d.display_name?d.display_name.split(',').slice(0,3).join(',').trim():'';
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.latitude}&lon=${loc.longitude}&format=json`,{headers:{'Accept-Language':'en'}});
+    const d = await r.json();
+    loc.address = d.display_name ? d.display_name.split(',').slice(0,3).join(',').trim() : '';
   } catch(e){loc.address='';}
   return loc;
 }
 
-function showLocBar(state, msg, accuracy) {
-  const el=document.getElementById('loc-status-bar'); if(!el)return;
+function showLocBar(state,msg,accuracy){
+  const el=document.getElementById('loc-status-bar');if(!el)return;
   const icons={getting:'📡',ok:'📍',fail:'⚠️'};
   const acc=accuracy?` <span style="opacity:.6;font-size:10px">±${Math.round(accuracy)}m</span>`:'';
   el.innerHTML=`<div class="loc-bar ${state}">${icons[state]||''} ${msg}${acc}</div>`;
 }
 
-// ── Attendance success card ───────────────────────────────────
+// ── Attendance card (shown after marking) ─────────────────────
 function showAttendanceCard(data, userId) {
   markedUserId = userId;
   const el = document.getElementById('att-success-card');
-  if(!el)return;
-  el.style.display='block';
-  el.innerHTML=`
+  el.style.display = 'block';
+  el.innerHTML = `
     <div class="att-card">
       <div class="att-name">✓ Attendance Marked</div>
-      <div class="att-row"><span>Name</span><span class="att-val">${data.name||''}</span></div>
-      <div class="att-row"><span>Date</span><span class="att-val">${data.date||''}</span></div>
-      <div class="att-row"><span>Entry time</span><span class="att-val">${data.time||''}</span></div>
-      <div class="att-row"><span>Location</span><span class="att-val">${data.location||'not captured'}</span></div>
-      <div class="att-row"><span>Method</span><span class="att-val">${data.method||''}</span></div>
+      <div class="att-row"><span>full_name</span><span class="att-val">${data.name||''}</span></div>
+      <div class="att-row"><span>attendance_date</span><span class="att-val">${data.date||''}</span></div>
+      <div class="att-row"><span>entry_time</span><span class="att-val">${data.time||''}</span></div>
+      <div class="att-row"><span>address</span><span class="att-val">${data.location||'not captured'}</span></div>
+      <div class="att-row"><span>distance_from_centre</span><span class="att-val">${data.distanceFromCentre||'—'} m</span></div>
+      <div class="att-row"><span>login_method</span><span class="att-val">${data.method||'biometric'}</span></div>
+      <div class="att-row"><span>type_attendance</span><span class="att-val">entry</span></div>
     </div>
     <button class="btn-exit" id="btn-exit" onclick="handleExit()">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
       Mark Exit (leaving classroom)
     </button>`;
-  const emailF=document.getElementById('si-email');
-  if(emailF&&emailF.closest('.field'))emailF.closest('.field').style.display='none';
-  const ib=document.querySelector('#pane-signin .info-box');
+  // Hide form
+  const ef = document.getElementById('si-email');
+  if(ef&&ef.closest('.field'))ef.closest('.field').style.display='none';
+  const ib = document.querySelector('#pane-signin .info-box');
   if(ib)ib.style.display='none';
-  const bb=document.getElementById('btn-bio-signin');
+  const bb = document.getElementById('btn-bio-signin');
   if(bb)bb.style.display='none';
   try{
-    sessionStorage.setItem('ba_uid',  userId);
-    sessionStorage.setItem('ba_name', data.name||'');
-    sessionStorage.setItem('ba_date', data.date||'');
-    sessionStorage.setItem('ba_time', data.time||'');
-    sessionStorage.setItem('ba_loc',  data.location||'');
-    sessionStorage.setItem('ba_meth', data.method||'biometric');
+    sessionStorage.setItem('ba_uid',   userId);
+    sessionStorage.setItem('ba_name',  data.name||'');
+    sessionStorage.setItem('ba_date',  data.date||'');
+    sessionStorage.setItem('ba_time',  data.time||'');
+    sessionStorage.setItem('ba_loc',   data.location||'');
+    sessionStorage.setItem('ba_meth',  data.method||'biometric');
+    sessionStorage.setItem('ba_dist',  data.distanceFromCentre||'');
   }catch(e){}
 }
 
 function restoreSignInForm() {
-  const card=document.getElementById('att-success-card');
-  if(card)card.style.display='none';
-  const loc=document.getElementById('loc-status-bar'); if(loc)loc.innerHTML='';
-  const emailF=document.getElementById('si-email');
-  if(emailF&&emailF.closest('.field'))emailF.closest('.field').style.display='';
-  const ib=document.querySelector('#pane-signin .info-box'); if(ib)ib.style.display='';
-  const bb=document.getElementById('btn-bio-signin'); if(bb){bb.style.display='';bb.disabled=false;}
-  if(emailF)emailF.value='';
+  const card=document.getElementById('att-success-card');if(card)card.style.display='none';
+  const lb=document.getElementById('loc-status-bar');if(lb)lb.innerHTML='';
+  const ef=document.getElementById('si-email');
+  if(ef&&ef.closest('.field'))ef.closest('.field').style.display='';
+  const ib=document.querySelector('#pane-signin .info-box');if(ib)ib.style.display='';
+  const bb=document.getElementById('btn-bio-signin');if(bb){bb.style.display='';bb.disabled=false;}
+  if(ef)ef.value='';
   markedUserId=null;
-  try{['ba_uid','ba_name','ba_date','ba_time','ba_loc','ba_meth'].forEach(k=>sessionStorage.removeItem(k));}catch(e){}
+  try{['ba_uid','ba_name','ba_date','ba_time','ba_loc','ba_meth','ba_dist'].forEach(k=>sessionStorage.removeItem(k));}catch(e){}
 }
 
-// ══════════════════════════════════════════
+// ════════════════════════════════════════════
 // BIOMETRIC SIGN IN
-// ══════════════════════════════════════════
+// Sends: getBiometric → markEntry → Attendance + LocationMonitor sheets
+// ════════════════════════════════════════════
 async function handleBiometricSignIn() {
-  if(!window.PublicKeyCredential){toast('WebAuthn not supported','error');return;}
-  const email=document.getElementById('si-email').value.trim();
+  if(!window.PublicKeyCredential){toast('WebAuthn not supported on this browser','error');return;}
+  const email = document.getElementById('si-email').value.trim();
   if(!email){toast('Enter your email first','error');return;}
 
   if(navigator.permissions){
-    try {
+    try{
       const p=await navigator.permissions.query({name:'geolocation'});
-      if(p.state==='denied'){
-        showLocBar('fail','Location blocked — go to Settings → Site permissions → Allow');
-        toast('📍 Allow location in browser settings then try again','error'); return;
-      }
+      if(p.state==='denied'){showLocBar('fail','Location blocked — allow in Settings → Site permissions');toast('📍 Allow location in browser settings and retry','error');return;}
     }catch(e){}
   }
 
   const btn=document.getElementById('btn-bio-signin');
   if(btn){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> Verifying…';btn.disabled=true;}
-  try {
-    const info=await api({action:'getBiometric',email});
+  try{
+    // 1. Fetch biometric_code from Users table
+    const info = await api({action:'getBiometric', email});
     if(!info.success||!info.credentialId){toast(info.message||'No biometric registered','error');return;}
 
-    const challenge=crypto.getRandomValues(new Uint8Array(32));
-    const rawId=Uint8Array.from(atob(info.credentialId),c=>c.charCodeAt(0));
+    // 2. WebAuthn — prompts device fingerprint/FaceID
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const rawId = Uint8Array.from(atob(info.credentialId), c=>c.charCodeAt(0));
     await navigator.credentials.get({publicKey:{
       challenge, userVerification:'required', timeout:60000,
       allowCredentials:[{type:'public-key',id:rawId}]
     }});
 
+    // 3. Get fine GPS (latitude, longitude for Attendance + LocationMonitor tables)
     showLocBar('getting','Getting your location…');
-    const loc=await getLocationWithAddress();
+    const loc = await getLocationWithAddress();
     if(loc.denied){if(btn){btn.innerHTML=btn._h;btn.disabled=false;}return;}
-    if(loc.lat)showLocBar('ok',loc.address||`${loc.lat}, ${loc.lng}`,loc.accuracy);
+    if(loc.latitude)showLocBar('ok',loc.address||`${loc.latitude}, ${loc.longitude}`,loc.accuracy);
     else showLocBar('fail','Location not captured — marked without GPS');
 
-    const att=await api({action:'markEntry',userId:info.userId,
-      method:'biometric',lat:loc.lat,lng:loc.lng,address:loc.address});
+    // 4. markEntry → writes to Attendance + LocationMonitor tables
+    const att = await api({
+      action:      'markEntry',
+      userId:      info.userId,
+      loginMethod: 'biometric',
+      latitude:    loc.latitude,
+      longitude:   loc.longitude,
+      address:     loc.address
+    });
 
     if(att.success){
       toast('✓ '+att.message,'success');
-      showAttendanceCard({...att,method:'biometric'},info.userId);
+      showAttendanceCard({...att, method:'biometric'}, info.userId);
     } else if(att.code==='TOO_FAR'){
-      showLocBar('fail',`${att.distance}m from campus — must be within 200m`);
+      showLocBar('fail',`${att.distance}m from campus — must be within ${att.allowed}m`);
       toast(`📍 Too far (${att.distance}m). Move closer and try again`,'error');
     } else {
       toast(att.message,'error');
     }
-  } catch(e){
+  }catch(e){
     if(e.name==='NotAllowedError')toast('Biometric cancelled','warn');
     else toast('Error: '+e.message,'error');
   }
   if(btn){btn.innerHTML=btn._h||btn.innerHTML;btn.disabled=false;}
 }
 
-// ══════════════════════════════════════════
+// ════════════════════════════════════════════
 // MARK EXIT
-// ══════════════════════════════════════════
+// Updates Attendance row: type→exit, exit_time
+// Also writes to LocationMonitor
+// ════════════════════════════════════════════
 async function handleExit() {
   if(!markedUserId){toast('Mark attendance first','error');return;}
   const btn=document.getElementById('btn-exit');
-  if(btn){btn.disabled=true;btn.textContent='Getting location…';}
-  try {
+  if(btn){btn.disabled=true;btn.textContent='Getting exit location…';}
+  try{
     showLocBar('getting','Getting exit location…');
-    const loc=await getLocationWithAddress();
-    if(loc.lat)showLocBar('ok','Exit: '+(loc.address||`${loc.lat}, ${loc.lng}`),loc.accuracy);
+    const loc = await getLocationWithAddress();
+    if(loc.latitude)showLocBar('ok','Exit: '+(loc.address||`${loc.latitude}, ${loc.longitude}`),loc.accuracy);
     else showLocBar('fail','Exit location not captured');
 
-    const res=await api({action:'markExit',userId:markedUserId,
-      lat:loc.lat,lng:loc.lng,address:loc.address});
+    const res = await api({
+      action:    'markExit',
+      userId:    markedUserId,
+      latitude:  loc.latitude,
+      longitude: loc.longitude,
+      address:   loc.address
+    });
+
     if(res.success){
       toast('✓ '+res.message,'success');
       const card=document.querySelector('.att-card');
       if(card){
         card.querySelector('.att-name').textContent='✓ Entry & Exit Recorded';
         card.innerHTML+=`
-          <div class="att-row"><span>Exit time</span><span class="att-val">${res.exitTime||''}</span></div>
-          <div class="att-row"><span>Duration</span><span class="att-val">${res.duration||res.durationMins+' min'||''}</span></div>
-          <div class="att-row"><span>Exit location</span><span class="att-val">${res.location||'not captured'}</span></div>`;
+          <div class="att-row"><span>exit_time</span><span class="att-val">${res.exitTime||''}</span></div>
+          <div class="att-row"><span>type_attendance</span><span class="att-val">exit</span></div>
+          <div class="att-row"><span>duration</span><span class="att-val">${res.duration||res.durationMins+' min'||''}</span></div>
+          <div class="att-row"><span>address (exit)</span><span class="att-val">${res.location||'not captured'}</span></div>`;
       }
       if(btn){btn.disabled=true;btn.textContent='Exit recorded ✓';btn.style.opacity='.5';}
       markedUserId=null;
       setTimeout(()=>restoreSignInForm(),4000);
-    } else {
+    }else{
       toast(res.message,'error');
-      if(btn){btn.disabled=false;btn.innerHTML='<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> Mark Exit (leaving classroom)';}
+      if(btn){btn.disabled=false;btn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> Mark Exit (leaving classroom)';}
     }
   }catch(e){toast('Error: '+e.message,'error');if(btn){btn.disabled=false;btn.textContent='Mark Exit (leaving classroom)';}}
 }
 
-// ── My Attendance (student history) ──────────────────────────
-async function loadMyAttendance() {
-  const uid=sessionStorage.getItem('ba_uid')||markedUserId;
-  if(!uid){toast('Sign in first to view history','error');return;}
+// ════════════════════════════════════════════
+// MY ATTENDANCE
+// ════════════════════════════════════════════
+async function toggleMyAtt() {
   const list=document.getElementById('my-att-list');
+  if(list.style.display==='block'){list.style.display='none';return;}
   list.style.display='block';
-  list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:10px">Loading…</div>';
-  try {
+  const uid=sessionStorage.getItem('ba_uid')||markedUserId;
+  if(!uid){list.innerHTML='<div style="color:var(--muted);font-size:11.5px;text-align:center;padding:8px">Sign in first to view history</div>';return;}
+  list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11.5px;padding:8px">Loading…</div>';
+  try{
     const d=await api({action:'getMyAttendance',userId:uid});
-    if(!d.records||!d.records.length){list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:10px">No attendance records yet</div>';return;}
+    if(!d.records||!d.records.length){list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11.5px;padding:8px">No records yet</div>';return;}
     list.innerHTML=d.records.map(r=>`
-      <div class="my-att-item">
-        <div class="my-att-date">${r.date}</div>
-        <div class="my-att-row"><span>Entry</span><span>${r.entryTime||'—'}</span></div>
-        <div class="my-att-row"><span>Exit</span><span>${r.exitTime||'—'}</span></div>
-        <div class="my-att-row"><span>Duration</span><span>${r.durationMins!==''?r.durationMins+' min':'—'}</span></div>
-        <div class="my-att-row"><span>Method</span><span>${r.method||'—'}</span></div>
-        <div class="my-att-row"><span>Location</span><span>${r.entryAddress||'not captured'}</span></div>
+      <div class="my-item">
+        <div class="my-date">${r.date}</div>
+        <div class="my-row"><span>entry_time</span><span>${r.entryTime||'—'}</span></div>
+        <div class="my-row"><span>exit_time</span><span>${r.exitTime||'—'}</span></div>
+        <div class="my-row"><span>duration</span><span>${r.duration||'—'}</span></div>
+        <div class="my-row"><span>login_method</span><span>${r.loginMethod||'—'}</span></div>
+        <div class="my-row"><span>address</span><span>${r.address||'not captured'}</span></div>
+        <div class="my-row"><span>distance_from_centre</span><span>${r.distanceFromCentre||'—'} m</span></div>
       </div>`).join('');
-  }catch(e){list.innerHTML='<div style="color:var(--danger);font-size:12px;text-align:center;padding:10px">Error: '+e.message+'</div>';}
+  }catch(e){list.innerHTML='<div style="color:var(--danger);font-size:11.5px;text-align:center;padding:8px">Error: '+e.message+'</div>';}
 }
 
-// ══════════════════════════════════════════
-// REGISTER
-// ══════════════════════════════════════════
+// ════════════════════════════════════════════
+// REGISTER — writes to Users + UserAttendanceLocationMap
+// ════════════════════════════════════════════
 async function handleRegister() {
-  const name=document.getElementById('r-name').value.trim();
-  const email=document.getElementById('r-email').value.trim();
-  const pass=document.getElementById('r-password').value;
-  const dob=document.getElementById('r-dob').value;
-  const mobile=document.getElementById('r-mobile').value.trim();
-  const dept=document.getElementById('r-dept').value;
-  const role=document.getElementById('r-role').value;
-  if(!name||!email||!pass){toast('Name, email and password required','error');return;}
+  const name   = document.getElementById('r-name').value.trim();
+  const email  = document.getElementById('r-email').value.trim();
+  const pass   = document.getElementById('r-password').value;
+  const dob    = document.getElementById('r-dob').value;
+  const mobile = document.getElementById('r-mobile').value.trim();
+  const dept   = document.getElementById('r-dept').value;
+  const role   = document.getElementById('r-role').value;
+  const inst   = document.getElementById('r-institute').value.trim();
+  const locId  = document.getElementById('r-location').value;
+
+  if(!name||!email||!pass||!dept||!role){toast('Name, email, password, department and role are required','error');return;}
   if(pass.length<8){toast('Password must be at least 8 characters','error');return;}
+
   setLoading('btn-register',true);
-  try {
-    const dId=await getDeviceId();
-    const d=await api({action:'register',name,email,password:pass,dob,mobile,department:dept,role,deviceId:dId});
+  try{
+    const dId = await getDeviceId();
+    const d   = await api({
+      action:               'register',
+      name, email, password:pass, dob, mobile,
+      departmentId:         dept,
+      roleId:               role,
+      instituteId:          inst||'SIT001',
+      attendanceLocationId: locId,
+      allowedDistance:      200,
+      deviceId:             dId
+    });
     if(d.success){
       registeredUid=d.userId;
-      toast('✓ Account created! Now register your biometric.','success');
+      toast('✓ Account created! Now register biometric.','success');
       document.getElementById('btn-bio-reg').disabled=false;
-      document.getElementById('bio-hint').textContent='Tap below to register your fingerprint';
-      showDeviceBadge(dId);
+      document.getElementById('bio-hint').textContent='Tap below to register fingerprint / Face ID';
+      // Auto-bind device
       await api({action:'registerDevice',userId:d.userId,deviceId:dId});
-    } else toast(d.message,'error');
+    }else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
   setLoading('btn-register',false);
 }
 
+// ── Biometric registration (writes biometric_code to Users) ──
 async function handleBiometricRegister() {
   if(!registeredUid){toast('Create account first','error');return;}
   if(!window.PublicKeyCredential){toast('WebAuthn not supported','error');return;}
-  try {
+  try{
     const challenge=crypto.getRandomValues(new Uint8Array(32));
     const cred=await navigator.credentials.create({publicKey:{
-      challenge,rp:{name:'BioAttend SIT',id:location.hostname},
+      challenge,
+      rp:{name:'BioAttend SIT',id:location.hostname},
       user:{id:Uint8Array.from(registeredUid,c=>c.charCodeAt(0)),
             name:document.getElementById('r-email').value,
             displayName:document.getElementById('r-name').value},
       pubKeyCredParams:[{type:'public-key',alg:-7}],
-      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},timeout:60000
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+      timeout:60000
     }});
     const credId=btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
     const d=await api({action:'saveBiometric',userId:registeredUid,credentialId:credId});
     if(d.success){
-      toast('✓ Biometric registered! You can now sign in with fingerprint.','success');
-      document.getElementById('bio-hint').textContent='✓ Biometric saved';
+      toast('✓ Biometric registered! Ready to sign in.','success');
+      document.getElementById('bio-hint').textContent='✓ Biometric saved — ready to use';
     }else toast(d.message,'error');
   }catch(e){toast('Biometric error: '+e.message,'error');}
 }
 
-function showDeviceBadge(dId){
-  const ex=document.getElementById('device-badge');if(ex)ex.remove();
-  const b=document.createElement('div');b.id='device-badge';
-  b.innerHTML=`<svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5-4H7V4h10v12z"/></svg><span>Device bound: <code style="font-family:monospace">${dId}</code></span>`;
-  document.getElementById('btn-register').parentNode.insertBefore(b,document.getElementById('btn-register'));
-}
-
-// ══════════════════════════════════════════
-// TEACHER ADMIN
-// ══════════════════════════════════════════
-async function handleTeacherLogin(){
+// ════════════════════════════════════════════
+// TEACHER LOGIN & DASHBOARD
+// ════════════════════════════════════════════
+async function handleTeacherLogin() {
   const email=document.getElementById('t-email').value.trim();
   const pass=document.getElementById('t-password').value;
   if(!email||!pass){toast('Enter email and password','error');return;}
-  setLoading('btn-teacher-login',true);
-  try {
+  setLoading('btn-t-login',true);
+  try{
     const d=await api({action:'signIn',email,password:pass});
-    if(!d.success){toast(d.message,'error');setLoading('btn-teacher-login',false);return;}
-    if(d.role!=='teacher'&&d.role!=='admin'){toast('Not a teacher account','error');setLoading('btn-teacher-login',false);return;}
+    if(!d.success){toast(d.message,'error');setLoading('btn-t-login',false);return;}
+    if(d.roleId!=='teacher'&&d.roleId!=='admin'){toast('Not a teacher account','error');setLoading('btn-t-login',false);return;}
     teacherData=d;
-    document.getElementById('teacher-login-section').style.display='none';
-    document.getElementById('teacher-dashboard').style.display='block';
+    document.getElementById('t-login-section').style.display='none';
+    document.getElementById('t-dashboard').style.display='block';
     document.getElementById('t-welcome').textContent='Hello, '+d.name;
-    switchSubTab('session'); checkActiveForTeacher();
+    switchSub('session'); checkActiveSess();
   }catch(e){toast('Error: '+e.message,'error');}
-  setLoading('btn-teacher-login',false);
+  setLoading('btn-t-login',false);
 }
 
 function teacherLogout(){
   teacherData=null;clearInterval(sessionTimer);liveSessionId=null;
-  document.getElementById('teacher-login-section').style.display='block';
-  document.getElementById('teacher-dashboard').style.display='none';
-  document.getElementById('t-email').value='';
-  document.getElementById('t-password').value='';
+  document.getElementById('t-login-section').style.display='block';
+  document.getElementById('t-dashboard').style.display='none';
+  document.getElementById('t-email').value='';document.getElementById('t-password').value='';
 }
 
-function switchSubTab(tab){
-  ['session','live','history','students'].forEach(t=>{
-    document.getElementById('sp-'+t).classList.toggle('active',t===tab);
-    document.getElementById('stab-'+t).classList.toggle('active',t===tab);
-  });
-  if(tab==='live')refreshLive();
-  if(tab==='history'){document.getElementById('hist-date').value=new Date().toISOString().slice(0,10);loadHistory();}
-  if(tab==='students')loadStudents();
-}
-
-async function checkActiveForTeacher(){
-  try {
+async function checkActiveSess(){
+  try{
     const d=await api({action:'getActiveSession'});
-    const el=document.getElementById('active-session-display');
-    const form=document.getElementById('open-session-form');
+    const el=document.getElementById('active-sess-display');
+    const form=document.getElementById('open-sess-form');
     if(d.active){
       let secs=d.secondsLeft; liveSessionId=d.session.session_id;
-      el.innerHTML=`<div class="session-card" style="margin-bottom:12px">
-        <div class="subj">🟢 ${d.session.subject} — LIVE</div>
-        <div class="meta">Closes in <span id="t-timer" style="font-weight:700;color:var(--success)">${fmtTime(secs)}</span></div>
-        <button onclick="closeCurrentSession('${d.session.session_id}')" class="btn btn-danger" style="margin-top:10px;padding:8px">Stop Session</button>
+      el.innerHTML=`<div class="sess-card">
+        <div class="sess-subj">🟢 ${d.session.subject} — LIVE</div>
+        <div class="sess-meta">Closes in <span id="t-timer" style="font-weight:700;color:var(--success)">${fmtTime(secs)}</span></div>
+        <button onclick="closeSess('${d.session.session_id}')" class="btn btn-danger" style="margin-top:9px;padding:8px">Stop Session</button>
       </div>`;
       form.style.display='none';
       clearInterval(sessionTimer);
-      sessionTimer=setInterval(()=>{secs--;const t=document.getElementById('t-timer');if(t)t.textContent=fmtTime(secs);if(secs<=0){clearInterval(sessionTimer);checkActiveForTeacher();}},1000);
+      sessionTimer=setInterval(()=>{secs--;const t=document.getElementById('t-timer');if(t)t.textContent=fmtTime(secs);if(secs<=0){clearInterval(sessionTimer);checkActiveSess();}},1000);
     }else{liveSessionId=null;el.innerHTML='';form.style.display='block';}
   }catch(e){}
 }
 
 async function openSession(){
   const subj=document.getElementById('t-subject').value.trim();
-  const win=document.getElementById('t-window').value;
+  const win=parseInt(document.getElementById('t-window').value);
   if(!subj){toast('Enter subject name','error');return;}
-  setLoading('btn-open-session',true);
-  try {
+  setLoading('btn-open-sess',true);
+  try{
     const d=await api({action:'createSession',userId:teacherData.userId,teacherName:teacherData.name,
-                       role:teacherData.role,subject:subj,windowMinutes:parseInt(win)});
-    if(d.success){toast('✓ Session opened — students can mark now','success');document.getElementById('t-subject').value='';checkActiveForTeacher();}
+                       roleId:teacherData.roleId,subject:subj,windowMinutes:win});
+    if(d.success){toast('✓ Session opened','success');document.getElementById('t-subject').value='';checkActiveSess();}
     else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
-  setLoading('btn-open-session',false);
+  setLoading('btn-open-sess',false);
 }
 
-async function closeCurrentSession(sessionId){
-  try{await api({action:'closeSession',sessionId});toast('Session closed','success');clearInterval(sessionTimer);liveSessionId=null;checkActiveForTeacher();}
-  catch(e){toast('Error closing','error');}
+async function closeSess(sid){
+  try{await api({action:'closeSession',sessionId:sid});toast('Session closed','success');clearInterval(sessionTimer);liveSessionId=null;checkActiveSess();}
+  catch(e){toast('Error','error');}
 }
 
+// ── Live dashboard ────────────────────────────────────────────
 async function refreshLive(){
   const listEl=document.getElementById('live-list');
-  const infoEl=document.getElementById('live-session-info');
-  const statsEl=document.getElementById('live-stats');
-  const togEl=document.getElementById('live-toggle-row');
-  const refEl=document.getElementById('live-refresh-row');
+  const infoEl=document.getElementById('live-info');
+  const statEl=document.getElementById('live-stats');
+  const toolEl=document.getElementById('live-toolbar');
+  const refEl=document.getElementById('live-refresh');
   try{const chk=await api({action:'getActiveSession'});if(chk.active)liveSessionId=chk.session.session_id;}catch(e){}
-  if(!liveSessionId){
-    infoEl.className='no-session';infoEl.style.display='block';
-    infoEl.textContent='No active session — open one from Session tab';
-    statsEl.style.display='none';togEl.style.display='none';refEl.style.display='none';listEl.innerHTML='';return;
-  }
+  if(!liveSessionId){infoEl.className='no-session';infoEl.style.display='block';infoEl.textContent='No active session — open one from Session tab';statEl.style.display='none';toolEl.style.display='none';refEl.style.display='none';listEl.innerHTML='';return;}
   try{
     const d=await api({action:'getDashboard',sessionId:liveSessionId});
     if(!d.success){toast(d.message,'error');return;}
     liveData=d;
-    infoEl.style.display='none';statsEl.style.display='grid';togEl.style.display='flex';refEl.style.display='block';
-    document.getElementById('stat-present').textContent=d.presentCount;
-    document.getElementById('stat-absent').textContent=d.absentCount;
-    document.getElementById('stat-total').textContent=d.total;
-    document.getElementById('stat-pct').textContent=d.total?Math.round(d.presentCount/d.total*100)+'%':'0%';
+    infoEl.style.display='none';statEl.style.display='grid';toolEl.style.display='flex';refEl.style.display='block';
+    document.getElementById('sp').textContent=d.presentCount;
+    document.getElementById('sa').textContent=d.absentCount;
+    document.getElementById('st').textContent=d.total;
+    document.getElementById('spc').textContent=d.total?Math.round(d.presentCount/d.total*100)+'%':'0%';
     document.getElementById('live-updated').textContent='Updated '+new Date().toLocaleTimeString();
     renderLiveList();
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
-function showLiveTab(tab){
+function showLive(tab){
   liveTab=tab;
-  document.getElementById('seg-present').classList.toggle('active',tab==='present');
-  document.getElementById('seg-absent').classList.toggle('active',tab==='absent');
+  document.getElementById('seg-p').classList.toggle('active',tab==='present');
+  document.getElementById('seg-a').classList.toggle('active',tab==='absent');
   renderLiveList();
 }
 
@@ -915,68 +1078,67 @@ function renderLiveList(){
   if(!liveData)return;
   const el=document.getElementById('live-list');
   const list=liveTab==='present'?liveData.present:liveData.absent;
-  if(!list||!list.length){
-    el.innerHTML=`<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px">${liveTab==='present'?'No one marked yet':'Everyone present! 🎉'}</div>`;return;
-  }
+  if(!list||!list.length){el.innerHTML=`<div style="text-align:center;color:var(--muted);padding:16px;font-size:12px">${liveTab==='present'?'No one marked yet':'Everyone present! 🎉'}</div>`;return;}
   el.innerHTML=list.map((s,i)=>liveTab==='present'
-    ?`<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email} · ${s.department||'—'} · ${s.entryTime} · ${s.method}${s.exitTime?' · Exit: '+s.exitTime:''}</div></div><span class="att-badge">✓</span></div>`
-    :`<div class="att-item"><div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email} · ${s.department||'—'}</div></div><span class="att-badge absent">✗</span></div>`
+    ?`<div class="att-item"><div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} · ${s.department||'—'} · ${s.entryTime} · ${s.method}${s.exitTime?' → exit '+s.exitTime:''}</div></div><span class="badge">✓</span></div>`
+    :`<div class="att-item"><div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} · ${s.department||'—'}</div></div><span class="badge absent">✗</span></div>`
   ).join('');
 }
 
-function exportCurrentSession(){
+function exportLive(){
   if(!liveData)return;
-  const rows=[['Name','Email','Department','Entry Time','Exit Time','Duration (min)','Method','Status']];
-  liveData.present.forEach(s=>rows.push([s.name,s.email,s.department||'',s.entryTime,s.exitTime||'',s.durationMins||'',s.method,'Present']));
-  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.department||'','','','','','Absent']));
-  downloadCSV(rows,'attendance_live.csv');
+  const rows=[['full_name','email','department_id','entry_time','exit_time','login_method','type_attendance']];
+  liveData.present.forEach(s=>rows.push([s.name,s.email,s.department||'',s.entryTime,s.exitTime||'',s.method,'present']));
+  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.department||'','','','','absent']));
+  dlCSV(rows,'attendance_live.csv');
 }
 
+// ── History ───────────────────────────────────────────────────
 async function loadHistory(){
   const date=document.getElementById('hist-date').value;
-  const el=document.getElementById('history-list');
-  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">Loading…</div>';
+  const el=document.getElementById('hist-list');
+  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">Loading…</div>';
   try{
     const d=await api({action:'getSessions',userId:teacherData.userId});
     let sessions=d.sessions||[];
     if(date)sessions=sessions.filter(s=>s.date===date);
     historyData=sessions;
-    if(!sessions.length){el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">No sessions found</div>';document.getElementById('hist-export-row').style.display='none';return;}
-    document.getElementById('hist-export-row').style.display='block';
+    if(!sessions.length){el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">No sessions found</div>';document.getElementById('hist-export').style.display='none';return;}
+    document.getElementById('hist-export').style.display='block';
     el.innerHTML=sessions.map(s=>`
-      <div class="att-item" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="toggleSessionDetail('${s.sessionId}','${(s.subject||'').replace(/'/g,"\\'")}')">
+      <div class="att-item clickable" style="flex-direction:column;align-items:stretch" onclick="toggleSessDet('${s.sessionId}','${(s.subject||'').replace(/'/g,"\\'")}')">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div class="name">${s.subject}</div><div class="meta">${s.date} · ${s.startTime}–${s.endTime}</div></div>
-          <div style="text-align:right"><span class="att-badge">${s.presentCount||0} present</span><div style="font-size:10px;margin-top:3px;color:${s.status==='open'?'var(--success)':'var(--muted)'}">${s.status}</div></div>
+          <div><div class="iname">${s.subject}</div><div class="imeta">${s.date} · ${s.startTime}–${s.endTime}</div></div>
+          <div style="text-align:right"><span class="badge ${s.status==='open'?'':'closed'}">${s.presentCount||0} present</span><div style="font-size:9.5px;margin-top:2px;color:var(--muted)">${s.status}</div></div>
         </div>
-        <div id="detail-${s.sessionId}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px"></div>
+        <div id="sd-${s.sessionId}" style="display:none;margin-top:9px;border-top:1px solid var(--border);padding-top:9px"></div>
       </div>`).join('');
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
-async function toggleSessionDetail(sessionId,subject){
-  const el=document.getElementById('detail-'+sessionId);if(!el)return;
+async function toggleSessDet(sid,subj){
+  const el=document.getElementById('sd-'+sid);if(!el)return;
   if(el.style.display==='block'){el.style.display='none';return;}
   el.style.display='block';el.innerHTML='<div style="color:var(--muted);font-size:11px">Loading…</div>';
   try{
-    const d=await api({action:'getDashboard',sessionId});
+    const d=await api({action:'getDashboard',sessionId:sid});
     if(!d.success){el.innerHTML='<div style="color:var(--danger);font-size:11px">'+d.message+'</div>';return;}
     el.innerHTML=`
-      <div style="display:flex;gap:12px;margin-bottom:8px;font-size:11px">
-        <span style="color:var(--success)">✓ ${d.presentCount} present</span>
-        <span style="color:var(--danger)">✗ ${d.absentCount} absent</span>
+      <div style="display:flex;gap:10px;margin-bottom:7px;font-size:11px">
+        <span style="color:var(--success)">✓ ${d.presentCount}</span>
+        <span style="color:var(--danger)">✗ ${d.absentCount}</span>
         <span style="color:var(--muted)">${d.total} total · ${d.total?Math.round(d.presentCount/d.total*100):0}%</span>
       </div>
       ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.entryTime}${s.exitTime?' → '+s.exitTime:''} · ${s.method}</span></div>`).join('')}
       ${!d.present.length?'<div style="font-size:11px;color:var(--muted)">No students marked</div>':''}
-      <button onclick="event.stopPropagation();exportOneSession('${sessionId}','${subject}')" class="export-btn" style="float:none;margin-top:10px">Export CSV</button>`;
+      <button onclick="event.stopPropagation();exportSession('${sid}','${subj}')" class="export-btn" style="float:none;margin-top:9px">↓ Export CSV</button>`;
   }catch(e){el.innerHTML='<div style="color:var(--danger);font-size:11px">Error</div>';}
 }
 
-async function exportOneSession(sessionId,subject){
+async function exportSession(sid,subj){
   try{
-    const d=await api({action:'exportAttendance',sessionId});
-    if(d.success)downloadCSV(null,'attendance_'+(subject||'export').replace(/\s+/g,'_')+'.csv',d.csv);
+    const d=await api({action:'exportAttendance',sessionId:sid});
+    if(d.success)dlCSV(null,'att_'+(subj||'export').replace(/\s+/g,'_')+'.csv',d.csv);
     else toast(d.message,'error');
   }catch(e){toast('Export failed','error');}
 }
@@ -985,18 +1147,19 @@ async function exportHistory(){
   if(!historyData.length)return;
   try{
     const d=await api({action:'exportAttendance',date:historyData[0]?.date});
-    if(d.success)downloadCSV(null,'attendance_'+(historyData[0]?.date||'all')+'.csv',d.csv);
+    if(d.success)dlCSV(null,'att_'+(historyData[0]?.date||'all')+'.csv',d.csv);
     else toast(d.message,'error');
   }catch(e){toast('Export failed','error');}
 }
 
+// ── Students roster ───────────────────────────────────────────
 async function loadStudents(){
-  const el=document.getElementById('students-list');
-  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">Loading…</div>';
+  const el=document.getElementById('stud-list');
+  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">Loading…</div>';
   try{
     const d=await api({action:'getStudents'});
     allStudents=d.students||[];
-    document.getElementById('student-count').textContent=allStudents.length+' students registered';
+    document.getElementById('stud-count').textContent=allStudents.length+' students in Users table';
     renderStudents(allStudents);
   }catch(e){toast('Error','error');}
 }
@@ -1004,16 +1167,16 @@ async function loadStudents(){
 function filterStudents(){
   const q=document.getElementById('student-search').value.toLowerCase();
   const f=allStudents.filter(s=>(s.name||'').toLowerCase().includes(q)||(s.email||'').toLowerCase().includes(q)||(s.department||'').toLowerCase().includes(q));
-  document.getElementById('student-count').textContent=f.length+' of '+allStudents.length+' students';
+  document.getElementById('stud-count').textContent=f.length+' of '+allStudents.length+' students';
   renderStudents(f);
 }
 
 function renderStudents(list){
-  const el=document.getElementById('students-list');
-  if(!list.length){el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">No students found</div>';return;}
+  const el=document.getElementById('stud-list');
+  if(!list.length){el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">No students found</div>';return;}
   el.innerHTML=list.map((s,i)=>`
     <div class="att-item">
-      <div><div class="name">${i+1}. ${s.name}</div><div class="meta">${s.email}<br>${s.department||'—'}</div></div>
+      <div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} · dept: ${s.department||'—'}</div></div>
       <div style="text-align:right;font-size:10px;line-height:1.8">
         <span style="color:${s.hasBio?'var(--success)':'var(--muted)'}">${s.hasBio?'🔐 bio':'🔐 none'}</span><br>
         <span style="color:${s.hasDevice?'var(--success)':'var(--muted)'}">${s.hasDevice?'📱 bound':'📱 none'}</span>
@@ -1021,64 +1184,121 @@ function renderStudents(list){
     </div>`).join('');
 }
 
-function downloadCSV(rows,filename,csvString){
-  const c=csvString||rows.map(r=>r.map(x=>'"'+(x||'')+'"').join(',')).join('\n');
+// ════════════════════════════════════════════
+// ADMIN — lookup table management
+// ════════════════════════════════════════════
+
+// Departments
+async function addDepartment(){
+  const id=document.getElementById('ad-id').value.trim();
+  const name=document.getElementById('ad-name').value.trim();
+  const incharge=document.getElementById('ad-incharge').value.trim();
+  const email=document.getElementById('ad-email').value.trim();
+  if(!id||!name){toast('department_id and name are required','error');return;}
+  try{
+    // Write directly to Departments sheet via a dedicated action
+    const d=await api({action:'addDepartment',departmentId:id,name,inCharge:incharge,email});
+    if(d.success){toast('✓ Department added','success');document.getElementById('ad-id').value='';document.getElementById('ad-name').value='';loadDepts();}
+    else toast(d.message,'error');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function loadDepts(){
+  const el=document.getElementById('dept-list');
+  try{
+    const d=await api({action:'getDepartments'});
+    const rows=d.data||[];
+    el.innerHTML=rows.length?rows.map(r=>`<div class="att-item"><div><div class="iname">${r.department_id} — ${r.name}</div><div class="imeta">in_charge: ${r.in_charge||'—'} · ${r.email||'—'}</div></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No departments yet</div>';
+  }catch(e){}
+}
+
+// Attendance Locations
+async function addLocation(){
+  const id=document.getElementById('al-id').value.trim();
+  const name=document.getElementById('al-name').value.trim();
+  const lat=document.getElementById('al-lat').value.trim();
+  const lng=document.getElementById('al-lng').value.trim();
+  if(!id||!name||!lat||!lng){toast('All location fields are required','error');return;}
+  try{
+    const d=await api({action:'addAttendanceLocation',locationId:id,name,latitude:parseFloat(lat),longitude:parseFloat(lng)});
+    if(d.success){toast('✓ Location added','success');document.getElementById('al-id').value='';document.getElementById('al-name').value='';loadLocs();}
+    else toast(d.message,'error');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function loadLocs(){
+  const el=document.getElementById('loc-list');
+  try{
+    const d=await api({action:'getLocations'});
+    const rows=d.data||[];
+    el.innerHTML=rows.length?rows.map(r=>`<div class="att-item"><div><div class="iname">${r.attendance_location_id} — ${r.name}</div><div class="imeta">lat: ${r.latitude} · lng: ${r.longitude}</div></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No locations yet</div>';
+  }catch(e){}
+}
+
+// User → Location map
+async function addUserLocMap(){
+  const uid=document.getElementById('ulm-uid').value.trim();
+  const lid=document.getElementById('ulm-lid').value.trim();
+  const dist=document.getElementById('ulm-dist').value.trim();
+  if(!uid||!lid){toast('user_id and attendance_location_id are required','error');return;}
+  try{
+    const d=await api({action:'addUserLocMap',userId:uid,locationId:lid,allowedDistance:parseInt(dist)||200});
+    if(d.success){toast('✓ Mapping added','success');document.getElementById('ulm-uid').value='';}
+    else toast(d.message,'error');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+// ── CSV download ──────────────────────────────────────────────
+function dlCSV(rows, filename, csvStr){
+  const c=csvStr||rows.map(r=>r.map(x=>'"'+(String(x||'')).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));
   a.download=filename;a.click();
 }
 
 // ── Init ──────────────────────────────────────────────────────
-switchTab('signin');
-getDeviceId().then(dId=>{
-  try{if(localStorage.getItem('bioattend_did'))showDeviceBadge(dId);}catch(e){}
-});
-// Restore state if student already marked today
+// Restore session state (if student already marked today)
 try{
   const uid=sessionStorage.getItem('ba_uid');
   if(uid){
     markedUserId=uid;
     showAttendanceCard({
-      name:    sessionStorage.getItem('ba_name'),
-      date:    sessionStorage.getItem('ba_date'),
-      time:    sessionStorage.getItem('ba_time'),
-      location:sessionStorage.getItem('ba_loc'),
-      method:  sessionStorage.getItem('ba_meth')
+      name:             sessionStorage.getItem('ba_name'),
+      date:             sessionStorage.getItem('ba_date'),
+      time:             sessionStorage.getItem('ba_time'),
+      location:         sessionStorage.getItem('ba_loc'),
+      method:           sessionStorage.getItem('ba_meth'),
+      distanceFromCentre: sessionStorage.getItem('ba_dist')
     }, uid);
   }
 }catch(e){}
-// Online/offline
+
+// Online/offline detection
 const offBar=document.getElementById('offline-bar');
 function chkOnline(){offBar.classList.toggle('show',!navigator.onLine);}
 window.addEventListener('online',chkOnline);window.addEventListener('offline',chkOnline);chkOnline();
 </script>
 
-<!-- PWA Service Worker + Install Prompt -->
+<!-- ── Add admin write actions to router (add to Code.gs route) ── -->
+<!-- These are called from the Admin tab forms -->
+
+<!-- ── PWA service worker + install prompt ── -->
 <script>
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e));
-  });
+  window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 }
 let dip=null;
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();dip=e;
-  try{if(!localStorage.getItem('pwa_dismissed'))document.getElementById('pwa-banner').classList.add('show');}catch(err){}
+  try{if(!localStorage.getItem('pwa_d'))document.getElementById('pwa-banner').classList.add('show');}catch(e){}
 });
 document.getElementById('pwa-install-btn').addEventListener('click',async()=>{
-  if(!dip)return;
-  document.getElementById('pwa-banner').classList.remove('show');
-  dip.prompt();
-  const{outcome}=await dip.userChoice;
-  dip=null;if(outcome==='accepted')toast('✓ BioAttend installed!','success');
+  if(!dip)return;document.getElementById('pwa-banner').classList.remove('show');dip.prompt();
+  const{outcome}=await dip.userChoice;dip=null;if(outcome==='accepted')toast('✓ BioAttend installed!','success');
 });
 document.getElementById('pwa-dismiss').addEventListener('click',()=>{
   document.getElementById('pwa-banner').classList.remove('show');
-  try{localStorage.setItem('pwa_dismissed','1');}catch(e){}
-});
-window.addEventListener('appinstalled',()=>{
-  document.getElementById('pwa-banner').classList.remove('show');
-  toast('✓ Installed on home screen!','success');
+  try{localStorage.setItem('pwa_d','1');}catch(e){}
 });
 </script>
 </body>
