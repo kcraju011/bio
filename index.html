@@ -604,6 +604,8 @@ let liveTab       = 'present';
 let liveRefreshTimer = null;
 let liveNotifBooted = false;
 let lastNotifId = '';
+let studentTrackWatchId = null;
+let studentTrackLastSentAt = 0;
 let allStudents   = [];
 let historyData   = [];
 let deviceId      = null;
@@ -737,6 +739,50 @@ function showLocBar(state,msg,accuracy){
   el.innerHTML=`<div class="loc-bar ${state}">${icons[state]||''} ${msg}${acc}</div>`;
 }
 
+async function sendTrackingPoint(userId, coords){
+  if(!userId||!coords) return;
+  const now = Date.now();
+  if(now - studentTrackLastSentAt < 30000) return;
+  studentTrackLastSentAt = now;
+  try{
+    await api({
+      action:'trackStudentLocation',
+      userId,
+      latitude: coords.latitude,
+      longitude: coords.longitude
+    });
+  }catch(e){}
+}
+
+function startStudentTracking(userId){
+  if(!userId||!navigator.geolocation) return;
+  stopStudentTracking(false);
+  studentTrackLastSentAt = 0;
+  try{sessionStorage.setItem('ba_tracking','1');}catch(e){}
+  studentTrackWatchId = navigator.geolocation.watchPosition(
+    pos => {
+      sendTrackingPoint(userId, {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        accuracy: pos.coords.accuracy
+      });
+    },
+    () => {},
+    {enableHighAccuracy:true, maximumAge:10000, timeout:15000}
+  );
+}
+
+function stopStudentTracking(clearFlag=true){
+  if(studentTrackWatchId!==null){
+    try{navigator.geolocation.clearWatch(studentTrackWatchId);}catch(e){}
+    studentTrackWatchId=null;
+  }
+  studentTrackLastSentAt = 0;
+  if(clearFlag){
+    try{sessionStorage.removeItem('ba_tracking');}catch(e){}
+  }
+}
+
 // ── Attendance card (shown after marking) ─────────────────────
 function showAttendanceCard(data, userId) {
   markedUserId = userId;
@@ -773,6 +819,7 @@ function showAttendanceCard(data, userId) {
     sessionStorage.setItem('ba_meth',  data.method||'biometric');
     sessionStorage.setItem('ba_dist',  data.distanceFromCentre||'');
   }catch(e){}
+  startStudentTracking(userId);
 }
 
 function restoreSignInForm() {
@@ -784,6 +831,7 @@ function restoreSignInForm() {
   const bb=document.getElementById('btn-bio-signin');if(bb){bb.style.display='';bb.disabled=false;}
   if(ef)ef.value='';
   markedUserId=null;
+  stopStudentTracking();
   try{['ba_uid','ba_name','ba_date','ba_time','ba_loc','ba_meth','ba_dist'].forEach(k=>sessionStorage.removeItem(k));}catch(e){}
 }
 
@@ -876,6 +924,7 @@ async function handleExit() {
 
     if(res.success){
       toast('✓ '+res.message,'success');
+      stopStudentTracking();
       const card=document.querySelector('.att-card');
       if(card){
         card.querySelector('.att-name').textContent='✓ Entry & Exit Recorded';
@@ -1307,6 +1356,7 @@ try{
       method:           sessionStorage.getItem('ba_meth'),
       distanceFromCentre: sessionStorage.getItem('ba_dist')
     }, uid);
+    if(sessionStorage.getItem('ba_tracking')==='1') startStudentTracking(uid);
   }
 }catch(e){}
 

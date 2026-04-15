@@ -122,6 +122,7 @@ function route(b) {
     // ── Attendance
     case 'markEntry':             return markEntry(b);
     case 'markExit':              return markExit(b);
+    case 'trackStudentLocation':  return trackStudentLocation(b);
     case 'getMyAttendance':       return getMyAttendance(b);
     case 'exportAttendance':      return exportAttendance(b);
 
@@ -412,6 +413,38 @@ function getOpenSessionForToday() {
     if (rows[i].status === 'open' && normDate(rows[i].date, tz()) === today) return rows[i];
   }
   return getCurrentAutoSession(now);
+}
+
+function resolveUserTrackingLocation(userId) {
+  var userLocRows = getRows(getSheet(SH.USER_LOC_MAP));
+  var userLocMap = null;
+  for (var i = 0; i < userLocRows.length; i++) {
+    if (String(userLocRows[i].user_id) === String(userId)) {
+      userLocMap = userLocRows[i];
+      break;
+    }
+  }
+
+  var locId = userLocMap ? userLocMap.attendance_location_id : 'LOC001';
+  var allowedDist = userLocMap ? parseInt(userLocMap.allowed_distance || DEFAULT_RADIUS, 10) : DEFAULT_RADIUS;
+  var anchorLat = DEFAULT_LAT;
+  var anchorLng = DEFAULT_LNG;
+  var locRows = getCached(SH.ATT_LOCATIONS, TTL_LOOKUP);
+
+  for (var j = 0; j < locRows.length; j++) {
+    if (String(locRows[j].attendance_location_id) === String(locId)) {
+      anchorLat = parseFloat(locRows[j].latitude || DEFAULT_LAT);
+      anchorLng = parseFloat(locRows[j].longitude || DEFAULT_LNG);
+      break;
+    }
+  }
+
+  return {
+    attendanceLocationId: locId,
+    allowedDistance: allowedDist,
+    anchorLat: anchorLat,
+    anchorLng: anchorLng
+  };
 }
 
 // ============================================================
@@ -724,6 +757,43 @@ function markExit(b) {
       message: 'No entry record found for today (' + dateStr + '). Mark attendance first.'
     };
   } catch(err) { return { success: false, message: 'markExit: ' + err }; }
+}
+
+function trackStudentLocation(b) {
+  try {
+    if (!b.userId) return { success: false, message: 'userId required' };
+    if (b.latitude === '' || b.latitude === null || typeof b.latitude === 'undefined')
+      return { success: false, message: 'latitude required' };
+    if (b.longitude === '' || b.longitude === null || typeof b.longitude === 'undefined')
+      return { success: false, message: 'longitude required' };
+
+    var lat = parseFloat(b.latitude);
+    var lng = parseFloat(b.longitude);
+    if (isNaN(lat) || isNaN(lng)) return { success: false, message: 'invalid coordinates' };
+
+    var user = getUserById(b.userId);
+    if (!user) return { success: false, message: 'User not found' };
+
+    var now = new Date();
+    var track = resolveUserTrackingLocation(b.userId);
+    var dist = haversine(lat, lng, track.anchorLat, track.anchorLng);
+
+    getSheet(SH.LOC_MONITOR).appendRow([
+      genId('lm'),
+      b.userId,
+      lat,
+      lng,
+      dist,
+      now.toISOString()
+    ]);
+
+    return {
+      success: true,
+      message: 'Location tracked',
+      distanceFromCentre: dist,
+      attendanceLocationId: track.attendanceLocationId
+    };
+  } catch(err) { return { success: false, message: 'trackStudentLocation: ' + err }; }
 }
 
 // ============================================================
