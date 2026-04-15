@@ -74,6 +74,9 @@ var HEADERS = {
 var DEFAULT_LAT = 13.32603;
 var DEFAULT_LNG = 77.12621;
 var DEFAULT_RADIUS = 200;
+var AUTO_SESSION_WINDOW_MINUTES = 10;
+var AUTO_SESSION_TIMES = ['09:00', '10:30', '14:00', '15:30'];
+var AUTO_SESSION_SUBJECT = 'Automatic Attendance Session';
 
 // ── Cache TTLs ────────────────────────────────────────────────
 var TTL_LOOKUP  = 600;
@@ -127,6 +130,7 @@ function route(b) {
     case 'closeSession':          return closeSession(b);
     case 'getActiveSession':      return getActiveSession(b);
     case 'getSessions':           return getSessions(b);
+    case 'getTeacherNotifications': return getTeacherNotifications(b);
 
     // ── Dashboard
     case 'getDashboard':          return getDashboard(b);
@@ -285,6 +289,58 @@ function normDate(raw, tz) {
 
 function tz() { return Session.getScriptTimeZone(); }
 
+function pad2(n) {
+  return String(n).padStart(2, '0');
+}
+
+function normalizeClockTime(raw) {
+  var m = String(raw || '').trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return '';
+  var h = parseInt(m[1], 10);
+  var min = parseInt(m[2], 10);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return '';
+  return pad2(h) + ':' + pad2(min);
+}
+
+function buildAutoSession(dateStr, startHm) {
+  var norm = normalizeClockTime(startHm);
+  if (!norm) return null;
+  var startDt = new Date(dateStr + 'T' + norm + ':00');
+  var endDt = new Date(startDt.getTime() + AUTO_SESSION_WINDOW_MINUTES * 60000);
+  return {
+    session_id: 'auto_' + dateStr + '_' + norm.replace(':', ''),
+    teacher_id: 'ALL',
+    teacher_name: 'Automatic',
+    subject: AUTO_SESSION_SUBJECT,
+    date: dateStr,
+    start_time: norm + ':00',
+    end_time: Utilities.formatDate(endDt, tz(), 'HH:mm:ss'),
+    status: 'open',
+    window_minutes: AUTO_SESSION_WINDOW_MINUTES,
+    is_auto: true
+  };
+}
+
+function getAutoSessionsForDate(dateStr) {
+  return AUTO_SESSION_TIMES.map(function(startHm) {
+    return buildAutoSession(dateStr, startHm);
+  }).filter(function(s) { return !!s; });
+}
+
+function getCurrentAutoSession(now) {
+  var t = tz();
+  var dateStr = Utilities.formatDate(now || new Date(), t, 'yyyy-MM-dd');
+  var current = now || new Date();
+  var sessions = getAutoSessionsForDate(dateStr);
+  for (var i = 0; i < sessions.length; i++) {
+    var s = sessions[i];
+    var st = new Date(s.date + 'T' + s.start_time);
+    var en = new Date(s.date + 'T' + s.end_time);
+    if (current >= st && current <= en) return s;
+  }
+  return null;
+}
+
 function getRoleDirectory() {
   var rows = getCached(SH.ROLES, TTL_LOOKUP);
   var byId = {};
@@ -320,6 +376,42 @@ function ensureExactRows(sheetName, rows) {
     sheet.getRange(2, 1, rows.length, hdrs.length).setValues(rows);
   }
   invalidate(sheetName);
+}
+
+function pushTeacherNotification(notification) {
+  try {
+    if (!notification || !notification.sessionId) return;
+    var cache = CacheService.getScriptCache();
+    var key = 'teacher_notif_' + notification.sessionId;
+    var rows = [];
+    var cached = cache.get(key);
+    if (cached) {
+      try { rows = JSON.parse(cached) || []; } catch(e) {}
+    }
+    rows.unshift(notification);
+    rows = rows.slice(0, 25);
+    cache.put(key, JSON.stringify(rows), 21600);
+  } catch(e) {}
+}
+
+function getOpenSessionForToday() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get('active_session');
+  var now = new Date();
+  var today = Utilities.formatDate(now, tz(), 'yyyy-MM-dd');
+
+  if (cached) {
+    try {
+      var active = JSON.parse(cached);
+      if (active && active.status === 'open' && active.date === today) return active;
+    } catch(e) {}
+  }
+
+  var rows = getRows(getSheet(SH.SESSIONS));
+  for (var i = rows.length - 1; i >= 0; i--) {
+    if (rows[i].status === 'open' && normDate(rows[i].date, tz()) === today) return rows[i];
+  }
+  return getCurrentAutoSession(now);
 }
 
 // ============================================================
@@ -512,6 +604,21 @@ function markEntry(b) {
 
       SpreadsheetApp.flush();
       invalidate(SH.ATTENDANCE);
+
+      var activeSession = getOpenSessionForToday();
+      if (activeSession) {
+        pushTeacherNotification({
+          id: genId('ntf'),
+          sessionId: String(activeSession.session_id || ''),
+          teacherId: String(activeSession.teacher_id || ''),
+          userId: String(b.userId || ''),
+          studentName: String(user.full_name || ''),
+          message: String(user.full_name || 'Student') + ' marked attendance at ' + timeStr,
+          time: timeStr,
+          date: dateStr,
+          createdAt: now.toISOString()
+        });
+      }
 
       return {
         success:          true,
@@ -742,6 +849,17 @@ function getActiveSession(b) {
       cache.remove('active_session');
     }
 
+    var autoSession = getCurrentAutoSession(new Date());
+    if (autoSession) {
+      var autoEnd = new Date(autoSession.date + 'T' + autoSession.end_time);
+      return {
+        success: true,
+        active: true,
+        session: autoSession,
+        secondsLeft: Math.max(0, Math.round((autoEnd - new Date()) / 1000))
+      };
+    }
+
     // Cache miss — read sheet
     var t2    = tz();
     var today2 = Utilities.formatDate(new Date(), t2, 'yyyy-MM-dd');
@@ -767,7 +885,14 @@ function getSessions(b) {
   try {
     var t    = tz();
     var rows = getRows(getSheet(SH.SESSIONS));
-    if (b.userId) rows = rows.filter(function(r) { return String(r.teacher_id) === String(b.userId); });
+    var today = Utilities.formatDate(new Date(), t, 'yyyy-MM-dd');
+    var autoRows = getAutoSessionsForDate(today);
+    rows = autoRows.concat(rows);
+    if (b.userId) {
+      rows = rows.filter(function(r) {
+        return String(r.teacher_id) === String(b.userId) || String(r.teacher_id) === 'ALL';
+      });
+    }
 
     // Count present students per day
     var attSheet = getSheet(SH.ATTENDANCE);
@@ -787,18 +912,45 @@ function getSessions(b) {
     return {
       success:  true,
       sessions: rows.map(function(s) {
+        var status = s.status;
+        if (s.is_auto) {
+          var st = new Date(s.date + 'T' + s.start_time);
+          var en = new Date(s.date + 'T' + s.end_time);
+          var now = new Date();
+          status = now >= st && now <= en ? 'open' : 'scheduled';
+        }
         return {
           sessionId:    s.session_id,
           subject:      s.subject,
           date:         normDate(s.date, t),
           startTime:    s.start_time,
           endTime:      s.end_time,
-          status:       s.status,
+          status:       status,
           presentCount: countMap[normDate(s.date, t)] || 0
         };
       }).reverse().slice(0, 20)
     };
   } catch(err) { return { success: false, message: 'getSessions: ' + err }; }
+}
+
+function getTeacherNotifications(b) {
+  try {
+    if (!b.sessionId) return { success: false, message: 'sessionId required' };
+    var cache = CacheService.getScriptCache();
+    var key = 'teacher_notif_' + b.sessionId;
+    var rows = [];
+    var cached = cache.get(key);
+    if (cached) {
+      try { rows = JSON.parse(cached) || []; } catch(e) {}
+    }
+    if (b.teacherId) {
+      rows = rows.filter(function(r) {
+        var teacherId = String(r.teacherId || '');
+        return teacherId === String(b.teacherId) || teacherId === 'ALL';
+      });
+    }
+    return { success: true, notifications: rows };
+  } catch(err) { return { success: false, message: 'getTeacherNotifications: ' + err }; }
 }
 
 // ============================================================

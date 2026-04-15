@@ -170,8 +170,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* ── Lists ── */
 .att-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow-y:auto;margin-top:9px}
+.notif-list{display:flex;flex-direction:column;gap:7px;max-height:160px;overflow-y:auto;margin-bottom:10px}
 .att-item{background:var(--inp);border:1px solid var(--border);border-radius:9px;
   padding:9px 12px;display:flex;align-items:center;justify-content:space-between}
+.notif-item{background:rgba(79,110,247,.08);border:1px solid rgba(79,110,247,.22);border-radius:10px;padding:9px 12px}
+.notif-msg{font-size:12px;color:var(--text);font-weight:500}
+.notif-meta{font-size:10px;color:var(--muted);margin-top:3px}
 .att-item.clickable{cursor:pointer}.att-item.clickable:hover{border-color:var(--acc)}
 .att-item .iname{font-size:12.5px;font-weight:500;color:var(--text)}
 .att-item .imeta{font-size:10.5px;color:var(--muted);margin-top:2px}
@@ -420,6 +424,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <!-- Session sub-pane -->
         <div class="sub-pane active" id="sp-session">
           <div id="active-sess-display"></div>
+          <div class="info-box blue">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5.59l3.7 3.7-1.4 1.41L11 13V7h2z"/></svg>
+            <span>Attendance sessions open automatically for 10 minutes at 9:00, 10:30, 2:00 and 3:30.</span>
+          </div>
           <div id="open-sess-form">
             <div class="field"><label>Subject / Class <span class="req">*</span></label>
               <input type="text" id="t-subject" placeholder="e.g. Data Structures – 3CSE-B"/></div>
@@ -434,7 +442,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
             </div>
             <button class="btn btn-success" id="btn-open-sess" onclick="openSession()">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              Open Attendance Session
+              Open Manual Session
             </button>
           </div>
         </div>
@@ -442,6 +450,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <!-- Live sub-pane -->
         <div class="sub-pane" id="sp-live">
           <div id="live-info" class="no-session">No active session</div>
+          <div id="live-notifs" class="notif-list" style="display:none"></div>
           <div class="stats-row" id="live-stats" style="display:none">
             <div class="stat-card green"><div class="stat-num" id="sp">0</div><div class="stat-lbl">Present</div></div>
             <div class="stat-card red"><div class="stat-num" id="sa">0</div><div class="stat-lbl">Absent</div></div>
@@ -592,6 +601,9 @@ let sessionTimer  = null;
 let liveSessionId = null;
 let liveData      = null;
 let liveTab       = 'present';
+let liveRefreshTimer = null;
+let liveNotifBooted = false;
+let lastNotifId = '';
 let allStudents   = [];
 let historyData   = [];
 let deviceId      = null;
@@ -634,9 +646,27 @@ function switchSub(tab) {
     document.getElementById('sp-'+t).classList.toggle('active', t===tab);
     document.getElementById('stab-'+t).classList.toggle('active', t===tab);
   });
-  if (tab==='live')     refreshLive();
+  if (tab==='live') {
+    refreshLive();
+    startLiveRefresh();
+  } else {
+    stopLiveRefresh();
+  }
   if (tab==='history')  { document.getElementById('hist-date').value = new Date().toISOString().slice(0,10); loadHistory(); }
   if (tab==='students') loadStudents();
+}
+
+function startLiveRefresh() {
+  if (liveRefreshTimer) return;
+  liveRefreshTimer = setInterval(() => {
+    const livePane = document.getElementById('sp-live');
+    if (livePane && livePane.classList.contains('active') && teacherData) refreshLive(true);
+  }, 8000);
+}
+
+function stopLiveRefresh() {
+  if (liveRefreshTimer) clearInterval(liveRefreshTimer);
+  liveRefreshTimer = null;
 }
 
 function switchAdmin(tab) {
@@ -978,7 +1008,7 @@ async function handleTeacherLogin() {
 }
 
 function teacherLogout(){
-  teacherData=null;clearInterval(sessionTimer);liveSessionId=null;
+  teacherData=null;clearInterval(sessionTimer);liveSessionId=null;stopLiveRefresh();liveNotifBooted=false;lastNotifId='';
   document.getElementById('t-login-section').style.display='block';
   document.getElementById('t-dashboard').style.display='none';
   document.getElementById('t-email').value='';document.getElementById('t-password').value='';
@@ -999,7 +1029,7 @@ async function checkActiveSess(){
       form.style.display='none';
       clearInterval(sessionTimer);
       sessionTimer=setInterval(()=>{secs--;const t=document.getElementById('t-timer');if(t)t.textContent=fmtTime(secs);if(secs<=0){clearInterval(sessionTimer);checkActiveSess();}},1000);
-    }else{liveSessionId=null;el.innerHTML='';form.style.display='block';}
+    }else{liveSessionId=null;el.innerHTML='';form.style.display='block';liveNotifBooted=false;lastNotifId='';}
   }catch(e){}
 }
 
@@ -1023,14 +1053,15 @@ async function closeSess(sid){
 }
 
 // ── Live dashboard ────────────────────────────────────────────
-async function refreshLive(){
+async function refreshLive(silent=false){
   const listEl=document.getElementById('live-list');
   const infoEl=document.getElementById('live-info');
   const statEl=document.getElementById('live-stats');
   const toolEl=document.getElementById('live-toolbar');
   const refEl=document.getElementById('live-refresh');
+  const notifEl=document.getElementById('live-notifs');
   try{const chk=await api({action:'getActiveSession'});if(chk.active)liveSessionId=chk.session.session_id;}catch(e){}
-  if(!liveSessionId){infoEl.className='no-session';infoEl.style.display='block';infoEl.textContent='No active session — open one from Session tab';statEl.style.display='none';toolEl.style.display='none';refEl.style.display='none';listEl.innerHTML='';return;}
+  if(!liveSessionId){infoEl.className='no-session';infoEl.style.display='block';infoEl.textContent='No active session — open one from Session tab';statEl.style.display='none';toolEl.style.display='none';refEl.style.display='none';listEl.innerHTML='';notifEl.style.display='none';notifEl.innerHTML='';liveNotifBooted=false;lastNotifId='';return;}
   try{
     const d=await api({action:'getDashboard',sessionId:liveSessionId});
     if(!d.success){toast(d.message,'error');return;}
@@ -1041,8 +1072,36 @@ async function refreshLive(){
     document.getElementById('st').textContent=d.total;
     document.getElementById('spc').textContent=d.total?Math.round(d.presentCount/d.total*100)+'%':'0%';
     document.getElementById('live-updated').textContent='Updated '+new Date().toLocaleTimeString();
+    await refreshTeacherNotifications(silent);
     renderLiveList();
   }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function refreshTeacherNotifications(silent=false){
+  const el=document.getElementById('live-notifs');
+  if(!liveSessionId||!teacherData){el.style.display='none';el.innerHTML='';return;}
+  try{
+    const d=await api({action:'getTeacherNotifications',sessionId:liveSessionId,teacherId:teacherData.userId});
+    const list=d.notifications||[];
+    if(!list.length){el.style.display='none';el.innerHTML='';return;}
+    el.style.display='flex';
+    el.innerHTML=list.map(n=>`
+      <div class="notif-item">
+        <div class="notif-msg">${n.message}</div>
+        <div class="notif-meta">${n.date||''} ${n.time||''}</div>
+      </div>
+    `).join('');
+    const newestId=list[0]?.id||'';
+    if(!liveNotifBooted){
+      liveNotifBooted=true;
+      lastNotifId=newestId;
+      return;
+    }
+    if(newestId&&newestId!==lastNotifId&&!silent){
+      toast(list[0].message,'success');
+    }
+    lastNotifId=newestId;
+  }catch(e){}
 }
 
 function showLive(tab){
