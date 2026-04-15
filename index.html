@@ -513,16 +513,25 @@ function togglePw(id) { const i=document.getElementById(id); i.type=i.type==='pa
 function fmtTime(s) { const m=Math.floor(Math.max(0,s)/60),x=Math.max(0,s)%60; return String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'); }
 
 // ── Device fingerprint ────────────────────────────────────────
+// FIX: replaced undefined `canvas` variable with `cv` (the actual canvas element)
 async function getDeviceId() {
   if (deviceId) return deviceId;
   try { const s=localStorage.getItem('bioattend_did'); if(s){deviceId=s;return s;} } catch(e){}
-  const cv=document.createElement('canvas'), c=cv.getContext('2d');
-  c.fillText('BioAttend',2,2);
-  const raw=[navigator.userAgent,navigator.language,screen.width+'x'+screen.height,
-             new Date().getTimezoneOffset(),canvas&&cv.toDataURL().slice(-40)].join('|');
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));
-  deviceId=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,16);
-  try{localStorage.setItem('bioattend_did',deviceId);}catch(e){}
+  const cv = document.createElement('canvas');
+  const c  = cv.getContext('2d');
+  c.fillText('BioAttend', 2, 2);
+  let canvasData = '';
+  try { canvasData = cv.toDataURL().slice(-40); } catch(e) { canvasData = ''; }
+  const raw = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + 'x' + screen.height,
+    new Date().getTimezoneOffset(),
+    canvasData
+  ].join('|');
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+  deviceId = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('').slice(0,16);
+  try { localStorage.setItem('bioattend_did', deviceId); } catch(e) {}
   return deviceId;
 }
 
@@ -592,14 +601,12 @@ function showAttendanceCard(data, userId) {
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
       Mark Exit (leaving classroom)
     </button>`;
-  // Hide sign-in form while card is shown
   const emailF=document.getElementById('si-email');
   if(emailF&&emailF.closest('.field'))emailF.closest('.field').style.display='none';
   const ib=document.querySelector('#pane-signin .info-box');
   if(ib)ib.style.display='none';
   const bb=document.getElementById('btn-bio-signin');
   if(bb)bb.style.display='none';
-  // Persist in sessionStorage
   try{
     sessionStorage.setItem('ba_uid',  userId);
     sessionStorage.setItem('ba_name', data.name||'');
@@ -631,7 +638,6 @@ async function handleBiometricSignIn() {
   const email=document.getElementById('si-email').value.trim();
   if(!email){toast('Enter your email first','error');return;}
 
-  // Pre-check location permission
   if(navigator.permissions){
     try {
       const p=await navigator.permissions.query({name:'geolocation'});
@@ -645,11 +651,9 @@ async function handleBiometricSignIn() {
   const btn=document.getElementById('btn-bio-signin');
   if(btn){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> Verifying…';btn.disabled=true;}
   try {
-    // 1. Get credential from backend
     const info=await api({action:'getBiometric',email});
     if(!info.success||!info.credentialId){toast(info.message||'No biometric registered','error');return;}
 
-    // 2. Prompt device biometric
     const challenge=crypto.getRandomValues(new Uint8Array(32));
     const rawId=Uint8Array.from(atob(info.credentialId),c=>c.charCodeAt(0));
     await navigator.credentials.get({publicKey:{
@@ -657,14 +661,12 @@ async function handleBiometricSignIn() {
       allowCredentials:[{type:'public-key',id:rawId}]
     }});
 
-    // 3. Get fine GPS
     showLocBar('getting','Getting your location…');
     const loc=await getLocationWithAddress();
     if(loc.denied){if(btn){btn.innerHTML=btn._h;btn.disabled=false;}return;}
     if(loc.lat)showLocBar('ok',loc.address||`${loc.lat}, ${loc.lng}`,loc.accuracy);
     else showLocBar('fail','Location not captured — marked without GPS');
 
-    // 4. Mark entry (renamed from markAttendance → markEntry in v5)
     const att=await api({action:'markEntry',userId:info.userId,
       method:'biometric',lat:loc.lat,lng:loc.lng,address:loc.address});
 
