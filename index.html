@@ -334,44 +334,24 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
       <div class="row2">
         <div class="field">
-          <label>Institute ID</label>
-          <input type="text" id="r-institute" value="SIT001" placeholder="SIT001"/>
+          <label>Institute Full Name</label>
+          <input type="text" id="r-institute" value="Siddaganga Institute of Technology" placeholder="Siddaganga Institute of Technology"/>
         </div>
         <div class="field">
           <label>Department <span class="req">*</span></label>
           <select id="r-dept">
             <option value="">Select…</option>
-            <option value="CSE">CSE</option>
-            <option value="ISE">ISE</option>
-            <option value="ECE">ECE</option>
-            <option value="EEE">EEE</option>
-            <option value="MECH">MECH</option>
-            <option value="CIVIL">CIVIL</option>
-            <option value="CHEM">CHEM</option>
-            <option value="BT">BT</option>
-            <option value="MBA">MBA</option>
-            <option value="MCA">MCA</option>
+            <option value="1">cse</option>
           </select>
         </div>
       </div>
 
-      <div class="row2">
-        <div class="field">
-          <label>Role <span class="req">*</span></label>
-          <select id="r-role">
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Attendance Location</label>
-          <select id="r-location">
-            <option value="LOC001">SIT Main Block</option>
-            <option value="LOC002">CS Lab Block</option>
-            <option value="LOC003">Seminar Hall</option>
-          </select>
-        </div>
+      <div class="field">
+        <label>Role <span class="req">*</span></label>
+        <select id="r-role">
+          <option value="1">admin</option>
+          <option value="2">teacher</option>
+        </select>
       </div>
 
       <div class="field">
@@ -923,7 +903,6 @@ async function handleRegister() {
   const dept   = document.getElementById('r-dept').value;
   const role   = document.getElementById('r-role').value;
   const inst   = document.getElementById('r-institute').value.trim();
-  const locId  = document.getElementById('r-location').value;
 
   if(!name||!email||!pass||!dept||!role){toast('Name, email, password, department and role are required','error');return;}
   if(pass.length<8){toast('Password must be at least 8 characters','error');return;}
@@ -936,8 +915,7 @@ async function handleRegister() {
       name, email, password:pass, dob, mobile,
       departmentId:         dept,
       roleId:               role,
-      instituteId:          inst||'SIT001',
-      attendanceLocationId: locId,
+      instituteId:          inst||'Siddaganga Institute of Technology',
       allowedDistance:      200,
       deviceId:             dId
     });

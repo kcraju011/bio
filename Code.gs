@@ -285,6 +285,43 @@ function normDate(raw, tz) {
 
 function tz() { return Session.getScriptTimeZone(); }
 
+function getRoleDirectory() {
+  var rows = getCached(SH.ROLES, TTL_LOOKUP);
+  var byId = {};
+  var byName = {};
+  rows.forEach(function(r) {
+    var id = String(r.role_id || '').trim();
+    var name = String(r.name || '').trim().toLowerCase();
+    if (id) byId[id] = name;
+    if (name) byName[name] = id;
+  });
+  return { byId: byId, byName: byName };
+}
+
+function normalizeRoleValue(roleValue) {
+  var raw = String(roleValue || '').trim().toLowerCase();
+  if (!raw) return '';
+  var roles = getRoleDirectory();
+  return roles.byId[raw] || raw;
+}
+
+function findRoleIdByName(roleName) {
+  var raw = String(roleName || '').trim().toLowerCase();
+  if (!raw) return '';
+  return getRoleDirectory().byName[raw] || '';
+}
+
+function ensureExactRows(sheetName, rows) {
+  var sheet = getSheet(sheetName);
+  var hdrs = HEADERS[sheetName];
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, hdrs.length).setValues([hdrs]);
+  if (rows && rows.length) {
+    sheet.getRange(2, 1, rows.length, hdrs.length).setValues(rows);
+  }
+  invalidate(sheetName);
+}
+
 // ============================================================
 //  1. REGISTER USER
 //  Writes to: Users, UserIndex
@@ -304,14 +341,15 @@ function registerUser(b) {
     lock.waitLock(6000);
     try {
       var userId = genId('u');
-      var now    = new Date();
+      var roleId = String(b.roleId).trim();
+      var defaultLoc = getCached(SH.ATT_LOCATIONS, TTL_LOOKUP)[0];
 
       // ── Write to Users table (exact columns) ──
       getSheet(SH.USERS).appendRow([
         userId,                      // user_id
-        b.instituteId || 'SIT001',   // institute_id
+        b.instituteId || 'Siddaganga Institute of Technology', // institute_id
         b.departmentId || '',        // department_id
-        b.roleId,                    // role_id
+        roleId,                      // role_id
         b.name,                      // full_name
         b.dob     || '',             // dob
         b.mobile  || '',             // mobile
@@ -326,7 +364,7 @@ function registerUser(b) {
 
       // ── Auto-create UserAttendanceLocationMap entry ──
       // Maps the new user to the default/selected attendance location
-      var locId = b.attendanceLocationId || 'LOC001';
+      var locId = b.attendanceLocationId || (defaultLoc ? defaultLoc.attendance_location_id : 'LOC001');
       var allowedDist = b.allowedDistance || DEFAULT_RADIUS;
       getSheet(SH.USER_LOC_MAP).appendRow([
         genId('ulm'),  // user_attendance_location_map_id
@@ -351,11 +389,14 @@ function signInUser(b) {
     if (!user) return { success: false, message: 'No account found for this email' };
     if (user.password_hash !== hashPw(b.password || ''))
       return { success: false, message: 'Incorrect password' };
+    var roleName = normalizeRoleValue(user.role_id);
     return {
       success: true,
       userId:  user.user_id,
       name:    user.full_name,
-      roleId:  user.role_id,
+      roleId:  roleName || String(user.role_id || ''),
+      roleKey: roleName || String(user.role_id || ''),
+      roleDbId: String(user.role_id || ''),
       deptId:  user.department_id
     };
   } catch(err) { return { success: false, message: 'signIn: ' + err }; }
@@ -636,7 +677,8 @@ function getMyAttendance(b) {
 
 function createSession(b) {
   try {
-    if (b.roleId !== 'teacher' && b.roleId !== 'admin')
+    var roleName = normalizeRoleValue(b.roleId);
+    if (roleName !== 'teacher' && roleName !== 'admin')
       return { success: false, message: 'Only teachers can create sessions' };
     if (!b.subject || !b.windowMinutes)
       return { success: false, message: 'subject and windowMinutes required' };
@@ -774,7 +816,10 @@ function getDashboard(b) {
     var t         = tz();
     var today     = Utilities.formatDate(new Date(), t, 'yyyy-MM-dd');
     var userRows  = getCached(SH.USERS, TTL_LOOKUP);
-    var students  = userRows.filter(function(u) { return u.role_id === 'student'; });
+    var studentRoleId = findRoleIdByName('student');
+    var students  = userRows.filter(function(u) {
+      return normalizeRoleValue(u.role_id) === 'student' || (studentRoleId && String(u.role_id) === studentRoleId);
+    });
     var userMap   = buildMap(students, 'user_id');
 
     // Narrow read — entry rows for today only
@@ -833,8 +878,11 @@ function getDashboard(b) {
 
 function getStudents(b) {
   try {
+    var studentRoleId = findRoleIdByName('student');
     var rows = getCached(SH.USERS, TTL_LOOKUP)
-      .filter(function(r) { return r.role_id === 'student'; })
+      .filter(function(r) {
+        return normalizeRoleValue(r.role_id) === 'student' || (studentRoleId && String(r.role_id) === studentRoleId);
+      })
       .map(function(r) {
         return {
           userId:     r.user_id,
@@ -1021,6 +1069,20 @@ function setupSheets() {
 
     // Create all sheets
     Object.keys(SH).forEach(function(key) { getSheet(SH[key]); created.push(SH[key]); });
+
+    ensureExactRows('Roles', [
+      [1, 'admin'],
+      [2, 'teacher']
+    ]);
+
+    ensureExactRows('Departments', [
+      [1, 'cse', 'dr sunitha', 'nrsunitha@sit.acin']
+    ]);
+
+    ensureExactRows('AttendanceType', [
+      [1, 'entry'],
+      [2, 'exit']
+    ]);
 
     // ── Seed Roles ──
     var rolesSheet = getSheet(SH.ROLES);
