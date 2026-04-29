@@ -2,7 +2,7 @@
 const DEFAULT_TENANT_API = 'https://script.google.com/macros/s/AKfycbzR-z38NrPZZm--4OeStiRvAgMb6SpwCjtb_GW0Rl9-/dev';
 
 const NERVE_URL = 'https://script.google.com/macros/s/AKfycbwhFJ7oyLoed11sTYGikHyExxYs20J842q244K0MJ0VfwL5KgMDTb7E3uMN2sWhj0njYg/exec';
-                   
+                    
 
 const TENANT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const EXPECTED_TENANTS = {
@@ -431,6 +431,15 @@ function applyTenantBranding(profile) {
   const teacherSubtitle = document.getElementById('teacher-dashboard-subtitle');
   const logoEl = document.getElementById('org-logo');
   const fallbackEl = document.getElementById('org-logo-fallback');
+  const logoCandidates = Array.from(new Set([
+    String(institution.logoUrl || institution.logo_url || profile?.logoUrl || profile?.logo || '').trim(),
+    String(profile?.guid || '').trim() === '2'
+      ? 'https://web.sit.ac.in/wp-content/uploads/2025/03/cropped-cropped-SIT-Logo-1.png'
+      : '',
+    String(profile?.guid || '').trim() === '3'
+      ? 'https://ssit.edu.in/img/ssit-logo.png'
+      : ''
+  ].filter(Boolean)));
 
   if (brandEl) brandEl.textContent = orgName;
   if (tagEl) tagEl.textContent = subtitle;
@@ -438,25 +447,37 @@ function applyTenantBranding(profile) {
   if (teacherSubtitle) teacherSubtitle.textContent = `Teacher Dashboard · ${orgName}`;
   
   if (logoEl && fallbackEl) {
+    let candidateIndex = 0;
+    const showFallback = () => {
+      logoEl.removeAttribute('src');
+      logoEl.style.display = 'none';
+      fallbackEl.style.display = 'block';
+    };
+    const tryNextCandidate = () => {
+      const next = logoCandidates[candidateIndex++];
+      if (!next) {
+        showFallback();
+        return;
+      }
+      logoEl.style.display = 'block';
+      fallbackEl.style.display = 'none';
+      logoEl.src = next;
+    };
+
     logoEl.onload = () => {
       logoEl.style.display = 'block';
       fallbackEl.style.display = 'none';
     };
     logoEl.onerror = () => {
-      logoEl.removeAttribute('src');
-      logoEl.style.display = 'none';
-      fallbackEl.style.display = 'block';
+      tryNextCandidate();
     };
-    if (logo) {
-      logoEl.referrerPolicy = 'no-referrer';
+    logoEl.referrerPolicy = 'strict-origin-when-cross-origin';
+    logoEl.decoding = 'async';
+    if (logoCandidates.length) {
       logoEl.loading = 'eager';
-      logoEl.src = logo;
-      logoEl.style.display = 'block';
-      fallbackEl.style.display = 'none';
+      tryNextCandidate();
     } else {
-      logoEl.removeAttribute('src');
-      logoEl.style.display = 'none';
-      fallbackEl.style.display = 'block';
+      showFallback();
     }
   }
 }
