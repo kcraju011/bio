@@ -2,7 +2,7 @@
 const DEFAULT_TENANT_API = 'https://script.google.com/macros/s/AKfycbzR-z38NrPZZm--4OeStiRvAgMb6SpwCjtb_GW0Rl9-/dev';
 
 const NERVE_URL = 'https://script.google.com/macros/s/AKfycbwhFJ7oyLoed11sTYGikHyExxYs20J842q244K0MJ0VfwL5KgMDTb7E3uMN2sWhj0njYg/exec';
-                    
+                   
 
 const TENANT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const EXPECTED_TENANTS = {

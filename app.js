@@ -349,85 +349,8 @@ let registerLookupState = {
 
 let registerFlowState = {
   step: 1,
-  accountCreated: false,
-  biometricChallenge: null,
-  biometricChallengeName: '',
-  biometricChallengeEmail: '',
-  biometricChallengeAt: 0,
-  biometricChallengeLoading: false,
-  biometricChallengeTimer: null
+  accountCreated: false
 };
-
-function clearRegisterBiometricChallenge() {
-  registerFlowState.biometricChallenge = null;
-  registerFlowState.biometricChallengeName = '';
-  registerFlowState.biometricChallengeEmail = '';
-  registerFlowState.biometricChallengeAt = 0;
-}
-
-function setRegisterBiometricButtonState(loading, text) {
-  const btn = document.getElementById('btn-register');
-  if (!btn) return;
-  if (loading) {
-    if (!btn._h) btn._h = btn.innerHTML;
-    btn.innerHTML = text || '<span class="spin"></span> Preparing biometric setup...';
-    btn.disabled = true;
-    return;
-  }
-  btn.innerHTML = btn._h || btn.innerHTML;
-  btn.disabled = false;
-}
-
-function scheduleRegisterBiometricPrep(delayMs = 0) {
-  if (registerFlowState.biometricChallengeTimer) {
-    clearTimeout(registerFlowState.biometricChallengeTimer);
-    registerFlowState.biometricChallengeTimer = null;
-  }
-  registerFlowState.biometricChallengeTimer = setTimeout(() => {
-    prepareRegisterBiometricChallenge().catch(() => {});
-  }, Math.max(0, delayMs));
-}
-
-async function prepareRegisterBiometricChallenge(force = false) {
-  if (registerFlowState.biometricChallengeLoading) return registerFlowState.biometricChallenge;
-  if (registerFlowState.step !== 3) return null;
-
-  const name = getRegisterValue('r-name');
-  const email = getRegisterValue('r-email');
-  if (!name || !email) {
-    clearRegisterBiometricChallenge();
-    setRegisterBiometricButtonState(false);
-    return null;
-  }
-
-  const cached = registerFlowState.biometricChallenge;
-  const ageMs = Date.now() - (registerFlowState.biometricChallengeAt || 0);
-  if (!force && cached && registerFlowState.biometricChallengeName === name && registerFlowState.biometricChallengeEmail === email && ageMs < 4 * 60 * 1000) {
-    setRegisterBiometricButtonState(false);
-    return cached;
-  }
-
-  registerFlowState.biometricChallengeLoading = true;
-  setRegisterBiometricButtonState(true, '<span class="spin"></span> Preparing biometric setup...');
-  try {
-    const begin = await api({ action: 'beginWebAuthnRegistration', email, name, guid: tenantState.guid });
-    if (!begin.success || !begin.challengeId || !begin.challenge) {
-      throw new Error(begin.message || 'Unable to prepare biometric setup');
-    }
-    registerFlowState.biometricChallenge = begin;
-    registerFlowState.biometricChallengeName = name;
-    registerFlowState.biometricChallengeEmail = email;
-    registerFlowState.biometricChallengeAt = Date.now();
-    return begin;
-  } catch (e) {
-    clearRegisterBiometricChallenge();
-    toast(e.message || 'Unable to prepare biometric setup', 'error');
-    return null;
-  } finally {
-    registerFlowState.biometricChallengeLoading = false;
-    setRegisterBiometricButtonState(false);
-  }
-}
 
 function normalizeCode(value) {
   return String(value || '').replace(/\s+/g, '').toUpperCase();
@@ -586,10 +509,6 @@ function refreshRegisterConditionalFields() {
       desigInput.value = '';
       setFieldState('field-r-designation', '');
     }
-  }
-
-  if (registerFlowState.step === 3) {
-    scheduleRegisterBiometricPrep(0);
   }
 }
 
@@ -789,17 +708,6 @@ function setRegisterStep(step, options = {}) {
   const bar = document.getElementById('register-progress-bar');
   if (bar) bar.style.width = next === 1 ? '33.33%' : next === 2 ? '66.66%' : '100%';
 
-  if (next !== 3) {
-    clearRegisterBiometricChallenge();
-    if (registerFlowState.biometricChallengeTimer) {
-      clearTimeout(registerFlowState.biometricChallengeTimer);
-      registerFlowState.biometricChallengeTimer = null;
-    }
-    setRegisterBiometricButtonState(false);
-  } else {
-    scheduleRegisterBiometricPrep(0);
-  }
-
   if (!options.silent && !options.skipFocus) {
     const panel = document.getElementById(`register-step-${next}`);
     const focusTarget = panel?.querySelector('input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])');
@@ -899,7 +807,6 @@ async function loadRegisterLookups() {
     tenantState.attendanceLocations = locations;
     updateRegisterFormByRole();
     populateAdminDepartmentSelect();
-    if (registerFlowState.step === 3) scheduleRegisterBiometricPrep(0);
   } catch (e) {
     if (!registerLookupState.departments || !registerLookupState.departments.length) {
       registerLookupState.departments = DEFAULT_DEPARTMENT_OPTIONS;
@@ -1133,44 +1040,28 @@ async function handleRegister() {
   return handleRegisterV2();
 }
 
-async function collectRegistrationBiometric(name, email) {
+async function registerBiometric(userId) {
   if (!window.PublicKeyCredential) {
     throw new Error('WebAuthn not supported');
   }
-  const begin = registerFlowState.biometricChallenge &&
-    registerFlowState.biometricChallengeName === name &&
-    registerFlowState.biometricChallengeEmail === email
-      ? registerFlowState.biometricChallenge
-      : null;
-  if (!begin) {
-    throw new Error('Preparing biometric setup. Please wait a moment and try again.');
-  }
-  if (!begin.success || !begin.challengeId || !begin.challenge) {
-    throw new Error(begin.message || 'Unable to start biometric registration');
-  }
   const cred = await navigator.credentials.create({ publicKey: {
-    challenge: base64UrlToUint8Array(begin.challenge),
-    rp: { name: `BioAttend ${tenantState.institution?.name || ''}`.trim() },
+    challenge: crypto.getRandomValues(new Uint8Array(32)),
+    rp: { name: `BioAttend ${tenantState.institution?.name || 'BioAttend'}`.trim() },
     user: {
-      id: crypto.getRandomValues(new Uint8Array(16)),
-      name: email,
-      displayName: name
+      id: new TextEncoder().encode(String(userId)),
+      name: String(userId),
+      displayName: 'User'
     },
-    pubKeyCredParams: [
-      { type: 'public-key', alg: -7 },
-      { type: 'public-key', alg: -257 }
-    ],
-    authenticatorSelection: { userVerification: 'preferred', residentKey: 'preferred' },
-    attestation: 'none',
+    pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+    authenticatorSelection: {
+      authenticatorAttachment: 'platform',
+      userVerification: 'required'
+    },
+    attestation: 'direct',
     timeout: 60000
   }});
   return {
-    credentialId: bufferToBase64Url(cred.rawId),
-    publicKey: cred.response?.getPublicKey ? bufferToBase64Url(await cred.response.getPublicKey()) : '',
-    challengeId: begin.challengeId,
-    challenge: begin.challenge,
-    clientDataJSON: cred.response?.clientDataJSON ? bufferToBase64Url(cred.response.clientDataJSON) : '',
-    attestationObject: cred.response?.attestationObject ? bufferToBase64Url(cred.response.attestationObject) : ''
+    credentialId: bufferToBase64Url(cred.rawId)
   };
 }
 
@@ -1209,17 +1100,7 @@ async function handleRegisterV2() {
 
   setLoading('btn-register',true);
   try{
-    const preparedChallenge = registerFlowState.biometricChallenge &&
-      registerFlowState.biometricChallengeName === name &&
-      registerFlowState.biometricChallengeEmail === email
-        ? registerFlowState.biometricChallenge
-        : null;
-    if (!preparedChallenge) {
-      toast('Biometric setup is still preparing. Please wait a moment and try again.', 'warn');
-      return;
-    }
     const dId = await getDeviceId();
-    const biometric = await collectRegistrationBiometric(name, email);
     const d   = await api({
       action:               'registerUser',
       name, email, password:pass, dob, mobile,
@@ -1230,27 +1111,20 @@ async function handleRegisterV2() {
       studentEmployeeId:    memberId,
       studyLevel:           studyLevel,
       designation:          designation,
-      biometricCode:        biometric.credentialId,
-      publicKey:            biometric.publicKey || '',
       deviceId:             dId
     });
     if(d.success){
       registeredUid=d.userId;
       registerFlowState.accountCreated = true;
-      toast('âœ“ Account created with biometric access.','success');
+      const biometric = await registerBiometric(d.userId);
       const biometricBind = await api({
-        action: 'finishWebAuthnRegistration',
-        email,
-        name,
-        challengeId: biometric.challengeId,
-        challenge: biometric.challenge,
-        credentialId: biometric.credentialId,
-        publicKey: biometric.publicKey || '',
-        clientDataJSON: biometric.clientDataJSON || '',
-        attestationObject: biometric.attestationObject || '',
-        guid: tenantState.guid
+        action: 'saveBiometric',
+        userId: d.userId,
+        credentialId: biometric.credentialId
       });
-      if (!biometricBind.success) {
+      if (biometricBind.success) {
+        toast('âœ“ Account created with biometric access.','success');
+      } else {
         toast(biometricBind.message || 'Biometric binding failed', 'error');
       }
     }else toast(d.message,'error');
@@ -1918,17 +1792,6 @@ function chkOnline(){offBar.classList.toggle('show',!navigator.onLine);}
 window.addEventListener('online',chkOnline);window.addEventListener('offline',chkOnline);chkOnline();
 const rDob=document.getElementById('r-dob');if(rDob)rDob.max=new Date().toISOString().slice(0,10);
 syncOrganizationName();
-['r-name', 'r-email'].forEach(id => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const refreshChallenge = () => {
-    if (registerFlowState.step !== 3) return;
-    clearRegisterBiometricChallenge();
-    scheduleRegisterBiometricPrep(350);
-  };
-  el.addEventListener('input', refreshChallenge);
-  el.addEventListener('change', refreshChallenge);
-});
 try{
   const savedTeacher = localStorage.getItem('ba_teacher_session');
   if (savedTeacher) teacherData = JSON.parse(savedTeacher);

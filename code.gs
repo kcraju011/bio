@@ -286,6 +286,7 @@ function route(b) {
     getAttendanceTypes: true,
     getLocations: true,
     getAttendanceLocations: true,
+    checkBiometric: true,
     debug: false
   };
   if (!publicActions[action]) {
@@ -306,6 +307,7 @@ function route(b) {
     case 'refreshToken':          return refreshAuthSession(b);
     case 'saveBiometric':         return saveBiometric(b);
     case 'getBiometric':          return getBiometric(b);
+    case 'checkBiometric':        return checkBiometric(b);
     case 'registerDevice':        return registerDevice(b);
     case 'checkDevice':           return checkDevice(b);
     case 'logout':                return logoutUser(b);
@@ -3192,36 +3194,62 @@ function exportAttendance(b) {
 
 function getBiometric(b) {
   try {
+    if (!b.email)
+      return { success: false, message: 'Email required' };
+
     var user = getUserByEmail(b.email);
-    if (!user) return { success: false, message: 'No account found. Please register first.' };
+    if (!user)
+      return { success: false, message: 'No account found. Please register first.' };
+
     if (!user.biometric_code)
-      return { success: false, message: 'No biometric registered. Please register fingerprint or Face ID first.' };
-    var role = normalizeRoleValue(user.role_id);
+      return { success: false, message: 'No biometric registered. Please register first.' };
+
     return {
       success: true,
-      credentialId: user.biometric_code,
+      credentialId: String(user.biometric_code || ''),
       userId: user.user_id,
-      name: user.full_name,
-      roleId: role,
-      roleKey: role,
-      deptId: user.department_id
+      name: user.full_name
     };
-  } catch(err) { return { success: false, message: 'getBiometric: ' + err }; }
+  } catch (err) {
+    return { success: false, message: 'getBiometric: ' + err };
+  }
 }
 
 function saveBiometric(b) {
   try {
-    var sheet = getSheet(SH.USERS), last = sheet.getLastRow();
-    var uids = sheet.getRange(2, 1, last-1, 1).getValues();
+    if (!b.userId || !b.credentialId)
+      return { success: false, message: 'userId and credentialId required' };
+
+    var sheet = getSheet(SH.USERS);
+    var last  = sheet.getLastRow();
+    if (last < 2) return { success: false, message: 'User not found' };
+
+    var uids  = sheet.getRange(2, 1, last - 1, 1).getValues();
     for (var i = 0; i < uids.length; i++) {
       if (String(uids[i][0]) === String(b.userId)) {
-        sheet.getRange(i+2, 10).setValue(b.credentialId);
+        sheet.getRange(i + 2, 10).setValue(b.credentialId);
         invalidate(SH.USERS);
-        return { success: true };
+        return { success: true, message: 'Biometric registered successfully' };
       }
     }
+
     return { success: false, message: 'User not found' };
-  } catch(err) { return { success: false, message: 'saveBiometric: ' + err }; }
+  } catch (err) {
+    return { success: false, message: 'saveBiometric: ' + err };
+  }
+}
+
+function checkBiometric(b) {
+  try {
+    var user = getUserById(b.userId);
+    if (!user) return { success: false, message: 'User not found' };
+    return {
+      success: true,
+      hasBiometric: !!user.biometric_code
+    };
+  } catch (err) {
+    return { success: false, message: 'checkBiometric: ' + err };
+  }
 }
 
 function registerDevice(b) {
