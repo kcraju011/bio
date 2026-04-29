@@ -1,0 +1,511 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>BioAttend SaaS</title>
+<meta name="theme-color" content="#4f6ef7"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="BioAttend"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%230b1220'/%3E%3Ccircle cx='96' cy='96' r='50' fill='%236c63ff'/%3E%3Cpath d='M96 50c-21 0-38 17-38 38 0 16 10 29 24 35v7h10v-6h8v6h10v-7c14-6 24-19 24-35 0-21-17-38-38-38zm0 8c16 0 30 14 30 30s-14 30-30 30-30-14-30-30 14-30 30-30zm0 12c-9 0-16 7-16 16h8c0-5 3-8 8-8s8 3 8 8h8c0-9-7-16-16-16z' fill='white'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+</head>
+<body>
+
+<div id="offline-bar">ðŸ“¡ Offline â€” attendance requires internet</div>
+
+<div id="tenant-loader" class="info-box blue" style="max-width:460px;width:100%;margin:8px 0 12px;display:none;z-index:2">
+  <span class="spin"></span>
+  <span id="tenant-loader-text">Loading organizationÃ¢â‚¬Â¦</span>
+</div>
+
+<div class="card">
+  <!-- â”€â”€ Header â”€â”€ -->
+  <div class="header">
+    <div class="logo-ring">
+      <img id="org-logo" alt="Organization logo"/>
+      <svg id="org-logo-fallback" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+    </div>
+    <div class="brand" id="org-name">BioAttend</div>
+    <div class="tagline" id="org-tagline">Biometric Attendance System</div>
+    <div class="college-badge" id="org-city-badge">
+      <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <span id="org-city-text">Loading...</span>
+    </div>
+  </div>
+
+  <!-- â”€â”€ Main Tabs â”€â”€ -->
+  <div class="main-tabs">
+    <button class="mtab active" id="mtab-signin"   onclick="switchMain('signin')">Sign In</button>
+    <button class="mtab" id="mtab-register" onclick="switchMain('register')">Register</button>
+  </div>
+
+  <div class="form-body">
+
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         SIGN IN â€” biometric or password
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <div class="pane active" id="pane-signin">
+      <div id="loc-status-bar"></div>
+      <div id="att-success-card" style="display:none"></div>
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" id="si-email" placeholder="usn@sit.ac.in"/>
+      </div>
+      <div class="field">
+        <label>Password <span class="req">*</span></label>
+        <div class="pw-wrap">
+          <input type="password" id="si-password" placeholder="Enter password"/>
+          <button class="pw-eye" onclick="togglePw('si-password')" type="button" aria-label="Show or hide password">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-bio-signin" onclick="handleBiometricSignIn()">
+        <svg width="17" height="17" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+        Sign &amp; Mark Attendance with Fingerprint / Face ID
+      </button>
+      <button class="btn btn-secondary" id="btn-pass-signin" onclick="handlePasswordSignIn()">
+        Sign &amp; Mark Attendance with Password
+      </button>
+
+    </div>
+
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         REGISTER â€” User table form
+         user_id(auto), institute_id, department_id, role_id,
+         full_name, dob, mobile, email, password_hash(auto),
+         biometric_code(post), device_identification(auto)
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <div class="pane" id="pane-register">
+      <div class="register-shell">
+        <div class="register-intro">
+          <div class="progress-line" aria-hidden="true"><span id="register-progress-bar"></span></div>
+          <div class="stepper" role="list" aria-label="Registration steps">
+            <button type="button" class="stepper-step active" id="register-step-tab-1" data-step="1" aria-current="step" onclick="goRegisterStep(1)">
+              <strong>1. Basic Info</strong>
+            </button>
+            <button type="button" class="stepper-step" id="register-step-tab-2" data-step="2" aria-current="false" onclick="goRegisterStep(2)">
+              <strong>2. Organization &amp; Role</strong>
+            </button>
+            <button type="button" class="stepper-step" id="register-step-tab-3" data-step="3" aria-current="false" onclick="goRegisterStep(3)">
+              <strong>3. Security &amp; Biometric</strong>
+            </button>
+          </div>
+        </div>
+
+        <form id="register-form" class="register-form" novalidate onsubmit="return false">
+          <section class="step-panel active" id="register-step-1" aria-labelledby="register-step-1-title">
+            <div class="section-label" id="register-step-1-title">Basic Info</div>
+
+            <div class="row2">
+              <div class="field" id="field-r-name">
+                <label for="r-name">Name <span class="req">*</span></label>
+                <input type="text" id="r-name" placeholder="Enter your full name" maxlength="80" autocomplete="name" required aria-describedby="err-r-name"/>
+                <div class="field-error" id="err-r-name" role="alert"></div>
+              </div>
+              <div class="field" id="field-r-dob">
+                <label for="r-dob">DOB <span class="req">*</span></label>
+                <input type="date" id="r-dob" required aria-describedby="err-r-dob"/>
+                <div class="field-error" id="err-r-dob" role="alert"></div>
+              </div>
+            </div>
+
+            <div class="field" id="field-r-email">
+              <label for="r-email">Email <span class="req">*</span></label>
+              <input type="email" id="r-email" placeholder="name@organization.com" maxlength="120" autocomplete="email" required aria-describedby="err-r-email"/>
+              <div class="field-error" id="err-r-email" role="alert"></div>
+            </div>
+
+            <div class="row2">
+              <div class="field" id="field-r-mobile">
+                <label for="r-mobile">Mobile <span class="req">*</span></label>
+                <input type="tel" id="r-mobile" placeholder="+91 9876543210" maxlength="20" autocomplete="tel" required aria-describedby="err-r-mobile"/>
+                <div class="field-error" id="err-r-mobile" role="alert"></div>
+              </div>
+              <div class="field" id="field-r-emp-id">
+                <label for="r-employee-id">Student / Employee ID <span class="req">*</span></label>
+                <input type="text" id="r-employee-id" placeholder="Institution unique ID" maxlength="40" autocomplete="off" required aria-describedby="err-r-employee-id"/>
+                <div class="field-error" id="err-r-employee-id" role="alert"></div>
+              </div>
+            </div>
+
+            <div class="step-nav">
+              <button class="btn btn-primary" type="button" onclick="if(validateRegisterStep(1)) goRegisterStep(2)">
+                Continue
+              </button>
+            </div>
+          </section>
+
+          <section class="step-panel" id="register-step-2" aria-labelledby="register-step-2-title">
+            <div class="section-label" id="register-step-2-title">Organization &amp; Role</div>
+
+            <div class="row2">
+              <div class="field" id="field-r-institute">
+                <label id="r-org-name-label" for="r-institute">Organization Name <span class="req">*</span></label>
+<input type="text" id="r-institute" value="" placeholder="Loading organization..." maxlength="120" readonly required aria-describedby="err-r-institute"/>
+                <div class="field-error" id="err-r-institute" role="alert"></div>
+              </div>
+              <div class="field" id="field-r-org-type">
+                <label for="r-org-type">Org Type <span class="req">*</span></label>
+<select id="r-org-type" required disabled onchange="updateRegisterFormByRole()" aria-describedby="err-r-org-type">
+                  <option value="">Select...</option>
+                  <option value="college">College</option>
+                  <option value="university">University</option>
+                  <option value="institute">Institute</option>
+                </select>
+                <div class="field-error" id="err-r-org-type" role="alert"></div>
+              </div>
+            </div>
+
+            <div class="row2">
+              <div class="field" id="field-r-role">
+                <label id="r-role-label" for="r-role">Role <span class="req">*</span></label>
+                <select id="r-role" required onchange="updateRegisterFormByRole()" aria-describedby="err-r-role">
+                  <option value="">Select organization type first...</option>
+                </select>
+                <div class="field-error" id="err-r-role" role="alert"></div>
+              </div>
+              <div class="field" id="field-r-dept">
+                <label id="r-dept-label" for="r-dept">Department <span class="req">*</span></label>
+                <input type="text" id="r-dept" placeholder="Enter department manually" maxlength="120" autocomplete="organization" required aria-describedby="err-r-dept"/>
+                <div class="field-error" id="err-r-dept" role="alert"></div>
+              </div>
+            </div>
+
+            <div class="field hidden" id="field-r-study-level">
+              <label for="r-study-level">Semester <span class="req">*</span></label>
+              <select id="r-study-level" aria-describedby="err-r-study-level">
+                <option value="">Select semester...</option>
+                <option value="1st Semester">1st Semester</option>
+                <option value="2nd Semester">2nd Semester</option>
+                <option value="3rd Semester">3rd Semester</option>
+                <option value="4th Semester">4th Semester</option>
+                <option value="5th Semester">5th Semester</option>
+                <option value="6th Semester">6th Semester</option>
+                <option value="7th Semester">7th Semester</option>
+                <option value="8th Semester">8th Semester</option>
+              </select>
+              <div class="field-error" id="err-r-study-level" role="alert"></div>
+            </div>
+
+            <div class="field hidden" id="field-r-designation">
+              <label for="r-designation">Designation <span class="req">*</span></label>
+              <input type="text" id="r-designation" placeholder="e.g. Assistant Professor / HR Manager" maxlength="80" autocomplete="organization-title" aria-describedby="err-r-designation"/>
+              <div class="field-error" id="err-r-designation" role="alert"></div>
+            </div>
+
+            <div class="step-nav">
+              <button class="btn btn-secondary" type="button" onclick="goRegisterStep(1)">Back</button>
+              <button class="btn btn-primary" type="button" onclick="if(validateRegisterStep(2)) goRegisterStep(3)">Continue</button>
+            </div>
+          </section>
+
+          <section class="step-panel" id="register-step-3" aria-labelledby="register-step-3-title">
+            <div class="section-label" id="register-step-3-title">Security &amp; Biometric</div>
+
+            <div class="row2">
+              <div class="field" id="field-r-password">
+                <label for="r-password">Password <span class="req">*</span> <span style="font-weight:400;text-transform:none;letter-spacing:0">(min 8 chars)</span></label>
+                <div class="pw-wrap">
+                  <input type="password" id="r-password" placeholder="Create a strong password" minlength="8" maxlength="64" autocomplete="new-password" required aria-describedby="err-r-password"/>
+                  <button class="pw-eye" onclick="togglePw('r-password')" type="button" aria-label="Show or hide password">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                <div class="field-error" id="err-r-password" role="alert"></div>
+              </div>
+              <div class="field" id="field-r-confirm-password">
+                <label for="r-confirm-password">Confirm Password <span class="req">*</span></label>
+                <div class="pw-wrap">
+                  <input type="password" id="r-confirm-password" placeholder="Re-enter your password" minlength="8" maxlength="64" autocomplete="new-password" required aria-describedby="err-r-confirm-password"/>
+                  <button class="pw-eye" onclick="togglePw('r-confirm-password')" type="button" aria-label="Show or hide confirm password">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                <div class="field-error" id="err-r-confirm-password" role="alert"></div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-register" type="button" onclick="handleRegisterV2()">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Verify Biometric &amp; Create Account
+            </button>
+
+            <div class="bio-lock" id="bio-panel" aria-live="polite">
+              <div class="bio-lock-head">
+                <strong>Biometric first</strong>
+                <span>Fingerprint or Face ID</span>
+              </div>
+              <div class="bio-status" id="bio-hint">When you tap create account, we will ask for fingerprint or Face ID before saving the account.</div>
+            </div>
+
+            <div class="step-nav">
+              <button class="btn btn-secondary" type="button" onclick="goRegisterStep(2)">Back</button>
+            </div>
+          </section>
+        </form>
+      </div>
+    </div>
+
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TEACHER PANEL
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <div class="pane" id="pane-teacher">
+
+      <!-- Login -->
+      <div id="t-login-section">
+        <div class="info-box blue">
+          <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span>Sign in with your teacher account.</span>
+        </div>
+        <div class="field"><label>Email</label><input type="email" id="t-email" placeholder="teacher@sit.ac.in"/></div>
+        <div class="field"><label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="t-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"/>
+            <button class="pw-eye" onclick="togglePw('t-password')" type="button">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-t-login" onclick="handleTeacherLogin()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Teacher Sign In
+        </button>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="t-dashboard" style="display:none">
+        <div class="dash-header">
+          <div><div class="dash-name" id="t-welcome"></div><div class="dash-sub" id="teacher-dashboard-subtitle">Teacher Dashboard</div></div>
+          <button class="dash-logout" onclick="teacherLogout()">Logout</button>
+        </div>
+        <div class="sub-tabs">
+          <button class="sub-tab active" id="stab-session"  onclick="switchSub('session')">Session</button>
+          <button class="sub-tab" id="stab-live"     onclick="switchSub('live')">Live</button>
+          <button class="sub-tab" id="stab-history"  onclick="switchSub('history')">History</button>
+          <button class="sub-tab" id="stab-students" onclick="switchSub('students')">Students</button>
+          <button class="sub-tab" id="stab-analytics" onclick="switchSub('analytics')">Analytics</button>
+        </div>
+
+        <!-- Session sub-pane -->
+        <div class="sub-pane active" id="sp-session">
+          <div id="active-sess-display"></div>
+          <div id="open-sess-form">
+            <div class="field"><label>Subject / Class <span class="req">*</span></label>
+              <input type="text" id="t-subject" placeholder="e.g. Data Structures â€“ 3CSE-B"/></div>
+            <div class="field"><label>Window</label>
+              <select id="t-window">
+                <option value="5">5 minutes</option>
+                <option value="10" selected>10 minutes</option>
+                <option value="15">15 minutes</option>
+                <option value="20">20 minutes</option>
+                <option value="30">30 minutes</option>
+              </select>
+            </div>
+            <button class="btn btn-success" id="btn-open-sess" onclick="openSession()">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              Open Attendance Session
+            </button>
+          </div>
+        </div>
+
+        <!-- Live sub-pane -->
+        <div class="sub-pane" id="sp-live">
+          <div id="live-info" class="no-session">No active session</div>
+          <div class="stats-row" id="live-stats" style="display:none">
+            <div class="stat-card green"><div class="stat-num" id="sp">0</div><div class="stat-lbl">Present</div></div>
+            <div class="stat-card red"><div class="stat-num" id="sa">0</div><div class="stat-lbl">Absent</div></div>
+            <div class="stat-card blue"><div class="stat-num" id="st">0</div><div class="stat-lbl">Total</div></div>
+            <div class="stat-card purple"><div class="stat-num" id="spc">0%</div><div class="stat-lbl">Rate</div></div>
+          </div>
+          <div class="live-toolbar" id="live-toolbar" style="display:none">
+            <div class="seg-control">
+              <button class="seg active" id="seg-p" onclick="showLive('present')">Present</button>
+              <button class="seg" id="seg-a" onclick="showLive('absent')">Absent</button>
+              <button class="seg" id="seg-r" onclick="showLive('recent')">Recent</button>
+            </div>
+            <button class="export-btn" onclick="exportLive()">â†“ Export</button>
+          </div>
+          <div id="live-list" class="att-list"></div>
+          <div id="live-map-wrap" style="margin-top:12px">
+            <div class="section-label" style="margin-bottom:8px">Live Campus Map</div>
+            <div id="live-map" style="height:280px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#eef2ff,#f8fafc)"></div>
+          </div>
+          <div id="live-refresh" style="display:none;text-align:center;margin-top:9px">
+            <button onclick="refreshLive()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">â†» Refresh</button>
+            <div id="live-updated" style="font-size:10px;color:var(--muted);margin-top:3px"></div>
+          </div>
+        </div>
+
+        <!-- History sub-pane -->
+        <div class="sub-pane" id="sp-history">
+          <div class="field"><label>Date</label>
+            <input type="date" id="hist-date" onchange="loadHistory()"/>
+          </div>
+          <div id="hist-list" class="att-list"></div>
+          <div style="text-align:right;margin-top:8px;display:none" id="hist-export">
+            <button class="export-btn" onclick="exportHistory()">â†“ Export CSV</button>
+          </div>
+        </div>
+
+        <!-- Students sub-pane -->
+        <div class="sub-pane" id="sp-students">
+          <input type="text" id="student-search" placeholder="Search name, email or deptâ€¦" oninput="filterStudents()"/>
+          <div id="stud-count" style="font-size:11px;color:var(--muted);margin-bottom:7px"></div>
+          <div id="stud-list" class="att-list"></div>
+        </div>
+
+        <!-- Analytics sub-pane -->
+        <div class="sub-pane" id="sp-analytics">
+          <div class="section-label">Attendance Analytics</div>
+          <div class="row2">
+            <div class="field">
+              <label>Date</label>
+              <input type="date" id="analytics-date" onchange="loadAnalytics(true)"/>
+            </div>
+            <div class="field">
+              <label>User ID</label>
+              <div class="pw-wrap">
+                <input type="text" id="analytics-user-id" placeholder="Student user_id"/>
+                <button class="pw-eye" type="button" onclick="loadUserAttendanceSummary()">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-row" id="analytics-stats" style="display:grid">
+            <div class="stat-card green"><div class="stat-num" id="an-present">0</div><div class="stat-lbl">Present</div></div>
+            <div class="stat-card red"><div class="stat-num" id="an-absent">0</div><div class="stat-lbl">Absent</div></div>
+            <div class="stat-card blue"><div class="stat-num" id="an-late">0</div><div class="stat-lbl">Late</div></div>
+            <div class="stat-card purple"><div class="stat-num" id="an-rate">0%</div><div class="stat-lbl">Avg Rate</div></div>
+          </div>
+
+          <div class="section-label" style="margin-top:14px">Daily & Weekly Trends</div>
+          <div style="display:grid;grid-template-columns:1fr;gap:12px">
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:16px;padding:12px">
+              <canvas id="daily-chart" height="180"></canvas>
+            </div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:16px;padding:12px">
+              <canvas id="weekly-chart" height="180"></canvas>
+            </div>
+          </div>
+
+          <div class="section-label" style="margin-top:14px">Insights</div>
+          <div id="insights-box" class="att-list"></div>
+          <div id="summary-box" class="att-list" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         ADMIN â€” manage lookup tables
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <div class="pane" id="pane-admin">
+      <div class="section-label">Database administration</div>
+
+      <!-- Admin sub-tabs -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="seg active" id="atab-dept"    onclick="switchAdmin('dept')"   style="padding:5px 10px">Departments</button>
+        <button class="seg" id="atab-loc"     onclick="switchAdmin('loc')"    style="padding:5px 10px">Locations</button>
+        <button class="seg" id="atab-ulmap"   onclick="switchAdmin('ulmap')"  style="padding:5px 10px">User-Loc Map</button>
+        <button class="seg" id="atab-atttype" onclick="switchAdmin('atttype')" style="padding:5px 10px">Att. Type</button>
+      </div>
+
+      <!-- Departments form -->
+      <div id="ap-dept" class="sub-pane active">
+        <div class="section-label">Add Department</div>
+        <div class="row2">
+          <div class="field"><label>department_id <span class="req">*</span></label>
+            <input type="text" id="ad-id" placeholder="e.g. CSE"/></div>
+          <div class="field"><label>name <span class="req">*</span></label>
+            <input type="text" id="ad-name" placeholder="Dept name"/></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>in_charge</label>
+            <input type="text" id="ad-incharge" placeholder="HOD name"/></div>
+          <div class="field"><label>email</label>
+            <input type="email" id="ad-email" placeholder="hod@sit.ac.in"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="addDepartment()">Add Department</button>
+        <div id="dept-list" class="att-list" style="margin-top:12px"></div>
+        <button onclick="loadDepts()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">â†» Refresh list</button>
+      </div>
+
+      <!-- Attendance Locations form -->
+      <div id="ap-loc" class="sub-pane">
+        <div class="section-label">Add Attendance Location</div>
+        <div class="row2">
+          <div class="field"><label>attendance_location_id <span class="req">*</span></label>
+            <input type="text" id="al-id" placeholder="LOC004"/></div>
+          <div class="field"><label>name <span class="req">*</span></label>
+            <input type="text" id="al-name" placeholder="Lab / Room name"/></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>latitude <span class="req">*</span></label>
+            <input type="number" id="al-lat" step="0.00001" placeholder="13.32603"/></div>
+          <div class="field"><label>longitude <span class="req">*</span></label>
+            <input type="number" id="al-lng" step="0.00001" placeholder="77.12621"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="addLocation()">Add Location</button>
+        <div id="loc-list" class="att-list" style="margin-top:12px"></div>
+        <button onclick="loadLocs()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">â†» Refresh list</button>
+      </div>
+
+      <!-- User Attendance Location Map form -->
+      <div id="ap-ulmap" class="sub-pane">
+        <div class="section-label">Map User â†’ Location</div>
+        <div class="field"><label>user_id <span class="req">*</span></label>
+          <input type="text" id="ulm-uid" placeholder="u_1234_abcde"/></div>
+        <div class="row2">
+          <div class="field"><label>attendance_location_id <span class="req">*</span></label>
+            <input type="text" id="ulm-lid" placeholder="LOC001"/></div>
+          <div class="field"><label>allowed_distance (m)</label>
+            <input type="number" id="ulm-dist" value="200" placeholder="200"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="addUserLocMap()">Add Mapping</button>
+        <div class="info-box orange" style="margin-top:10px">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span>user_id is auto-generated during registration. You can copy it from the Users sheet.</span>
+        </div>
+      </div>
+
+      <!-- Attendance Type form -->
+      <div id="ap-atttype" class="sub-pane">
+        <div class="section-label">Attendance Types (seeded automatically)</div>
+        <div class="att-list">
+          <div class="att-item"><div><div class="iname">ATT_TYPE_001</div><div class="imeta">type: entry</div></div><span class="badge">seeded</span></div>
+          <div class="att-item"><div><div class="iname">ATT_TYPE_002</div><div class="imeta">type: exit</div></div><span class="badge">seeded</span></div>
+        </div>
+        <div class="info-box blue" style="margin-top:10px">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span>Entry and Exit types are seeded automatically when you run setupSheets from Apps Script editor.</span>
+        </div>
+      </div>
+
+    </div><!-- /pane-admin -->
+  </div><!-- /form-body -->
+</div><!-- /card -->
+
+<div id="pwa-banner">
+  <div class="pwa-icon" aria-hidden="true"></div>
+  <div class="pwa-text"><strong>Install BioAttend</strong><span>Add to home screen</span></div>
+  <button class="pwa-install-btn" id="pwa-install-btn">Install</button>
+  <button class="pwa-dismiss" id="pwa-dismiss">âœ•</button>
+</div>
+
+<div id="toast"></div>
+
+<script src="tenant.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
+
