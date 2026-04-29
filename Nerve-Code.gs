@@ -28,6 +28,7 @@ var DEFAULT_TENANTS = [
     city: 'Tumakuru',
     spreadsheet_url: 'https://docs.google.com/spreadsheets/d/1c5ZGKxr-ZNxbao6L6D87N8JNSvPNf2Il9Xnl8ha04f8/edit?gid=0#gid=0',
     api_url: 'https://script.google.com/macros/s/AKfycby7Sz7KutpgfdbqCY9AvYfUmBs9QKOWiydT0eKj4TDFhVSC6cOKzk5YU3yHcrGYzdcbNg/exec',
+              
     application_id: '102',
     application_name: 'Attendance monitoring',
     application_description: 'Biometric attendance for students, teachers and employees',

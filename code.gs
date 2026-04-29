@@ -1417,7 +1417,7 @@ function finishWebAuthnRegistration(b) {
     var credentialId = String(b.credentialId || '').trim();
     var publicKey = String(b.publicKey || '').trim();
     var clientChallenge = String(b.challenge || '').trim();
-    if (!email || !name || !challengeId || !credentialId || !publicKey) {
+    if (!email || !name || !challengeId || !credentialId) {
       return { success: false, message: 'Missing registration data' };
     }
     var challengeCheck = verifyWebAuthnChallenge(challengeId, 'register', email, clientChallenge, credentialId);
