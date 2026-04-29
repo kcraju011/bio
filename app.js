@@ -1150,7 +1150,7 @@ async function collectRegistrationBiometric(name, email) {
   }
   const cred = await navigator.credentials.create({ publicKey: {
     challenge: base64UrlToUint8Array(begin.challenge),
-    rp: { name: `BioAttend ${tenantState.institution?.name || ''}`.trim(), id: location.hostname },
+    rp: { name: `BioAttend ${tenantState.institution?.name || ''}`.trim() },
     user: {
       id: crypto.getRandomValues(new Uint8Array(16)),
       name: email,

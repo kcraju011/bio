@@ -105,17 +105,20 @@ function setTenantLoading(on, text) {
   box.style.display = on ? 'flex' : 'none';
 }
 
-function jsonpRequest(url, timeoutMs = 45000) {
+function jsonpRequest(url, timeoutMs = 45000, retryCount = 2) {
   return new Promise((resolve, reject) => {
     const cb = '__ba_jsonp_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    const script = document.createElement('script');
     const sep = url.includes('?') ? '&' : '?';
     let timer = null;
+    let attempt = 0;
+    let script = null;
 
     function cleanup(options = {}) {
       const preserveCallback = !!options.preserveCallback;
       if (timer) clearTimeout(timer);
-      if (script.parentNode) script.parentNode.removeChild(script);
+      timer = null;
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+      script = null;
       if (preserveCallback) {
         window[cb] = () => {};
       } else {
@@ -123,23 +126,37 @@ function jsonpRequest(url, timeoutMs = 45000) {
       }
     }
 
-    window[cb] = data => {
-      cleanup();
-      resolve(data);
-    };
+    function loadOnce() {
+      script = document.createElement('script');
+      window[cb] = data => {
+        cleanup();
+        resolve(data);
+      };
+      script.async = true;
+      script.referrerPolicy = 'strict-origin-when-cross-origin';
+      script.onerror = () => {
+        cleanup({ preserveCallback: true });
+        if (attempt < retryCount) {
+          attempt += 1;
+          setTimeout(loadOnce, 350 * attempt);
+          return;
+        }
+        reject(new Error('Failed to load tenant response'));
+      };
+      script.src = `${url}${sep}callback=${encodeURIComponent(cb)}&_ts=${Date.now()}_${attempt}`;
+      document.head.appendChild(script);
+      timer = setTimeout(() => {
+        cleanup({ preserveCallback: true });
+        if (attempt < retryCount) {
+          attempt += 1;
+          setTimeout(loadOnce, 350 * attempt);
+          return;
+        }
+        reject(new Error('Tenant request timed out'));
+      }, timeoutMs);
+    }
 
-    script.async = true;
-    script.onerror = () => {
-      cleanup({ preserveCallback: true });
-      reject(new Error('Failed to load tenant response'));
-    };
-    script.src = `${url}${sep}callback=${encodeURIComponent(cb)}`;
-    document.head.appendChild(script);
-
-    timer = setTimeout(() => {
-      cleanup({ preserveCallback: true });
-      reject(new Error('Tenant request timed out'));
-    }, timeoutMs);
+    loadOnce();
   });
 }
 
@@ -523,4 +540,3 @@ async function bootTenant() {
 }
 
 // â”€â”€ Tab navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
