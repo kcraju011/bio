@@ -1045,6 +1045,46 @@ async function handleRegister() {
   return handleRegisterV2();
 }
 
+async function registerBiometric(userId) {
+  if (!window.PublicKeyCredential || !navigator.credentials || !navigator.credentials.create) {
+    throw new Error('WebAuthn not supported');
+  }
+  if (!userId) {
+    throw new Error('Biometric user id required');
+  }
+
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+  const cred = await navigator.credentials.create({
+    publicKey: {
+      challenge,
+      rp: { name: 'BioAttend' },
+      user: {
+        id: new TextEncoder().encode(String(userId)),
+        name: String(userId),
+        displayName: 'User'
+      },
+      pubKeyCredParams: [
+        { type: 'public-key', alg: -7 },
+        { type: 'public-key', alg: -257 }
+      ],
+      authenticatorSelection: {
+        authenticatorAttachment: 'platform',
+        userVerification: 'required'
+      },
+      timeout: 60000,
+      attestation: 'none'
+    }
+  });
+
+  if (!cred || !cred.rawId) {
+    throw new Error('Biometric registration failed');
+  }
+
+  return {
+    credentialId: bufferToBase64Url(cred.rawId)
+  };
+}
+
 async function collectRegistrationBiometric(name, email) {
   return registerBiometric(email || name);
 }
