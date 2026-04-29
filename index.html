@@ -1374,7 +1374,25 @@ async function handleRegister() {
 
   setLoading('btn-register',true);
   try{
+    if(!window.PublicKeyCredential || !navigator.credentials || !navigator.credentials.create){
+      toast('Biometric not supported on this device/browser','error');
+      setLoading('btn-register',false);
+      return;
+    }
     const dId = await getDeviceId();
+    const challenge=crypto.getRandomValues(new Uint8Array(32));
+    const cred=await navigator.credentials.create({publicKey:{
+      challenge,
+      rp:{name:'BioAttend SIT'},
+      user:{id:new TextEncoder().encode(String(email)),
+            name:email,
+            displayName:name},
+      pubKeyCredParams:[{type:'public-key',alg:-7}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+      timeout:60000,
+      attestation:'none'
+    }});
+    const credId=btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
     const d   = await api({
       action:               'register',
       name, email, password:pass, dob, mobile,
@@ -1382,15 +1400,14 @@ async function handleRegister() {
       roleId:               role,
       instituteId:          inst||'Siddaganga Institute of Technology',
       allowedDistance:      200,
+      biometricCode:        credId,
       deviceId:             dId
     });
     if(d.success){
       registeredUid=d.userId;
-      toast('✓ Account created! Now register biometric.','success');
-      document.getElementById('btn-bio-reg').disabled=false;
-      document.getElementById('bio-hint').textContent='Tap below to register fingerprint / Face ID';
-      // Auto-bind device
-      await api({action:'registerDevice',userId:d.userId,deviceId:dId});
+      toast('✓ Account created with biometric access.','success');
+      document.getElementById('btn-bio-reg').disabled=true;
+      document.getElementById('bio-hint').textContent='✓ Biometric saved — ready to use';
     }else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
   setLoading('btn-register',false);
@@ -1398,27 +1415,7 @@ async function handleRegister() {
 
 // ── Biometric registration (writes biometric_code to Users) ──
 async function handleBiometricRegister() {
-  if(!registeredUid){toast('Create account first','error');return;}
-  if(!window.PublicKeyCredential){toast('WebAuthn not supported','error');return;}
-  try{
-    const challenge=crypto.getRandomValues(new Uint8Array(32));
-    const cred=await navigator.credentials.create({publicKey:{
-      challenge,
-      rp:{name:'BioAttend SIT',id:location.hostname},
-      user:{id:Uint8Array.from(registeredUid,c=>c.charCodeAt(0)),
-            name:document.getElementById('r-email').value,
-            displayName:document.getElementById('r-name').value},
-      pubKeyCredParams:[{type:'public-key',alg:-7}],
-      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
-      timeout:60000
-    }});
-    const credId=btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
-    const d=await api({action:'saveBiometric',userId:registeredUid,credentialId:credId});
-    if(d.success){
-      toast('✓ Biometric registered! Ready to sign in.','success');
-      document.getElementById('bio-hint').textContent='✓ Biometric saved — ready to use';
-    }else toast(d.message,'error');
-  }catch(e){toast('Biometric error: '+e.message,'error');}
+  return handleRegister();
 }
 
 // ════════════════════════════════════════════

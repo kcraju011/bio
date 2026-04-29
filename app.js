@@ -1102,16 +1102,7 @@ async function handleRegisterV2() {
     if(d.success){
       registeredUid=d.userId;
       registerFlowState.accountCreated = true;
-      const biometricBind = await api({
-        action: 'saveBiometric',
-        userId: d.userId,
-        credentialId: biometric.credentialId
-      });
-      if (biometricBind.success) {
-        toast('âœ“ Account created with biometric access.','success');
-      } else {
-        toast('Account created, but biometric save failed: ' + (biometricBind.message || 'Unknown error'), 'warn');
-      }
+      toast('âœ“ Account created with biometric access.','success');
     }else toast(d.message,'error');
   }catch(e){
     if(e.name==='NotAllowedError') toast('Biometric cancelled','warn');
@@ -1121,9 +1112,7 @@ async function handleRegisterV2() {
 }
 
 async function handleBiometricRegister() {
-  try{
-    toast('Biometric is now requested automatically before account creation.','info');
-  }catch(e){toast('Biometric error: '+e.message,'error');}
+  return handleRegister();
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
