@@ -1,0 +1,1 @@
+# TODO: Push to main branch&#10;&#10;- [ ] Step 1: Verify git status (clean)&#10;- [ ] Step 2: git checkout main&#10;- [ ] Step 3: git pull origin main (update local main)&#10;- [ ] Step 4: git merge v2 (bring v2 changes to main)&#10;- [ ] Step 5: git push origin main&#10;- [ ] Step 6: Verify push success (git status, git log)
