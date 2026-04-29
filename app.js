@@ -1046,33 +1046,7 @@ async function handleRegister() {
 }
 
 async function collectRegistrationBiometric(name, email) {
-  if (!window.PublicKeyCredential) {
-    throw new Error('WebAuthn not supported');
-  }
-  const begin = await api({ action: 'beginWebAuthnRegistration', email, name, guid: tenantState.guid });
-  if (!begin.success || !begin.challengeId || !begin.challenge) {
-    throw new Error(begin.message || 'Unable to start biometric registration');
-  }
-  const cred = await navigator.credentials.create({ publicKey: {
-    challenge: base64UrlToUint8Array(begin.challenge),
-    rp: { name: `BioAttend ${tenantState.institution?.name || ''}`.trim(), id: location.hostname },
-    user: {
-      id: crypto.getRandomValues(new Uint8Array(16)),
-      name: email,
-      displayName: name
-    },
-    pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
-    authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
-    timeout: 60000
-  }});
-  return {
-    credentialId: bufferToBase64Url(cred.rawId),
-    publicKey: cred.response?.getPublicKey ? bufferToBase64Url(await cred.response.getPublicKey()) : '',
-    challengeId: begin.challengeId,
-    challenge: begin.challenge,
-    clientDataJSON: cred.response?.clientDataJSON ? bufferToBase64Url(cred.response.clientDataJSON) : '',
-    attestationObject: cred.response?.attestationObject ? bufferToBase64Url(cred.response.attestationObject) : ''
-  };
+  return registerBiometric(email || name);
 }
 
 async function handleRegisterV2() {
@@ -1110,10 +1084,10 @@ async function handleRegisterV2() {
 
   setLoading('btn-register',true);
   try{
+    const biometric = await registerBiometric(memberId || email);
     const dId = await getDeviceId();
-    const biometric = await collectRegistrationBiometric(name, email);
     const d   = await api({
-      action:               'registerUser',
+      action:               'register',
       name, email, password:pass, dob, mobile,
       departmentId:         dept,
       roleId:               role,
@@ -1123,27 +1097,20 @@ async function handleRegisterV2() {
       studyLevel:           studyLevel,
       designation:          designation,
       biometricCode:        biometric.credentialId,
-      publicKey:            biometric.publicKey || '',
       deviceId:             dId
     });
     if(d.success){
       registeredUid=d.userId;
       registerFlowState.accountCreated = true;
-      toast('âœ“ Account created with biometric access.','success');
       const biometricBind = await api({
-        action: 'finishWebAuthnRegistration',
-        email,
-        name,
-        challengeId: biometric.challengeId,
-        challenge: biometric.challenge,
-        credentialId: biometric.credentialId,
-        publicKey: biometric.publicKey || '',
-        clientDataJSON: biometric.clientDataJSON || '',
-        attestationObject: biometric.attestationObject || '',
-        guid: tenantState.guid
+        action: 'saveBiometric',
+        userId: d.userId,
+        credentialId: biometric.credentialId
       });
-      if (!biometricBind.success) {
-        toast(biometricBind.message || 'Biometric binding failed', 'error');
+      if (biometricBind.success) {
+        toast('âœ“ Account created with biometric access.','success');
+      } else {
+        toast('Account created, but biometric save failed: ' + (biometricBind.message || 'Unknown error'), 'warn');
       }
     }else toast(d.message,'error');
   }catch(e){

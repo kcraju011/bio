@@ -394,6 +394,9 @@ function cacheTenantProfile(guid, data) {
 async function fetchTenantProfile(guid) {
   const normalizedGuid = String(guid || '').trim();
   if (!VALID_GUIDS.has(normalizedGuid)) return null;
+  if (!NERVE_URL || NERVE_URL.includes('/dev')) {
+    return getDefaultTenantProfile(guid);
+  }
   if (NERVE_URL) {
     try {
       const joiner = NERVE_URL.includes('?') ? '&' : '?';
