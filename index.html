@@ -1246,7 +1246,7 @@ async function handleBiometricSignIn() {
 
     // 2. WebAuthn — prompts device fingerprint/FaceID
     const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const rawId = Uint8Array.from(atob(info.credentialId), c=>c.charCodeAt(0));
+    const rawId = credentialIdToUint8Array(info.credentialId);
     await navigator.credentials.get({publicKey:{
       challenge, userVerification:'required', timeout:60000,
       allowCredentials:[{type:'public-key',id:rawId}]

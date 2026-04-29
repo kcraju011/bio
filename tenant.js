@@ -106,6 +106,40 @@ function resolveTenantApiUrl() {
   return DEFAULT_TENANT_API;
 }
 
+function getTenantApiCandidates(extraUrl) {
+  const seen = new Set();
+  const urls = [];
+  [extraUrl, resolveTenantApiUrl(), TENANT_API, DEFAULT_TENANT_API, EXPECTED_TENANTS[String(tenantState.guid || readGuidFromUrl() || '').trim()]?.apiUrl]
+    .forEach(url => {
+      const normalized = String(url || '').trim();
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      urls.push(normalized);
+    });
+  return urls;
+}
+
+async function jsonpRequestWithFallback(urls, timeoutMs = 45000) {
+  let lastError = null;
+  for (const url of urls) {
+    try {
+      return await jsonpRequest(url, timeoutMs);
+    } catch (err) {
+      lastError = err;
+      console.warn('[tenant] request failed, trying next url:', url, err);
+    }
+  }
+  throw lastError || new Error('Failed to load tenant response');
+}
+
+function credentialIdToUint8Array(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return new Uint8Array();
+  const normalized = raw.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4 || 4)) % 4);
+  return Uint8Array.from(atob(padded), c => c.charCodeAt(0));
+}
+
 function setTenantLoading(on, text) {
   const box = document.getElementById('tenant-loader');
   const label = document.getElementById('tenant-loader-text');
@@ -279,7 +313,8 @@ async function refreshAccessToken() {
     refreshToken,
     guid: tenantState.guid
   };
-  const res = await jsonpRequest(resolveTenantApiUrl() + '?data=' + encodeURIComponent(JSON.stringify(payload)));
+  const query = '?data=' + encodeURIComponent(JSON.stringify(payload));
+  const res = await jsonpRequestWithFallback(getTenantApiCandidates().map(url => url + query));
   if (res && res.success && res.authToken) {
     persistTeacherSession(res);
     if (typeof teacherData !== 'undefined' && teacherData) teacherData = { ...teacherData, ...res };
@@ -307,9 +342,9 @@ async function api(payload) {
     const authToken = getAuthToken();
     if (authToken) requestPayload.authToken = authToken;
   }
-  const url = apiUrl + '?data=' + encodeURIComponent(JSON.stringify(requestPayload));
+  const query = '?data=' + encodeURIComponent(JSON.stringify(requestPayload));
   console.log('TENNANT API request sent');
-  let response = await jsonpRequest(url);
+  let response = await jsonpRequestWithFallback(getTenantApiCandidates(apiUrl).map(url => url + query));
   if (response && response.success === false) {
     const message = String(response.message || '').toLowerCase();
     const code = String(response.code || '').toUpperCase();
@@ -317,7 +352,8 @@ async function api(payload) {
       const refreshed = await refreshAccessToken().catch(() => null);
       if (refreshed) {
         requestPayload.authToken = getAuthToken();
-        response = await jsonpRequest(apiUrl + '?data=' + encodeURIComponent(JSON.stringify(requestPayload)));
+        const retryQuery = '?data=' + encodeURIComponent(JSON.stringify(requestPayload));
+        response = await jsonpRequestWithFallback(getTenantApiCandidates(apiUrl).map(url => url + retryQuery));
       } else {
         handleExpiredAuth();
       }

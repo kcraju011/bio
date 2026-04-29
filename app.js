@@ -849,42 +849,31 @@ async function handleBiometricSignIn() {
   const btn=document.getElementById('btn-bio-signin');
   if(btn){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> Verifyingâ€¦';btn.disabled=true;}
   try{
-    const begin = await api({action:'beginWebAuthnLogin', email, guid: tenantState.guid});
-    if(!begin.success||!begin.credentialId||!begin.challenge){toast(begin.message||'No biometric registered','error');return;}
+    const info = await api({action:'getBiometric', email});
+    if(!info.success||!info.credentialId){toast(info.message||'No biometric registered','error');return;}
 
-    const cred = await navigator.credentials.get({publicKey:{
-      challenge: base64UrlToUint8Array(begin.challenge),
-      userVerification:'required', timeout:60000,
-      allowCredentials:[{type:'public-key',id:base64UrlToUint8Array(begin.credentialId)}]
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const rawId = credentialIdToUint8Array(info.credentialId);
+    await navigator.credentials.get({publicKey:{
+      challenge,
+      userVerification:'required',
+      timeout:60000,
+      allowCredentials:[{type:'public-key',id:rawId}]
     }});
 
     const deviceId = await getDeviceId();
-    const session = await api({
-      action: 'finishWebAuthnLogin',
-      email,
-      challengeId: begin.challengeId,
-      challenge: begin.challenge,
-      credentialId: bufferToBase64Url(cred.rawId),
-      clientDataJSON: cred.response?.clientDataJSON ? bufferToBase64Url(cred.response.clientDataJSON) : '',
-      authenticatorData: cred.response?.authenticatorData ? bufferToBase64Url(cred.response.authenticatorData) : '',
-      signature: cred.response?.signature ? bufferToBase64Url(cred.response.signature) : '',
-      userHandle: cred.response?.userHandle ? bufferToBase64Url(cred.response.userHandle) : '',
+    signedInUser = info;
+    showLocBar('ok','Fingerprint / Face ID verified');
+    const att = await api({
+      action: 'markEntry',
+      userId: info.userId,
+      loginMethod: 'biometric',
       deviceId,
       guid: tenantState.guid
     });
-    if(!session.success){toast(session.message||'Biometric login failed','error');return;}
-
-    signedInUser = session;
-    persistTeacherSession(session);
-    const roleValue = normalizeRoleKey(session.roleKey || session.roleId || '');
-    showLocBar('ok','Fingerprint / Face ID verified');
-
-    if (isAdminRole(roleValue)) {
-      toast('âœ“ Admin signed in','success');
-      return;
-    }
-
-    await submitStudentAttendance('biometric');
+    if(!att.success){toast(att.message||'Biometric sign-in failed','error');return;}
+    toast('âœ“ '+att.message,'success');
+    showAttendanceCard({...att, method:'biometric'}, info.userId);
   }catch(e){
     if(e.name==='NotAllowedError')toast('Biometric cancelled','warn');
     else toast('Error: '+e.message,'error');
