@@ -1,7 +1,9 @@
 ﻿
-const DEFAULT_TENANT_API = 'https://script.google.com/macros/s/AKfycbzR-z38NrPZZm--4OeStiRvAgMb6SpwCjtb_GW0Rl9-/dev';
+const DEFAULT_TENANT_API = 'https://script.google.com/macros/s/AKfycbwhFJ7oyLoed11sTYGikHyExxYs20J842q244K0MJ0VfwL5KgMDTb7E3uMN2sWhj0njYg/exec';
 
-const NERVE_URL = 'https://script.google.com/macros/s/AKfycbwhFJ7oyLoed11sTYGikHyExxYs20J842q244K0MJ0VfwL5KgMDTb7E3uMN2sWhj0njYg/exec';
+const NERVE_URL = 'https://script.google.com/macros/s/AKfycbzM850zCIjNBeuSAkNwMsp9udubbnU4DWuEZJIrIFSnr69Z8Sehr9MhdJAREiY5IZh96w/exec';
+                   
+                   
                    
 
 const TENANT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -95,6 +97,13 @@ function readGuidFromUrl() {
 
 function tenantCacheKey(guid) {
   return `tenant_${guid}`;
+}
+
+function resolveTenantApiUrl() {
+  const guid = String(tenantState.guid || readGuidFromUrl() || '').trim();
+  if (guid && EXPECTED_TENANTS[guid]?.apiUrl) return EXPECTED_TENANTS[guid].apiUrl;
+  if (TENANT_API) return TENANT_API;
+  return DEFAULT_TENANT_API;
 }
 
 function setTenantLoading(on, text) {
@@ -270,7 +279,7 @@ async function refreshAccessToken() {
     refreshToken,
     guid: tenantState.guid
   };
-  const res = await jsonpRequest(TENANT_API + '?data=' + encodeURIComponent(JSON.stringify(payload)));
+  const res = await jsonpRequest(resolveTenantApiUrl() + '?data=' + encodeURIComponent(JSON.stringify(payload)));
   if (res && res.success && res.authToken) {
     persistTeacherSession(res);
     if (typeof teacherData !== 'undefined' && teacherData) teacherData = { ...teacherData, ...res };
@@ -281,7 +290,8 @@ async function refreshAccessToken() {
 }
 
 async function api(payload) {
-  if (!TENANT_API) throw new Error('Tenant API is not initialized');
+  const apiUrl = resolveTenantApiUrl();
+  if (!apiUrl) throw new Error('Tenant API is not initialized');
   if (isAuthExpired()) {
     const refreshed = await refreshAccessToken().catch(() => null);
     if (!refreshed) {
@@ -297,7 +307,7 @@ async function api(payload) {
     const authToken = getAuthToken();
     if (authToken) requestPayload.authToken = authToken;
   }
-  const url = TENANT_API + '?data=' + encodeURIComponent(JSON.stringify(requestPayload));
+  const url = apiUrl + '?data=' + encodeURIComponent(JSON.stringify(requestPayload));
   console.log('TENNANT API request sent');
   let response = await jsonpRequest(url);
   if (response && response.success === false) {
@@ -307,7 +317,7 @@ async function api(payload) {
       const refreshed = await refreshAccessToken().catch(() => null);
       if (refreshed) {
         requestPayload.authToken = getAuthToken();
-        response = await jsonpRequest(TENANT_API + '?data=' + encodeURIComponent(JSON.stringify(requestPayload)));
+        response = await jsonpRequest(apiUrl + '?data=' + encodeURIComponent(JSON.stringify(requestPayload)));
       } else {
         handleExpiredAuth();
       }
@@ -418,7 +428,7 @@ function applyTenantBranding(profile) {
   tenantState.orgType = String(profile?.orgType || institution?.orgType || '').toLowerCase();
   tenantState.institution = institution;
   tenantState.application = application;
-  TENANT_API = profile?.apiUrl || DEFAULT_TENANT_API;
+  TENANT_API = profile?.apiUrl || EXPECTED_TENANTS[String(profile?.guid || tenantState.guid || '').trim()]?.apiUrl || DEFAULT_TENANT_API;
   window.TENANT_API = TENANT_API;
   window.TENANT = profile || null;
 
