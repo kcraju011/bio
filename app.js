@@ -1057,7 +1057,7 @@ async function registerBiometric(userId) {
       authenticatorAttachment: 'platform',
       userVerification: 'required'
     },
-    attestation: 'direct',
+    attestation: 'none',
     timeout: 60000
   }});
   return {
@@ -1100,6 +1100,7 @@ async function handleRegisterV2() {
 
   setLoading('btn-register',true);
   try{
+    const biometric = await registerBiometric(memberId || email);
     const dId = await getDeviceId();
     const d   = await api({
       action:               'registerUser',
@@ -1111,22 +1112,13 @@ async function handleRegisterV2() {
       studentEmployeeId:    memberId,
       studyLevel:           studyLevel,
       designation:          designation,
+      biometricCode:        biometric.credentialId,
       deviceId:             dId
     });
     if(d.success){
       registeredUid=d.userId;
       registerFlowState.accountCreated = true;
-      const biometric = await registerBiometric(d.userId);
-      const biometricBind = await api({
-        action: 'saveBiometric',
-        userId: d.userId,
-        credentialId: biometric.credentialId
-      });
-      if (biometricBind.success) {
-        toast('âœ“ Account created with biometric access.','success');
-      } else {
-        toast(biometricBind.message || 'Biometric binding failed', 'error');
-      }
+      toast('âœ“ Account created with biometric access.','success');
     }else toast(d.message,'error');
   }catch(e){
     if(e.name==='NotAllowedError') toast('Biometric cancelled','warn');

@@ -9,11 +9,11 @@ const EXPECTED_TENANTS = {
   '2': {
     name: 'SIT',
     apiUrl: 'https://script.google.com/macros/s/AKfycby7Sz7KutpgfdbqCY9AvYfUmBs9QKOWiydT0eKj4TDFhVSC6cOKzk5YU3yHcrGYzdcbNg/exec'
-  },
+  },         
   '3': {
     name: 'SSIT',
     apiUrl: 'https://script.google.com/macros/s/AKfycbxVNcVsed50bZixWuAaC_CFRusRzbIvG5DyPa3ZEf2O0X4IFQoNRDYf-BWutrKYYTa7/exec'
-  }
+  }          
 };
 
 

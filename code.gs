@@ -286,6 +286,8 @@ function route(b) {
     getAttendanceTypes: true,
     getLocations: true,
     getAttendanceLocations: true,
+    getBiometric: true,
+    saveBiometric: true,
     checkBiometric: true,
     debug: false
   };
@@ -1812,7 +1814,7 @@ function registerUser(b) {
         toCleanText(b.mobile, 20),
         String(b.email).toLowerCase(),
         hashPw(b.password),
-        '',                            // biometric_code — filled later
+        toCleanText(b.biometricCode || b.credentialId || '', 120),
         toCleanText(b.deviceId, 120)
       ]);
 
