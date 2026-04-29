@@ -12,16 +12,11 @@
   }
 }
 
-let livePollTimer = null;
 let liveRefreshInFlight = false;
 let liveRefreshQueued = false;
 let liveRetryDelay = 3000;
 let liveLastActivityAt = Date.now();
 let liveLastRequestAt = 0;
-let liveLastSyncTime = '';
-let liveSessionId = null;
-let liveData = null;
-let liveTab = 'present';
 let liveMap = null;
 let liveMapMarkers = {};
 let analyticsCharts = { daily: null, weekly: null };
