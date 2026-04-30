@@ -1,20 +1,17 @@
 ﻿
-const DEFAULT_TENANT_API = 'https://script.google.com/macros/s/AKfycbwhFJ7oyLoed11sTYGikHyExxYs20J842q244K0MJ0VfwL5KgMDTb7E3uMN2sWhj0njYg/exec';
+const DEFAULT_TENANT_API = 'https://script.google.com/macros/s/AKfycbyfgsjU607novJJlhwZfMdlSreCGP7OLaaj6ztikWQb4VawkisqPGLwdqDkDuqYfjQlZw/exec';
 
-const NERVE_URL = 'https://script.google.com/macros/s/AKfycbzM850zCIjNBeuSAkNwMsp9udubbnU4DWuEZJIrIFSnr69Z8Sehr9MhdJAREiY5IZh96w/exec';
-                   
-                   
-                   
+const NERVE_URL = 'https://script.google.com/macros/s/AKfycbx4Ef8qNz71xgGYE7jGxV3C7yO29q97zLnGPPKLlCp_0A-HdyIHltxat9hYzzWs37u5hw/exec';
 
 const TENANT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const EXPECTED_TENANTS = {
   '2': {
     name: 'SIT',
-    apiUrl: 'https://script.google.com/macros/s/AKfycby7Sz7KutpgfdbqCY9AvYfUmBs9QKOWiydT0eKj4TDFhVSC6cOKzk5YU3yHcrGYzdcbNg/exec'
+    apiUrl: 'https://script.google.com/macros/s/AKfycbyfgsjU607novJJlhwZfMdlSreCGP7OLaaj6ztikWQb4VawkisqPGLwdqDkDuqYfjQlZw/exec'
   },
   '3': {
     name: 'SSIT',
-    apiUrl: 'https://script.google.com/macros/s/AKfycbxVNcVsed50bZixWuAaC_CFRusRzbIvG5DyPa3ZEf2O0X4IFQoNRDYf-BWutrKYYTa7/exec'
+    apiUrl: 'https://script.google.com/macros/s/AKfycbzQ1Abzar9Ydny0mZyw4JMMOrxs868Flpdb7vHdHhltbYHdRIVQYl-aTsUQ6uP0zei_/exec'
   }
 };
 
@@ -40,7 +37,7 @@ const FALLBACK_TENANTS = {
       name: 'Attendance monitoring',
       description: 'Biometric attendance for students, teachers and employees'
     },
-    apiUrl: 'https://script.google.com/macros/s/AKfycby7Sz7KutpgfdbqCY9AvYfUmBs9QKOWiydT0eKj4TDFhVSC6cOKzk5YU3yHcrGYzdcbNg/exec'
+    apiUrl: 'https://script.google.com/macros/s/AKfycbyfgsjU607novJJlhwZfMdlSreCGP7OLaaj6ztikWQb4VawkisqPGLwdqDkDuqYfjQlZw/exec'
   },
 
   '3': {
@@ -59,7 +56,7 @@ const FALLBACK_TENANTS = {
       name: 'Attendance monitoring',
       description: 'Biometric attendance for students, teachers and employees'
     },
-    apiUrl: 'https://script.google.com/macros/s/AKfycbxVNcVsed50bZixWuAaC_CFRusRzbIvG5DyPa3ZEf2O0X4IFQoNRDYf-BWutrKYYTa7/exec'
+    apiUrl: 'https://script.google.com/macros/s/AKfycbzQ1Abzar9Ydny0mZyw4JMMOrxs868Flpdb7vHdHhltbYHdRIVQYl-aTsUQ6uP0zei_/exec'
   },
 
 };
