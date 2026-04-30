@@ -511,6 +511,9 @@ async function bootTenant() {
     if (cachedProfile) {
       applyTenantBranding({ ...cachedProfile, guid });
       await loadRegisterLookups();
+      if (typeof renderRegisterRoles === 'function') {
+        renderRegisterRoles(document.getElementById('r-org-type')?.value || 'college');
+      }
       return;
     }
 
@@ -519,6 +522,9 @@ async function bootTenant() {
     applyTenantBranding({ ...tenantProfile, guid });
     cacheTenantProfile(guid, { ...tenantProfile, guid });
     await loadRegisterLookups();
+    if (typeof renderRegisterRoles === 'function') {
+      renderRegisterRoles(document.getElementById('r-org-type')?.value || 'college');
+    }
   } catch (e) {
     console.warn('[tenant] boot fallback', e);
     if (invalidLink) {
@@ -537,6 +543,9 @@ async function bootTenant() {
     applyTenantBranding({ ...fallbackProfile, guid });
     toast('Using fallback tenant configuration', 'warn');
     await loadRegisterLookups();
+    if (typeof renderRegisterRoles === 'function') {
+      renderRegisterRoles(document.getElementById('r-org-type')?.value || 'college');
+    }
   } finally {
     if (!invalidLink) setTenantLoading(false);
   }
