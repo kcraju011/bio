@@ -507,6 +507,13 @@ async function bootTenant() {
       throw new Error('Invalid tenant link');
     }
     try { localStorage.removeItem('tenant'); } catch (e) {}
+    const cachedProfile = readCachedTenant(guid);
+    if (cachedProfile) {
+      applyTenantBranding({ ...cachedProfile, guid });
+      await loadRegisterLookups();
+      return;
+    }
+
     const tenantProfile = await fetchTenantProfile(guid);
     if (!tenantProfile?.apiUrl && !tenantProfile?.institution) throw new Error('Tenant profile is incomplete');
     applyTenantBranding({ ...tenantProfile, guid });

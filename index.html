@@ -1030,8 +1030,46 @@ function renderRegisterRoles(orgType) {
 
 async function loadRegisterLookups() {
   applyTenantToRegisterForm();
-  const deptEl = document.getElementById('r-dept');
-  if (deptEl && deptEl.tagName === 'INPUT' && !deptEl.value) deptEl.placeholder = 'Enter department name';
+  try {
+    const [rolesRes, deptRes, locRes] = await Promise.all([
+      api({ action: 'getRoles' }),
+      api({ action: 'getDepartments' }),
+      api({ action: 'getLocations' })
+    ]);
+
+    const masterData = {
+      roles: rolesRes?.data || [],
+      departments: deptRes?.data || [],
+      locations: locRes?.data || []
+    };
+    window.__tenantMasterData = masterData;
+
+    const deptEl = document.getElementById('r-dept');
+    if (deptEl && deptEl.tagName === 'INPUT' && !deptEl.value) {
+      const deptNames = masterData.departments.map(d => d.name || d.department_id).filter(Boolean);
+      deptEl.placeholder = deptNames.length ? `Enter department name e.g. ${deptNames[0]}` : 'Enter department name';
+    }
+
+    const roleEl = document.getElementById('r-role');
+    if (roleEl && masterData.roles.length) {
+      const orgType = String(document.getElementById('r-org-type')?.value || 'college').toLowerCase();
+      const allowed = REGISTER_ROLE_OPTIONS[orgType] || REGISTER_ROLE_OPTIONS.college;
+      const validRoleIds = new Set(allowed.map(r => String(r.value)));
+      roleEl.innerHTML = '<option value="">Select role…</option>' +
+        masterData.roles
+          .filter(r => validRoleIds.has(String(r.role_id || '')))
+          .map(r => `<option value="${r.role_id}">${r.name || r.role_id}</option>`)
+          .join('');
+      if (!roleEl.innerHTML.includes('option')) {
+        renderRegisterRoles(orgType);
+      }
+    } else {
+      renderRegisterRoles(document.getElementById('r-org-type')?.value || 'college');
+    }
+  } catch (e) {
+    window.__tenantMasterData = { roles: [], departments: [], locations: [] };
+    renderRegisterRoles(document.getElementById('r-org-type')?.value || 'college');
+  }
 }
 
 function applyTenantToRegisterForm() {
