@@ -133,6 +133,14 @@ function getTenantByGuid(guid) {
   var aliasTarget = TENANT_GUID_ALIASES[canonical] || TENANT_GUID_ALIASES[target] || '';
   if (!target) return null;
   var tenants = getTenants();
+
+  if (aliasTarget) {
+    for (var j = 0; j < tenants.length; j++) {
+      var preferred = tenants[j];
+      if (normalizeGuid(preferred.alias) === aliasTarget) return preferred;
+    }
+  }
+
   for (var i = 0; i < tenants.length; i++) {
     var row = tenants[i];
     var rowGuid = normalizeGuid(row.guid);

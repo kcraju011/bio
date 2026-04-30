@@ -1510,5 +1510,23 @@ document.getElementById('pwa-dismiss').addEventListener('click',()=>{
 </script>
 
 <script src="tenant.js"></script>
+<script>
+(function () {
+  function startTenant() {
+    if (typeof startTenantBootstrap === 'function') {
+      startTenantBootstrap();
+      return;
+    }
+    if (typeof bootTenant === 'function') {
+      bootTenant().catch(err => console.error('[tenant] boot failed', err));
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startTenant, { once: true });
+  } else {
+    startTenant();
+  }
+})();
+</script>
 </body>
 </html>

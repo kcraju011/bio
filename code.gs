@@ -112,7 +112,9 @@ function doPost(e) {
 function route(b) {
   switch (b.action) {
     // ── Auth & Registration
+    case 'registerUser':          return registerUser(b);
     case 'register':              return registerUser(b);
+    case 'loginUser':             return signInUser(b);
     case 'signIn':                return signInUser(b);
     case 'saveBiometric':         return saveBiometric(b);
     case 'getBiometric':          return getBiometric(b);
@@ -123,6 +125,7 @@ function route(b) {
     case 'markAttendance':        return markAttendance(b);
     case 'markEntry':             return markEntry(b);
     case 'markExit':              return markExit(b);
+    case 'exitAttendance':        return markExit(b);
     case 'trackStudentLocation':  return trackStudentLocation(b);
     case 'getMyAttendance':       return getMyAttendance(b);
     case 'exportAttendance':      return exportAttendance(b);
@@ -144,6 +147,7 @@ function route(b) {
     case 'getRoles':              return getRoles();
     case 'getAttendanceTypes':    return getLookup(SH.ATT_TYPE);
     case 'getLocations':          return getLocations();
+    case 'getAttendanceLocations': return getLocations();
     case 'getUserLocMap':         return getUserLocMap(b);
 
     // ── Admin write actions (called from Admin tab UI)
