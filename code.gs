@@ -120,6 +120,7 @@ function route(b) {
     case 'checkDevice':           return checkDevice(b);
 
     // ── Attendance
+    case 'markAttendance':        return markAttendance(b);
     case 'markEntry':             return markEntry(b);
     case 'markExit':              return markExit(b);
     case 'trackStudentLocation':  return trackStudentLocation(b);
@@ -135,13 +136,14 @@ function route(b) {
 
     // ── Dashboard
     case 'getDashboard':          return getDashboard(b);
+    case 'getUsers':              return getUsers(b);
     case 'getStudents':           return getStudents(b);
 
     // ── Lookup tables (read)
-    case 'getDepartments':        return getLookup(SH.DEPARTMENTS);
-    case 'getRoles':              return getLookup(SH.ROLES);
+    case 'getDepartments':        return getDepartments();
+    case 'getRoles':              return getRoles();
     case 'getAttendanceTypes':    return getLookup(SH.ATT_TYPE);
-    case 'getLocations':          return getLookup(SH.ATT_LOCATIONS);
+    case 'getLocations':          return getLocations();
     case 'getUserLocMap':         return getUserLocMap(b);
 
     // ── Admin write actions (called from Admin tab UI)
@@ -362,6 +364,32 @@ function normalizeRoleValue(roleValue) {
   return roles.byId[raw] || raw;
 }
 
+function resolveRoleIdInput(roleValue) {
+  var raw = String(roleValue || '').trim();
+  if (!raw) return '';
+  var roles = getRoleDirectory();
+  if (roles.byId[raw]) return raw;
+  var roleId = findRoleIdByName(raw);
+  if (roleId) return roleId;
+  return raw;
+}
+
+function normalizeAttendanceType(typeValue) {
+  var raw = String(typeValue || '').trim().toLowerCase();
+  if (!raw) return '';
+  if (raw === 'entry' || raw === 'checkin' || raw === 'check-in') return 'check-in';
+  if (raw === 'exit' || raw === 'checkout' || raw === 'check-out') return 'check-out';
+  return raw;
+}
+
+function isCheckInAttendance(typeValue) {
+  return normalizeAttendanceType(typeValue) === 'check-in';
+}
+
+function isCheckOutAttendance(typeValue) {
+  return normalizeAttendanceType(typeValue) === 'check-out';
+}
+
 function findRoleIdByName(roleName) {
   var raw = String(roleName || '').trim().toLowerCase();
   if (!raw) return '';
@@ -455,7 +483,7 @@ function resolveUserTrackingLocation(userId) {
 
 function registerUser(b) {
   try {
-    if (!b.name || !b.email || !b.password || !b.roleId)
+    if (!b.name || !b.email || !b.password)
       return { success: false, message: 'name, email, password and roleId are required' };
 
     // Fast duplicate check via UserIndex
@@ -466,14 +494,17 @@ function registerUser(b) {
     lock.waitLock(6000);
     try {
       var userId = genId('u');
-      var roleId = String(b.roleId).trim();
+      var instituteId = String(b.instituteId || b.organization || b.organizationName || 'Siddaganga Institute of Technology').trim();
+      var departmentId = String(b.departmentId || b.department || '').trim();
+      var roleId = resolveRoleIdInput(b.roleId || b.role || b.roleKey);
+      if (!roleId) return { success: false, message: 'roleId is required' };
       var defaultLoc = getCached(SH.ATT_LOCATIONS, TTL_LOOKUP)[0];
 
       // ── Write to Users table (exact columns) ──
       getSheet(SH.USERS).appendRow([
         userId,                      // user_id
-        b.instituteId || 'Siddaganga Institute of Technology', // institute_id
-        b.departmentId || '',        // department_id
+        instituteId,                 // institute_id
+        departmentId,                // department_id
         roleId,                      // role_id
         b.name,                      // full_name
         b.dob     || '',             // dob
@@ -489,8 +520,8 @@ function registerUser(b) {
 
       // ── Auto-create UserAttendanceLocationMap entry ──
       // Maps the new user to the default/selected attendance location
-      var locId = b.attendanceLocationId || (defaultLoc ? defaultLoc.attendance_location_id : 'LOC001');
-      var allowedDist = b.allowedDistance || DEFAULT_RADIUS;
+      var locId = String(b.attendanceLocationId || b.attendance_location_id || (defaultLoc ? defaultLoc.attendance_location_id : 'LOC001')).trim();
+      var allowedDist = parseInt(b.allowedDistance || b.allowed_distance || DEFAULT_RADIUS, 10) || DEFAULT_RADIUS;
       getSheet(SH.USER_LOC_MAP).appendRow([
         genId('ulm'),  // user_attendance_location_map_id
         userId,        // user_id
@@ -550,8 +581,9 @@ function markEntry(b) {
         userLocMap = userLocRows[x]; break;
       }
     }
-    var allowedDist = userLocMap ? parseInt(userLocMap.allowed_distance || DEFAULT_RADIUS) : DEFAULT_RADIUS;
-    var locId       = userLocMap ? userLocMap.attendance_location_id : 'LOC001';
+    var requestedLocId = String(b.attendanceLocationId || b.attendance_location_id || '').trim();
+    var allowedDist = parseInt(b.allowedDistance || b.allowed_distance || (userLocMap ? userLocMap.allowed_distance : DEFAULT_RADIUS), 10) || DEFAULT_RADIUS;
+    var locId       = requestedLocId || (userLocMap ? userLocMap.attendance_location_id : 'LOC001');
 
     // ── B. Resolve anchor coordinates for this location ──
     var anchorLat = DEFAULT_LAT, anchorLng = DEFAULT_LNG;
@@ -576,7 +608,7 @@ function markEntry(b) {
           code:     'TOO_FAR',
           distance: dist,
           allowed:  allowedDist,
-          message:  'You are ' + dist + 'm away. Must be within ' + allowedDist + 'm of campus.'
+          message:  'You are outside allowed location. Must be within ' + allowedDist + 'm of campus.'
         };
       }
     }
@@ -593,7 +625,7 @@ function markEntry(b) {
       for (var j = 0; j < uids.length; j++) {
         if (String(uids[j][0]).trim() === String(b.userId).trim() &&
             normDate(dates[j][0], t) === dateStr &&
-            String(types[j][0]).trim() === 'entry') {
+            isCheckInAttendance(types[j][0])) {
           return { success: false, message: 'Attendance already marked for today.' };
         }
       }
@@ -611,7 +643,7 @@ function markEntry(b) {
         attId,                        // attendance_id
         b.userId,                     // user_id
         user.full_name,               // full_name
-        'entry',                      // type_attendance
+        'check-in',                   // type_attendance
         timeStr,                      // entry_time  (attendance_time col 1)
         '',                           // exit_time   (attendance_time col 2)
         dateStr,                      // attendance_date
@@ -694,7 +726,7 @@ function markExit(b) {
       var row = data[i];
       if (String(row[1]).trim() !== String(b.userId).trim()) continue; // col 2 = user_id
       if (normDate(row[6], t) !== dateStr) continue;                   // col 7 = attendance_date
-      if (String(row[3]).trim() !== 'entry') continue;                 // col 4 = type = 'entry'
+      if (!isCheckInAttendance(row[3])) continue;                      // col 4 = type = check-in
       if (String(row[5]).trim()) continue;                             // col 6 = exit_time already filled
 
       // Found today's entry row — compute duration
@@ -709,8 +741,9 @@ function markExit(b) {
 
       var xlat = b.latitude  ? parseFloat(b.latitude)  : '';
       var xlng = b.longitude ? parseFloat(b.longitude) : '';
+      var track = resolveUserTrackingLocation(b.userId);
       var xdist = (xlat !== '' && xlng !== '')
-        ? haversine(xlat, xlng, DEFAULT_LAT, DEFAULT_LNG) : '';
+        ? haversine(xlat, xlng, track.anchorLat, track.anchorLng) : '';
 
       var lock = LockService.getScriptLock();
       lock.waitLock(6000);
@@ -719,7 +752,7 @@ function markExit(b) {
 
         // Batch write exit columns — one setValues call
         // Col 4=type, 6=exit_time, 9=lat, 10=lng, 11=loc_id, 12=address, 13=distance
-        sheet.getRange(sheetRow, 4, 1, 1).setValue('exit');     // type_attendance → 'exit'
+        sheet.getRange(sheetRow, 4, 1, 1).setValue('check-out');
         sheet.getRange(sheetRow, 6, 1, 1).setValue(timeStr);    // exit_time (col 6 = attendance_time #2)
 
         if (xlat !== '') {
@@ -815,8 +848,8 @@ function getMyAttendance(b) {
     data.forEach(function(row) {
       if (String(row[1]).trim() !== String(b.userId).trim()) return;
       var date = normDate(row[6], t);
-      if (String(row[3]).trim() === 'entry') entryMap[date] = row;
-      if (String(row[3]).trim() === 'exit')  exitMap[date]  = row;
+      if (isCheckInAttendance(row[3])) entryMap[date] = row;
+      if (isCheckOutAttendance(row[3]))  exitMap[date]  = row;
     });
 
     var records = Object.keys(entryMap).map(function(date) {
@@ -973,7 +1006,7 @@ function getSessions(b) {
       var dates = attSheet.getRange(2, 7, attLast - 1, 1).getValues();
       var types = attSheet.getRange(2, 4, attLast - 1, 1).getValues();
       uids.forEach(function(u, i) {
-        if (String(types[i][0]).trim() !== 'entry') return;
+        if (!isCheckInAttendance(types[i][0])) return;
         var key = normDate(dates[i][0], t);
         countMap[key] = (countMap[key] || 0) + 1;
       });
@@ -1051,7 +1084,7 @@ function getDashboard(b) {
     if (attLast >= 2) {
       var rows = attSheet.getRange(2, 1, attLast - 1, 13).getValues();
       rows.forEach(function(row) {
-        if (String(row[3]).trim() !== 'entry') return;
+        if (!isCheckInAttendance(row[3])) return;
         if (normDate(row[6], t) !== today) return;
         presentMap[String(row[1]).trim()] = {
           entryTime:  row[4]  || '',
@@ -1098,12 +1131,14 @@ function getDashboard(b) {
 //  8. STUDENTS ROSTER
 // ============================================================
 
-function getStudents(b) {
+function getUsers(b) {
   try {
-    var studentRoleId = findRoleIdByName('student');
+    var roleId = String(b && (b.roleId || b.role || b.roleKey) || '').trim();
+    var roleFilter = normalizeRoleValue(roleId || '');
     var rows = getCached(SH.USERS, TTL_LOOKUP)
       .filter(function(r) {
-        return normalizeRoleValue(r.role_id) === 'student' || (studentRoleId && String(r.role_id) === studentRoleId);
+        if (!roleFilter) return true;
+        return normalizeRoleValue(r.role_id) === roleFilter || String(r.role_id) === roleId;
       })
       .map(function(r) {
         return {
@@ -1112,12 +1147,17 @@ function getStudents(b) {
           email:      r.email,
           department: r.department_id,
           mobile:     r.mobile,
+          roleId:     r.role_id,
           hasBio:     !!r.biometric_code,
           hasDevice:  !!r.device_identification
         };
       });
-    return { success: true, students: rows, total: rows.length };
-  } catch(err) { return { success: false, message: 'getStudents: ' + err }; }
+    return { success: true, users: rows, students: rows, total: rows.length };
+  } catch(err) { return { success: false, message: 'getUsers: ' + err }; }
+}
+
+function getStudents(b) {
+  return getUsers({ roleId: 'student' });
 }
 
 // ============================================================
@@ -1281,6 +1321,16 @@ function addUserLocMap(b) {
   } catch(err) { return { success: false, message: 'addUserLocMap: ' + err }; }
 }
 
+function getDepartments() { return getLookup(SH.DEPARTMENTS); }
+function getRoles() { return getLookup(SH.ROLES); }
+function getLocations() { return getLookup(SH.ATT_LOCATIONS); }
+
+function markAttendance(b) {
+  var mode = normalizeAttendanceType(b.type_attendance || b.attendanceType || b.type || 'check-in');
+  if (mode === 'check-out') return markExit(b);
+  return markEntry(b);
+}
+
 // ============================================================
 //  12. SETUP
 // ============================================================
@@ -1294,47 +1344,35 @@ function setupSheets() {
 
     ensureExactRows('Roles', [
       [1, 'admin'],
-      [2, 'teacher']
+      [2, 'teacher'],
+      [3, 'student'],
+      [4, 'employee'],
+      [5, 'manager']
     ]);
 
     ensureExactRows('Departments', [
-      [1, 'cse', 'dr sunitha', 'nrsunitha@sit.acin']
+      ['CSE', 'Computer Science & Engineering', '', ''],
+      ['ISE', 'Information Science & Engineering', '', ''],
+      ['ECE', 'Electronics & Communication Engineering', '', ''],
+      ['EEE', 'Electrical & Electronics Engineering', '', ''],
+      ['MECH', 'Mechanical Engineering', '', ''],
+      ['CIVIL', 'Civil Engineering', '', ''],
+      ['CHEM', 'Chemical Engineering', '', ''],
+      ['BT', 'Biotechnology', '', ''],
+      ['MBA', 'MBA', '', ''],
+      ['MCA', 'MCA', '', '']
     ]);
 
     ensureExactRows('AttendanceType', [
-      [1, 'entry'],
-      [2, 'exit']
+      [1, 'check-in'],
+      [2, 'check-out']
     ]);
-
-    // ── Seed Roles ──
-    var rolesSheet = getSheet(SH.ROLES);
-    if (rolesSheet.getLastRow() < 2) {
-      rolesSheet.appendRow(['student', 'Student']);
-      rolesSheet.appendRow(['teacher', 'Teacher']);
-      rolesSheet.appendRow(['admin',   'Admin']);
-    }
-
-    // ── Seed Departments (SIT) ──
-    var deptSheet = getSheet(SH.DEPARTMENTS);
-    if (deptSheet.getLastRow() < 2) {
-      [['CSE','Computer Science & Engineering','',''],
-       ['ISE','Information Science & Engineering','',''],
-       ['ECE','Electronics & Communication Engineering','',''],
-       ['EEE','Electrical & Electronics Engineering','',''],
-       ['MECH','Mechanical Engineering','',''],
-       ['CIVIL','Civil Engineering','',''],
-       ['CHEM','Chemical Engineering','',''],
-       ['BT','Biotechnology','',''],
-       ['MBA','MBA','',''],
-       ['MCA','MCA','','']
-      ].forEach(function(d) { deptSheet.appendRow(d); });
-    }
 
     // ── Seed AttendanceType ──
     var typeSheet = getSheet(SH.ATT_TYPE);
     if (typeSheet.getLastRow() < 2) {
-      typeSheet.appendRow(['ATT_TYPE_001', 'entry']);
-      typeSheet.appendRow(['ATT_TYPE_002', 'exit']);
+      typeSheet.appendRow(['ATT_TYPE_001', 'check-in']);
+      typeSheet.appendRow(['ATT_TYPE_002', 'check-out']);
     }
 
     // ── Seed AttendanceLocations ──

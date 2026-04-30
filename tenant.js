@@ -5,11 +5,11 @@ const NERVE_URL = 'https://script.google.com/macros/s/AKfycbx4Ef8qNz71xgGYE7jGxV
 
 const TENANT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const EXPECTED_TENANTS = {
-  '2': {
+  '1': {
     name: 'SIT',
     apiUrl: 'https://script.google.com/macros/s/AKfycbyfgsjU607novJJlhwZfMdlSreCGP7OLaaj6ztikWQb4VawkisqPGLwdqDkDuqYfjQlZw/exec'
-  },
-  '3': {
+  },         
+  '2': {
     name: 'SSIT',
     apiUrl: 'https://script.google.com/macros/s/AKfycbzQ1Abzar9Ydny0mZyw4JMMOrxs868Flpdb7vHdHhltbYHdRIVQYl-aTsUQ6uP0zei_/exec'
   }
@@ -17,13 +17,13 @@ const EXPECTED_TENANTS = {
 
 
 // â”€â”€ FALLBACK TENANTS (OFFLINE MODE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const VALID_GUIDS = new Set(['2', '3']);
+const FALLBACK_GUIDS = new Set(['1', '2']);
 
 const FALLBACK_TENANTS = {
 
-  '2': {
+  '1': {
     success: true,
-    guid: '2',
+    guid: '1',
     orgType: 'college',
     institution: {
       name: 'SIT',
@@ -40,9 +40,9 @@ const FALLBACK_TENANTS = {
     apiUrl: 'https://script.google.com/macros/s/AKfycbyfgsjU607novJJlhwZfMdlSreCGP7OLaaj6ztikWQb4VawkisqPGLwdqDkDuqYfjQlZw/exec'
   },
 
-  '3': {
+  '2': {
     success: true,
-    guid: '3',
+    guid: '2',
     orgType: 'college',
     institution: {
       name: 'SSIT',
@@ -379,7 +379,7 @@ function fmtTime(s) { const m = Math.floor(Math.max(0,s)/60), x = Math.max(0,s)%
 
 function getFallbackTenantProfile(guid) {
   const normalized = String(guid || '').trim();
-  return VALID_GUIDS.has(normalized) ? FALLBACK_TENANTS[normalized] || null : null;
+  return FALLBACK_GUIDS.has(normalized) ? FALLBACK_TENANTS[normalized] || null : null;
 }
 
 function normalizeTenantName(value) {
@@ -388,7 +388,8 @@ function normalizeTenantName(value) {
 
 function isExpectedTenantProfile(guid, profile) {
   const expected = EXPECTED_TENANTS[String(guid || '').trim()];
-  if (!expected || !profile) return false;
+  if (!profile) return false;
+  if (!expected) return true;
   const profileName = normalizeTenantName(profile?.institution?.name || profile?.name || '');
   const expectedName = normalizeTenantName(expected.name);
   const profileApi = String(profile?.apiUrl || '').trim();
@@ -436,7 +437,7 @@ function cacheTenantProfile(guid, data) {
 
 async function fetchTenantProfile(guid) {
   const normalizedGuid = String(guid || '').trim();
-  if (!VALID_GUIDS.has(normalizedGuid)) return null;
+  if (!normalizedGuid) return null;
   if (!NERVE_URL || NERVE_URL.includes('/dev')) {
     return getDefaultTenantProfile(guid);
   }
@@ -514,7 +515,7 @@ async function bootTenant() {
   let invalidLink = false;
   try {
     console.info('[tenant] boot start', { guid });
-    if (!VALID_GUIDS.has(String(guid))) {
+    if (!guid) {
       invalidLink = true;
       throw new Error('Invalid tenant link');
     }
@@ -530,7 +531,7 @@ async function bootTenant() {
       const box = document.getElementById('tenant-loader');
       const label = document.getElementById('tenant-loader-text');
       if (label) label.textContent = 'Invalid tenant link';
-      if (box) box.innerHTML = '<strong>Invalid link</strong><span>Please use a valid tenant URL with q=2 or q=3.</span>';
+      if (box) box.innerHTML = '<strong>Invalid link</strong><span>Please use a valid tenant URL with a tenant GUID.</span>';
       return;
     }
     const cachedProfile = readCachedTenant(guid);

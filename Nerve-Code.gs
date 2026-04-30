@@ -21,7 +21,7 @@ var TENANT_HEADERS = [
 
 var DEFAULT_TENANTS = [
   {
-    guid: '2',
+    guid: '1',
     alias: 'SIT',
     institution_name: 'SIT',
     org_type: 'college',
@@ -36,7 +36,7 @@ var DEFAULT_TENANTS = [
     status: 'active'
   },
   {
-    guid: '3',
+    guid: '2',
     alias: 'SSIT',
     institution_name: 'SSIT',
     org_type: 'college',
@@ -51,6 +51,11 @@ var DEFAULT_TENANTS = [
     status: 'active'
   }
 ];
+
+var TENANT_GUID_ALIASES = {
+  '1': 'sit',
+  '2': 'ssit'
+};
 
 function jsonOut(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
@@ -115,24 +120,33 @@ function normalizeGuid(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+function canonicalTenantGuid(target) {
+  var raw = normalizeGuid(target);
+  if (raw === '1' || raw === 'sit') return '1';
+  if (raw === '2' || raw === 'ssit') return '2';
+  return raw;
+}
+
 function getTenantByGuid(guid) {
   var target = normalizeGuid(guid);
+  var canonical = canonicalTenantGuid(target);
+  var aliasTarget = TENANT_GUID_ALIASES[canonical] || TENANT_GUID_ALIASES[target] || '';
   if (!target) return null;
   var tenants = getTenants();
   for (var i = 0; i < tenants.length; i++) {
     var row = tenants[i];
     var rowGuid = normalizeGuid(row.guid);
     var alias = normalizeGuid(row.alias);
-    if (rowGuid === target || alias === target) return row;
+    if (rowGuid === target || alias === target || rowGuid === canonical || alias === canonical || alias === aliasTarget) return row;
   }
   return null;
 }
 
-function formatTenantResponse(row) {
+function formatTenantResponse(row, requestedGuid) {
   if (!row) return { success: false, message: 'Tenant not found' };
   return {
     success: true,
-    guid: String(row.guid || ''),
+    guid: String(requestedGuid || row.guid || ''),
     institution: {
       name: String(row.institution_name || ''),
       city: String(row.city || ''),
@@ -153,7 +167,7 @@ function formatTenantResponse(row) {
 }
 
 function getApplicationFromGuid(guid) {
-  return formatTenantResponse(getTenantByGuid(guid));
+  return formatTenantResponse(getTenantByGuid(guid), guid);
 }
 
 function doGet(e) {
