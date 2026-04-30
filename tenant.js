@@ -62,19 +62,6 @@ const FALLBACK_TENANTS = {
 };
 
 // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-let markedUserId  = null;
-let registeredUid = null;
-let teacherData   = null;
-let sessionTimer  = null;
-let liveSessionId = null;
-let liveData      = null;
-let livePollTimer = null;
-let liveLastSyncTime = '';
-let liveTab       = 'present';
-let allStudents   = [];
-let historyData   = [];
-let deviceId      = null;
-let signedInUser  = null;
 let TENANT_API    = DEFAULT_TENANT_API;
 let tenantState   = {
   guid: '',

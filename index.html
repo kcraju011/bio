@@ -270,7 +270,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="main-tabs">
     <button class="mtab active" id="mtab-signin"   onclick="switchMain('signin')">Sign In</button>
     <button class="mtab" id="mtab-register" onclick="switchMain('register')">Register</button>
-    <button class="mtab" id="mtab-teacher"  onclick="switchMain('teacher')">Teacher</button>
     <button class="mtab" id="mtab-admin"    onclick="switchMain('admin')">Admin</button>
   </div>
 
@@ -351,16 +350,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           </select>
         </div>
         <div class="field">
-          <label>Attendance Location <span class="req">*</span></label>
-          <select id="r-location">
-            <option value="">Loading locations…</option>
-          </select>
-        </div>
-        <div class="field">
           <label>Department <span class="req">*</span></label>
-          <select id="r-dept">
-            <option value="">Loading departments…</option>
-          </select>
+          <input type="text" id="r-dept" placeholder="Enter department name"/>
         </div>
       </div>
 
@@ -1034,25 +1025,7 @@ function renderRegisterRoles(orgType) {
 async function loadRegisterLookups() {
   applyTenantToRegisterForm();
   const deptEl = document.getElementById('r-dept');
-  const locEl = document.getElementById('r-location');
-  try {
-    const [deptRes, locRes] = await Promise.all([
-      api({ action: 'getDepartments' }),
-      api({ action: 'getLocations' })
-    ]);
-
-    if (deptEl) {
-      const rows = deptRes?.data || [];
-      deptEl.innerHTML = '<option value="">Select department…</option>' +
-        rows.map(r => `<option value="${r.department_id}">${r.name || r.department_id}</option>`).join('');
-    }
-
-    if (locEl) {
-      const rows = locRes?.data || [];
-      locEl.innerHTML = '<option value="">Select location…</option>' +
-        rows.map(r => `<option value="${r.attendance_location_id}">${r.name || r.attendance_location_id}</option>`).join('');
-    }
-  } catch (e) {}
+  if (deptEl && deptEl.tagName === 'INPUT' && !deptEl.value) deptEl.placeholder = 'Enter department name';
 }
 
 function applyTenantToRegisterForm() {
@@ -1084,9 +1057,7 @@ async function handleRegister() {
   const role   = document.getElementById('r-role').value;
   const inst   = document.getElementById('r-institute').value.trim();
   const orgType = document.getElementById('r-org-type').value;
-  const locationId = document.getElementById('r-location').value;
-
-  if(!name||!email||!pass||!dept||!role||!locationId){toast('Name, email, password, department, role and location are required','error');return;}
+  if(!name||!email||!pass||!dept||!role){toast('Name, email, password, department and role are required','error');return;}
   if(pass.length<8){toast('Password must be at least 8 characters','error');return;}
 
   setLoading('btn-register',true);
@@ -1121,8 +1092,6 @@ async function handleRegister() {
       instituteId:          inst||'Siddaganga Institute of Technology',
       organization:         inst||'Siddaganga Institute of Technology',
       orgType,
-      attendanceLocationId: locationId,
-      allowedDistance:      200,
       biometricCode:        credId,
       deviceId:             dId
     });
