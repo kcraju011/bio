@@ -649,15 +649,19 @@ function fmtTime(s) { const m = Math.floor(Math.max(0,s)/60), x = Math.max(0,s)%
 // â”€â”€ Tab navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function switchMain(tab) {
   ['signin','register','teacher','admin'].forEach(t => {
-    document.getElementById('pane-'+t).classList.toggle('active', t===tab);
-    document.getElementById('mtab-'+t).classList.toggle('active', t===tab);
+    const pane = document.getElementById('pane-'+t);
+    const btn = document.getElementById('mtab-'+t);
+    if (pane) pane.classList.toggle('active', t===tab);
+    if (btn) btn.classList.toggle('active', t===tab);
   });
 }
 
 function switchSub(tab) {
   ['session','live','history','students'].forEach(t => {
-    document.getElementById('sp-'+t).classList.toggle('active', t===tab);
-    document.getElementById('stab-'+t).classList.toggle('active', t===tab);
+    const pane = document.getElementById('sp-'+t);
+    const btn = document.getElementById('stab-'+t);
+    if (pane) pane.classList.toggle('active', t===tab);
+    if (btn) btn.classList.toggle('active', t===tab);
   });
   if (tab==='live') {
     refreshLive();
@@ -684,8 +688,10 @@ function stopLiveRefresh() {
 
 function switchAdmin(tab) {
   ['dept','loc','ulmap','atttype'].forEach(t => {
-    document.getElementById('ap-'+t).classList.toggle('active', t===tab);
-    document.getElementById('atab-'+t).classList.toggle('active', t===tab);
+    const pane = document.getElementById('ap-'+t);
+    const btn = document.getElementById('atab-'+t);
+    if (pane) pane.classList.toggle('active', t===tab);
+    if (btn) btn.classList.toggle('active', t===tab);
   });
   if (tab==='dept')   loadDepts();
   if (tab==='loc')    loadLocs();
