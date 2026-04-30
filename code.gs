@@ -92,16 +92,30 @@ function jsonOut(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function jsonpOut(obj, callback) {
+  return ContentService.createTextOutput(String(callback || '') + '(' + JSON.stringify(obj) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
+function respondOut(obj, callback) {
+  return callback ? jsonpOut(obj, callback) : jsonOut(obj);
+}
+
 function doGet(e) {
   try {
     var p = e && e.parameter ? e.parameter : {};
-    if (!p.data) return jsonOut({ status: 'BioAttend v6 running', time: new Date().toString() });
-    return jsonOut(route(JSON.parse(decodeURIComponent(p.data))));
+    var callback = p.callback || '';
+    if (!p.data) return respondOut({ status: 'BioAttend v6 running', time: new Date().toString() }, callback);
+    return respondOut(route(JSON.parse(decodeURIComponent(p.data))), callback);
   } catch(err) { return jsonOut({ success: false, message: 'doGet: ' + err }); }
 }
 
 function doPost(e) {
-  try { return jsonOut(route(JSON.parse(e.postData.contents))); }
+  try {
+    var body = JSON.parse(e.postData.contents);
+    var callback = (e.parameter && e.parameter.callback) || body.callback || '';
+    return respondOut(route(body), callback);
+  }
   catch(err) { return jsonOut({ success: false, message: 'doPost: ' + err }); }
 }
 
