@@ -111,6 +111,12 @@ async function jsonpRequestWithFallback(urls, timeoutMs = 45000) {
     } catch (err) {
       lastError = err;
       console.warn('[tenant] request failed, trying next url:', url, err);
+      try {
+        return await iframeRequest(url, timeoutMs);
+      } catch (iframeErr) {
+        lastError = iframeErr;
+        console.warn('[tenant] iframe fallback failed, trying next url:', url, iframeErr);
+      }
     }
   }
   throw lastError || new Error('Failed to load tenant response');
@@ -165,6 +171,42 @@ function jsonpRequest(url, timeoutMs = 45000) {
 
     timer = setTimeout(() => {
       cleanup({ preserveCallback: true });
+      reject(new Error('Tenant request timed out'));
+    }, timeoutMs);
+  });
+}
+
+function iframeRequest(url, timeoutMs = 45000) {
+  return new Promise((resolve, reject) => {
+    const cb = '__ba_iframe_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const frame = document.createElement('iframe');
+    frame.style.display = 'none';
+    let timer = null;
+
+    function cleanup() {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('message', onMessage);
+      if (frame.parentNode) frame.parentNode.removeChild(frame);
+    }
+
+    function onMessage(event) {
+      const data = event && event.data;
+      if (!data || data.__ba_iframe_cb !== cb) return;
+      cleanup();
+      resolve(data.__ba_iframe_data);
+    }
+
+    window.addEventListener('message', onMessage);
+    const sep = url.includes('?') ? '&' : '?';
+    frame.src = `${url}${sep}transport=iframe&callback=${encodeURIComponent(cb)}`;
+    frame.onerror = () => {
+      cleanup();
+      reject(new Error('Failed to load tenant response'));
+    };
+    document.body.appendChild(frame);
+
+    timer = setTimeout(() => {
+      cleanup();
       reject(new Error('Tenant request timed out'));
     }, timeoutMs);
   });

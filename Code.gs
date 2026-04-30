@@ -97,6 +97,15 @@ function jsonpOut(obj, callback) {
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
+function iframeOut(obj, callback) {
+  var payload = JSON.stringify(obj).replace(/</g, '\\u003c');
+  var cb = String(callback || '').replace(/'/g, '\\u0027');
+  var html = '<!doctype html><html><body><script>' +
+    'parent.postMessage({__ba_iframe_cb:\'' + cb + '\',__ba_iframe_data:' + payload + '},\"*\");' +
+    '</script></body></html>';
+  return HtmlService.createHtmlOutput(html);
+}
+
 function respondOut(obj, callback) {
   return callback ? jsonpOut(obj, callback) : jsonOut(obj);
 }
@@ -105,8 +114,12 @@ function doGet(e) {
   try {
     var p = e && e.parameter ? e.parameter : {};
     var callback = p.callback || '';
-    if (!p.data) return respondOut({ status: 'BioAttend v6 running', time: new Date().toString() }, callback);
-    return respondOut(route(JSON.parse(decodeURIComponent(p.data))), callback);
+    var transport = String(p.transport || '').toLowerCase();
+    var result = !p.data
+      ? { status: 'BioAttend v6 running', time: new Date().toString() }
+      : route(JSON.parse(decodeURIComponent(p.data)));
+    if (transport === 'iframe') return iframeOut(result, callback);
+    return respondOut(result, callback);
   } catch(err) { return jsonOut({ success: false, message: 'doGet: ' + err }); }
 }
 
@@ -114,7 +127,10 @@ function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
     var callback = (e.parameter && e.parameter.callback) || body.callback || '';
-    return respondOut(route(body), callback);
+    var transport = String((e.parameter && e.parameter.transport) || body.transport || '').toLowerCase();
+    var result = route(body);
+    if (transport === 'iframe') return iframeOut(result, callback);
+    return respondOut(result, callback);
   }
   catch(err) { return jsonOut({ success: false, message: 'doPost: ' + err }); }
 }
