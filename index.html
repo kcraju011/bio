@@ -1127,9 +1127,12 @@ async function handleRegister() {
       window.__pendingBioRegistration = { userId: d.userId, email, name };
       toast('✓ Account created successfully. Now register biometric.','success');
       const bioBtn = document.getElementById('btn-bio-reg');
-      if (bioBtn) bioBtn.disabled = false;
+      if (bioBtn) {
+        bioBtn.disabled = false;
+        bioBtn.innerHTML = '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg> Step 2: Register Biometric';
+      }
       const hint = document.getElementById('bio-hint');
-      if (hint) hint.textContent='Account saved. Tap biometric registration next.';
+      if (hint) hint.textContent='Account saved. Tap "Step 2: Register Biometric" next.';
     }else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
   setLoading('btn-register',false);
@@ -1171,7 +1174,10 @@ async function handleBiometricRegister() {
       const hint = document.getElementById('bio-hint');
       if (hint) hint.textContent='✓ Biometric saved — ready to use';
       const bioBtn = document.getElementById('btn-bio-reg');
-      if (bioBtn) bioBtn.disabled = true;
+      if (bioBtn) {
+        bioBtn.disabled = true;
+        bioBtn.innerHTML = '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg> Register Fingerprint / Face ID';
+      }
       window.__pendingBioRegistration = null;
     } else {
       toast(d.message || 'Unable to save biometric','error');
