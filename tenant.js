@@ -1,23 +1,23 @@
 ﻿
 const DEFAULT_TENANT_API = 'https://script.google.com/macros/s/AKfycbzR-z38NrPZZm--4OeStiRvAgMb6SpwCjtb_GW0Rl9-/dev';
 
-const NERVE_URL = 'https://script.google.com/macros/s/AKfycbwhFJ7oyLoed11sTYGikHyExxYs20J842q244K0MJ0VfwL5KgMDTb7E3uMN2sWhj0njYg/exec';
+const NERVE_URL = 'https://script.google.com/macros/s/AKfycbx4Ef8qNz71xgGYE7jGxV3C7yO29q97zLnGPPKLlCp_0A-HdyIHltxat9hYzzWs37u5hw/exec';
                    
 
 const TENANT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const EXPECTED_TENANTS = {
   '2': {
     name: 'SIT',
-    apiUrl: 'https://script.google.com/macros/s/AKfycby7Sz7KutpgfdbqCY9AvYfUmBs9QKOWiydT0eKj4TDFhVSC6cOKzk5YU3yHcrGYzdcbNg/exec'
+    apiUrl: 'https://script.google.com/macros/s/AKfycbyfgsjU607novJJlhwZfMdlSreCGP7OLaaj6ztikWQb4VawkisqPGLwdqDkDuqYfjQlZw/exec'
   },         
   '3': {
     name: 'SSIT',
-    apiUrl: 'https://script.google.com/macros/s/AKfycbxVNcVsed50bZixWuAaC_CFRusRzbIvG5DyPa3ZEf2O0X4IFQoNRDYf-BWutrKYYTa7/exec'
+    apiUrl: 'https://script.google.com/macros/s/AKfycbzQ1Abzar9Ydny0mZyw4JMMOrxs868Flpdb7vHdHhltbYHdRIVQYl-aTsUQ6uP0zei_/exec'
   }          
 };
 
 
-// â”€â”€ FALLBACK TENANTS (OFFLINE MODE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// FALLBACK TENANTS (OFFLINE MODE)
 const VALID_GUIDS = new Set(['2', '3']);
 
 const FALLBACK_TENANTS = {
@@ -38,7 +38,7 @@ const FALLBACK_TENANTS = {
       name: 'Attendance monitoring',
       description: 'Biometric attendance for students, teachers and employees'
     },
-    apiUrl: 'https://script.google.com/macros/s/AKfycby7Sz7KutpgfdbqCY9AvYfUmBs9QKOWiydT0eKj4TDFhVSC6cOKzk5YU3yHcrGYzdcbNg/exec'
+    apiUrl: 'https://script.google.com/macros/s/AKfycbyfgsjU607novJJlhwZfMdlSreCGP7OLaaj6ztikWQb4VawkisqPGLwdqDkDuqYfjQlZw/exec'
   },
 
   '3': {
@@ -57,7 +57,7 @@ const FALLBACK_TENANTS = {
       name: 'Attendance monitoring',
       description: 'Biometric attendance for students, teachers and employees'
     },
-    apiUrl: 'https://script.google.com/macros/s/AKfycbxVNcVsed50bZixWuAaC_CFRusRzbIvG5DyPa3ZEf2O0X4IFQoNRDYf-BWutrKYYTa7/exec'
+    apiUrl: 'https://script.google.com/macros/s/AKfycbzQ1Abzar9Ydny0mZyw4JMMOrxs868Flpdb7vHdHhltbYHdRIVQYl-aTsUQ6uP0zei_/exec'
   },
 
 };
@@ -335,7 +335,7 @@ async function api(payload) {
   return response;
 }
 
-// â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Toast
 function toast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'show ' + type;
@@ -344,7 +344,7 @@ function toast(msg, type = '') {
 
 function setLoading(id, on) {
   const b = document.getElementById(id); if (!b) return;
-  if (on) { b._h = b.innerHTML; b.innerHTML = '<span class="spin"></span> Please waitâ€¦'; b.disabled = true; }
+  if (on) { b._h = b.innerHTML; b.innerHTML = '<span class="spin"></span> Please wait...'; b.disabled = true; }
   else { b.innerHTML = b._h || b.innerHTML; b.disabled = false; }
 }
 

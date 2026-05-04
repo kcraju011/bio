@@ -27,7 +27,7 @@ var DEFAULT_TENANTS = [
     org_type: 'college',
     city: 'Tumakuru',
     spreadsheet_url: 'https://docs.google.com/spreadsheets/d/1c5ZGKxr-ZNxbao6L6D87N8JNSvPNf2Il9Xnl8ha04f8/edit?gid=0#gid=0',
-    api_url: 'https://script.google.com/macros/s/AKfycby7Sz7KutpgfdbqCY9AvYfUmBs9QKOWiydT0eKj4TDFhVSC6cOKzk5YU3yHcrGYzdcbNg/exec',
+    api_url: 'https://script.google.com/macros/s/AKfycbyfgsjU607novJJlhwZfMdlSreCGP7OLaaj6ztikWQb4VawkisqPGLwdqDkDuqYfjQlZw/exec',
               
     application_id: '102',
     application_name: 'Attendance monitoring',
@@ -43,7 +43,7 @@ var DEFAULT_TENANTS = [
     org_type: 'college',
     city: 'Tumakuru',
     spreadsheet_url: 'https://docs.google.com/spreadsheets/d/1yGS6eyC6NTqwu6dllTYALe_Sc_0hn4_furgU-Wq6bH4/edit?gid=0#gid=0',
-    api_url: 'https://script.google.com/macros/s/AKfycbxVNcVsed50bZixWuAaC_CFRusRzbIvG5DyPa3ZEf2O0X4IFQoNRDYf-BWutrKYYTa7/exec',
+    api_url: 'https://script.google.com/macros/s/AKfycbzQ1Abzar9Ydny0mZyw4JMMOrxs868Flpdb7vHdHhltbYHdRIVQYl-aTsUQ6uP0zei_/exec',
     application_id: '103',
     application_name: 'Attendance monitoring',
     application_description: 'Biometric attendance for students, teachers and employees',

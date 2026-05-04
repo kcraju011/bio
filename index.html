@@ -16,15 +16,15 @@
 </head>
 <body>
 
-<div id="offline-bar">ðŸ“¡ Offline â€” attendance requires internet</div>
+<div id="offline-bar">Offline - attendance requires internet</div>
 
 <div id="tenant-loader" class="info-box blue" style="max-width:460px;width:100%;margin:8px 0 12px;display:none;z-index:2">
   <span class="spin"></span>
-  <span id="tenant-loader-text">Loading organizationÃ¢â‚¬Â¦</span>
+  <span id="tenant-loader-text">Loading organization...</span>
 </div>
 
 <div class="card">
-  <!-- â”€â”€ Header â”€â”€ -->
+  <!-- Header -->
   <div class="header">
     <div class="logo-ring">
       <img id="org-logo" alt="Organization logo"/>
@@ -46,9 +46,7 @@
 
   <div class="form-body">
 
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-         SIGN IN â€” biometric or password
-    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    
     <div class="pane active" id="pane-signin">
       <div id="loc-status-bar"></div>
       <div id="att-success-card" style="display:none"></div>
@@ -76,12 +74,7 @@
 
     </div>
 
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-         REGISTER â€” User table form
-         user_id(auto), institute_id, department_id, role_id,
-         full_name, dob, mobile, email, password_hash(auto),
-         biometric_code(post), device_identification(auto)
-    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+   
     <div class="pane" id="pane-register">
       <div class="register-shell">
         <div class="register-intro">
@@ -172,9 +165,14 @@
                 <div class="field-error" id="err-r-role" role="alert"></div>
               </div>
               <div class="field" id="field-r-dept">
-                <label id="r-dept-label" for="r-dept">Department <span class="req">*</span></label>
-                <input type="text" id="r-dept" placeholder="Enter department manually" maxlength="120" autocomplete="organization" required aria-describedby="err-r-dept"/>
+                <label id="r-dept-label" for="r-dept">Category <span class="req">*</span></label>
+                <input type="text" id="r-dept" placeholder="Enter category manually" maxlength="120" autocomplete="organization" required aria-describedby="err-r-dept"/>
                 <div class="field-error" id="err-r-dept" role="alert"></div>
+              </div>
+              <div class="field" id="field-r-subcategory">
+                <label id="r-subcategory-label" for="r-subcategory">Subcategory <span class="req">*</span></label>
+                <input type="text" id="r-subcategory" placeholder="Enter subcategory manually" maxlength="120" autocomplete="off" required aria-describedby="err-r-subcategory"/>
+                <div class="field-error" id="err-r-subcategory" role="alert"></div>
               </div>
             </div>
 
@@ -267,7 +265,7 @@
         <div class="field"><label>Email</label><input type="email" id="t-email" placeholder="teacher@sit.ac.in"/></div>
         <div class="field"><label>Password</label>
           <div class="pw-wrap">
-            <input type="password" id="t-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"/>
+            <input type="password" id="t-password" placeholder="Password"/>
             <button class="pw-eye" onclick="togglePw('t-password')" type="button">
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
@@ -288,7 +286,7 @@
         <div class="sub-tabs">
           <button class="sub-tab active" id="stab-session"  onclick="switchSub('session')">Session</button>
           <button class="sub-tab" id="stab-live"     onclick="switchSub('live')">Live</button>
-          <button class="sub-tab" id="stab-history"  onclick="switchSub('history')">History</button>
+          <button class="sub-tab" id="stab-history"  onclick="switchSub('history')">Attendance History</button>
           <button class="sub-tab" id="stab-students" onclick="switchSub('students')">Students</button>
           <button class="sub-tab" id="stab-analytics" onclick="switchSub('analytics')">Analytics</button>
         </div>
@@ -298,7 +296,7 @@
           <div id="active-sess-display"></div>
           <div id="open-sess-form">
             <div class="field"><label>Subject / Class <span class="req">*</span></label>
-              <input type="text" id="t-subject" placeholder="e.g. Data Structures â€“ 3CSE-B"/></div>
+              <input type="text" id="t-subject" placeholder="e.g. Data Structures - 3CSE-B"/></div>
             <div class="field"><label>Window</label>
               <select id="t-window">
                 <option value="5">5 minutes</option>
@@ -330,7 +328,7 @@
               <button class="seg" id="seg-a" onclick="showLive('absent')">Absent</button>
               <button class="seg" id="seg-r" onclick="showLive('recent')">Recent</button>
             </div>
-            <button class="export-btn" onclick="exportLive()">â†“ Export</button>
+            <button class="export-btn" onclick="exportLive()">Export</button>
           </div>
           <div id="live-list" class="att-list"></div>
           <div id="live-map-wrap" style="margin-top:12px">
@@ -338,7 +336,7 @@
             <div id="live-map" style="height:280px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#eef2ff,#f8fafc)"></div>
           </div>
           <div id="live-refresh" style="display:none;text-align:center;margin-top:9px">
-            <button onclick="refreshLive()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">â†» Refresh</button>
+            <button onclick="refreshLive()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">Refresh</button>
             <div id="live-updated" style="font-size:10px;color:var(--muted);margin-top:3px"></div>
           </div>
         </div>
@@ -350,13 +348,13 @@
           </div>
           <div id="hist-list" class="att-list"></div>
           <div style="text-align:right;margin-top:8px;display:none" id="hist-export">
-            <button class="export-btn" onclick="exportHistory()">â†“ Export CSV</button>
+            <button class="export-btn" onclick="exportHistory()">Export CSV</button>
           </div>
         </div>
 
         <!-- Students sub-pane -->
         <div class="sub-pane" id="sp-students">
-          <input type="text" id="student-search" placeholder="Search name, email or deptâ€¦" oninput="filterStudents()"/>
+          <input type="text" id="student-search" placeholder="Search name, email or category..." oninput="filterStudents()"/>
           <div id="stud-count" style="font-size:11px;color:var(--muted);margin-bottom:7px"></div>
           <div id="stud-list" class="att-list"></div>
         </div>
@@ -412,20 +410,20 @@
 
       <!-- Admin sub-tabs -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-        <button class="seg active" id="atab-dept"    onclick="switchAdmin('dept')"   style="padding:5px 10px">Departments</button>
+        <button class="seg active" id="atab-dept"    onclick="switchAdmin('dept')"   style="padding:5px 10px">Categories</button>
         <button class="seg" id="atab-loc"     onclick="switchAdmin('loc')"    style="padding:5px 10px">Locations</button>
-        <button class="seg" id="atab-ulmap"   onclick="switchAdmin('ulmap')"  style="padding:5px 10px">User-Loc Map</button>
+        <button class="seg" id="atab-ulmap"   onclick="switchAdmin('ulmap')"  style="padding:5px 10px">Category Map</button>
         <button class="seg" id="atab-atttype" onclick="switchAdmin('atttype')" style="padding:5px 10px">Att. Type</button>
       </div>
 
-      <!-- Departments form -->
+      <!-- Categories form -->
       <div id="ap-dept" class="sub-pane active">
-        <div class="section-label">Add Department</div>
+        <div class="section-label">Add Category</div>
         <div class="row2">
-          <div class="field"><label>department_id <span class="req">*</span></label>
+          <div class="field"><label>category_id <span class="req">*</span></label>
             <input type="text" id="ad-id" placeholder="e.g. CSE"/></div>
           <div class="field"><label>name <span class="req">*</span></label>
-            <input type="text" id="ad-name" placeholder="Dept name"/></div>
+            <input type="text" id="ad-name" placeholder="Category name"/></div>
         </div>
         <div class="row2">
           <div class="field"><label>in_charge</label>
@@ -433,19 +431,19 @@
           <div class="field"><label>email</label>
             <input type="email" id="ad-email" placeholder="hod@sit.ac.in"/></div>
         </div>
-        <button class="btn btn-primary" onclick="addDepartment()">Add Department</button>
+        <button class="btn btn-primary" onclick="addDepartment()">Add Category</button>
         <div id="dept-list" class="att-list" style="margin-top:12px"></div>
-        <button onclick="loadDepts()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">â†» Refresh list</button>
+        <button onclick="loadDepts()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">Refresh list</button>
       </div>
 
       <!-- Attendance Locations form -->
       <div id="ap-loc" class="sub-pane">
         <div class="section-label">Add Attendance Location</div>
         <div class="row2">
-          <div class="field"><label>attendance_location_id <span class="req">*</span></label>
-            <input type="text" id="al-id" placeholder="LOC004"/></div>
           <div class="field"><label>name <span class="req">*</span></label>
             <input type="text" id="al-name" placeholder="Lab / Room name"/></div>
+          <div class="field"><label>address</label>
+            <input type="text" id="al-address" placeholder="Building, block or room"/></div>
         </div>
         <div class="row2">
           <div class="field"><label>latitude <span class="req">*</span></label>
@@ -453,26 +451,36 @@
           <div class="field"><label>longitude <span class="req">*</span></label>
             <input type="number" id="al-lng" step="0.00001" placeholder="77.12621"/></div>
         </div>
+        <div class="row2">
+          <div class="field"><label>geofence_radius (m)</label>
+            <input type="number" id="al-radius" min="1" step="1" value="200" placeholder="200"/></div>
+          <div class="field"><label>reuse_location_id</label>
+            <input type="text" id="al-reuse" placeholder="Optional existing location id"/></div>
+        </div>
         <button class="btn btn-primary" onclick="addLocation()">Add Location</button>
         <div id="loc-list" class="att-list" style="margin-top:12px"></div>
-        <button onclick="loadLocs()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">â†» Refresh list</button>
+        <button onclick="loadLocs()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">Refresh list</button>
       </div>
 
-      <!-- User Attendance Location Map form -->
+      <!-- Category Location Map form -->
       <div id="ap-ulmap" class="sub-pane">
-        <div class="section-label">Map User â†’ Location</div>
-        <div class="field"><label>user_id <span class="req">*</span></label>
-          <input type="text" id="ulm-uid" placeholder="u_1234_abcde"/></div>
+        <div class="section-label">Map Category to Location</div>
+        <div class="row2">
+          <div class="field"><label>category <span class="req">*</span></label>
+            <input type="text" id="admin-map-category" placeholder="Category or class"/></div>
+          <div class="field"><label>subcategory <span class="req">*</span></label>
+            <input type="text" id="admin-map-subcategory" placeholder="Section or group"/></div>
+        </div>
         <div class="row2">
           <div class="field"><label>attendance_location_id <span class="req">*</span></label>
-            <input type="text" id="ulm-lid" placeholder="LOC001"/></div>
+            <input type="text" id="admin-map-location" placeholder="LOC001"/></div>
           <div class="field"><label>allowed_distance (m)</label>
-            <input type="number" id="ulm-dist" value="200" placeholder="200"/></div>
+            <input type="number" id="admin-map-distance" value="200" placeholder="200"/></div>
         </div>
         <button class="btn btn-primary" onclick="addUserLocMap()">Add Mapping</button>
         <div class="info-box orange" style="margin-top:10px">
           <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-          <span>user_id is auto-generated during registration. You can copy it from the Users sheet.</span>
+          <span>Category and subcategory mappings apply to all users in that group.</span>
         </div>
       </div>
 
@@ -497,7 +505,7 @@
   <div class="pwa-icon" aria-hidden="true"></div>
   <div class="pwa-text"><strong>Install BioAttend</strong><span>Add to home screen</span></div>
   <button class="pwa-install-btn" id="pwa-install-btn">Install</button>
-  <button class="pwa-dismiss" id="pwa-dismiss">âœ•</button>
+  <button class="pwa-dismiss" id="pwa-dismiss">Close</button>
 </div>
 
 <div id="toast"></div>

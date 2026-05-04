@@ -20,6 +20,7 @@ var SH = {
   ATT_TYPE     : 'AttendanceType',
   ATT_LOCATIONS: 'AttendanceLocations',
   USER_LOC_MAP : 'UserAttendanceLocationMap',
+  CATEGORY_LOC_MAP: 'CategoryLocationMap',
   SESSIONS     : 'Sessions',
   USER_INDEX   : 'UserIndex',
   AUTH_SESSIONS: 'AuthSessions',
@@ -35,10 +36,11 @@ var HEADERS = {
   Users: [
     'user_id', 'institute_id', 'department_id', 'role_id',
     'full_name', 'dob', 'mobile', 'email',
-    'password_hash', 'biometric_code', 'device_identification'
+    'password_hash', 'biometric_code', 'device_identification',
+    'subcategory_id', 'tenant_id'
   ],
   Departments: [
-    'department_id', 'name', 'in_charge', 'email'
+    'department_id', 'name', 'in_charge', 'email', 'tenant_id'
   ],
   Roles: [
     'role_id', 'name'
@@ -47,37 +49,43 @@ var HEADERS = {
     'attendance_id', 'user_id', 'full_name', 'type_attendance',
     'entry_time', 'exit_time', 'attendance_date', 'login_method',
     'latitude', 'longitude', 'attendance_location_id',
-    'address', 'distance_from_centre', 'status'
+    'address', 'distance_from_centre', 'status', 'tenant_id',
+    'category_id', 'subcategory_id'
   ],
   LocationMonitor: [
     'location_monitor_id', 'user_id', 'latitude', 'longitude',
-    'distance_from_centre', 'timestamp'
+    'distance_from_centre', 'timestamp', 'tenant_id'
   ],
   AttendanceType: [
     'attendance_type_id', 'type'
   ],
   AttendanceLocations: [
-    'attendance_location_id', 'name', 'latitude', 'longitude'
+    'attendance_location_id', 'name', 'address', 'latitude', 'longitude',
+    'geofence_radius', 'tenant_id'
   ],
   UserAttendanceLocationMap: [
     'user_attendance_location_map_id', 'user_id',
-    'attendance_location_id', 'allowed_distance'
+    'attendance_location_id', 'allowed_distance', 'tenant_id'
+  ],
+  CategoryLocationMap: [
+    'category_location_map_id', 'category_id', 'subcategory_id',
+    'attendance_location_id', 'allowed_distance', 'tenant_id', 'status'
   ],
   Sessions: [
     'session_id', 'teacher_id', 'teacher_name', 'subject',
-    'date', 'start_time', 'end_time', 'status', 'window_minutes'
+    'date', 'start_time', 'end_time', 'status', 'window_minutes', 'tenant_id'
   ],
   UserIndex: [
-    'user_id', 'email', 'row_number'
+    'user_id', 'email', 'row_number', 'tenant_id'
   ],
   AuthSessions: [
     'session_id', 'user_id', 'token', 'refresh_token', 'device_id',
     'created_at', 'expires_at', 'refresh_expires_at', 'status',
-    'guid', 'role_name', 'last_seen_at'
+    'guid', 'role_name', 'last_seen_at', 'tenant_id'
   ],
   AuditLog: [
     'audit_id', 'event_type', 'actor_user_id', 'actor_role', 'target_user_id',
-    'details', 'ip_hint', 'created_at'
+    'details', 'ip_hint', 'created_at', 'tenant_id'
   ],
   AttendanceWindows: [
     'window_id', 'name', 'start_time', 'duration_minutes', 'status', 'location_id'
@@ -353,10 +361,12 @@ function route(b) {
     case 'getLocations':          return getLookup(SH.ATT_LOCATIONS);
     case 'getAttendanceLocations': return getLookup(SH.ATT_LOCATIONS);
     case 'getUserLocMap':         return getUserLocMap(b);
+    case 'getCategoryLocationMap': return getCategoryLocationMap(b);
 
     case 'addDepartment':         return addDepartment(b);
     case 'addAttendanceLocation': return addAttendanceLocation(b);
-    case 'addUserLocMap':         return addUserLocMap(b);
+    case 'addUserLocMap':         return addCategoryLocationMap(b);
+    case 'addCategoryLocationMap': return addCategoryLocationMap(b);
 
     case 'setupSheets':           return setupSheets();
     case 'resetUsersSheet':       return resetUsersSheet();
@@ -392,7 +402,53 @@ function getSheet(name) {
       sheet.setFrozenRows(1);
     }
   }
+  ensureSheetHeaders(sheet, name);
   return sheet;
+}
+
+function ensureSheetHeaders(sheet, name) {
+  try {
+    var desired = HEADERS[name] || [];
+    if (!desired.length || !sheet) return;
+    var lastCol = Math.max(sheet.getLastColumn(), desired.length);
+    if (sheet.getMaxColumns() < desired.length) {
+      sheet.insertColumnsAfter(sheet.getMaxColumns(), desired.length - sheet.getMaxColumns());
+    }
+    var existing = lastCol ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+    var merged = [];
+    var seen = {};
+    existing.forEach(function(h) {
+      var key = String(h || '').trim();
+      if (key && !seen[key]) {
+        seen[key] = true;
+        merged.push(key);
+      }
+    });
+    desired.forEach(function(h) {
+      var key = String(h || '').trim();
+      if (key && !seen[key]) {
+        seen[key] = true;
+        merged.push(key);
+      }
+    });
+    if (!merged.length) merged = desired.slice();
+    if (merged.length > lastCol) {
+      sheet.getRange(1, 1, 1, merged.length).setValues([merged]);
+      sheet.setFrozenRows(1);
+    } else {
+      var current = existing.map(function(h) { return String(h || '').trim(); });
+      var changed = current.length !== merged.length;
+      if (!changed) {
+        for (var i = 0; i < merged.length; i++) {
+          if (current[i] !== merged[i]) { changed = true; break; }
+        }
+      }
+      if (changed) {
+        sheet.getRange(1, 1, 1, merged.length).setValues([merged]);
+        sheet.setFrozenRows(1);
+      }
+    }
+  } catch (e) {}
 }
 
 function getRows(sheet) {
@@ -400,11 +456,13 @@ function getRows(sheet) {
   if (last < 2) return [];
   var data = sheet.getRange(1, 1, last, sheet.getLastColumn()).getValues();
   var hdrs = data[0];
+  var tenantId = currentGuid();
   return data.slice(1).map(function(row) {
     var o = {};
     hdrs.forEach(function(h, i) { o[h] = row[i]; });
+    if (o.tenant_id && String(o.tenant_id).trim() && String(o.tenant_id).trim() !== tenantId) return null;
     return o;
-  });
+  }).filter(function(row) { return !!row; });
 }
 
 function getCached(sheetName, ttl) {
@@ -466,6 +524,102 @@ function setRequestGuid(guid) {
 
 function currentGuid() {
   return normalizeGuid(REQUEST_CONTEXT.guid);
+}
+
+function tenantIdOf(value) {
+  return normalizeGuid(value || currentGuid());
+}
+
+function userCategoryOf(user) {
+  return toCleanText((user && (user.department_id || user.category_id)) || '', 120);
+}
+
+function userSubcategoryOf(user) {
+  return toCleanText((user && user.subcategory_id) || '', 120);
+}
+
+function locationDistanceMeters(lat1, lng1, lat2, lng2) {
+  return haversine(lat1, lng1, lat2, lng2);
+}
+
+function rowMatchesTenant(rowTenant, tenantId) {
+  var rowValue = String(rowTenant || '').trim();
+  if (!rowValue) return true;
+  return rowValue === tenantIdOf(tenantId);
+}
+
+function findNearbyAttendanceLocations(lat, lng, tenantId, excludeLocationId) {
+  var rows = getCached(SH.ATT_LOCATIONS, TTL_LOOKUP);
+  var matches = [];
+  rows.forEach(function(loc) {
+    if (!rowMatchesTenant(loc.tenant_id, tenantId)) return;
+    if (excludeLocationId && String(loc.attendance_location_id) === String(excludeLocationId)) return;
+    var dLat = parseFloat(loc.latitude);
+    var dLng = parseFloat(loc.longitude);
+    if (isNaN(dLat) || isNaN(dLng)) return;
+    var dist = locationDistanceMeters(lat, lng, dLat, dLng);
+    if (dist <= 20) {
+      matches.push({
+        attendance_location_id: loc.attendance_location_id,
+        name: loc.name,
+        address: loc.address || '',
+        latitude: dLat,
+        longitude: dLng,
+        geofence_radius: loc.geofence_radius || '',
+        distance: dist
+      });
+    }
+  });
+  matches.sort(function(a, b) { return a.distance - b.distance; });
+  return matches;
+}
+
+function findLocationById(locationId, tenantId) {
+  var rows = getCached(SH.ATT_LOCATIONS, TTL_LOOKUP);
+  var id = String(locationId || '').trim();
+  for (var i = 0; i < rows.length; i++) {
+    if (!rowMatchesTenant(rows[i].tenant_id, tenantId)) continue;
+    if (String(rows[i].attendance_location_id) === id) return rows[i];
+  }
+  return null;
+}
+
+function findCategoryLocationMap(categoryId, subcategoryId, tenantId) {
+  var rows = getCached(SH.CATEGORY_LOC_MAP, TTL_LOOKUP);
+  var cat = String(categoryId || '').trim().toLowerCase();
+  var sub = String(subcategoryId || '').trim().toLowerCase();
+  var fallback = null;
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    if (!rowMatchesTenant(row.tenant_id, tenantId)) continue;
+    if (String(row.status || 'active').toLowerCase() !== 'active') continue;
+    var rowCat = String(row.category_id || '').trim().toLowerCase();
+    var rowSub = String(row.subcategory_id || '').trim().toLowerCase();
+    if (rowCat === cat && rowSub === sub) return row;
+    if (rowCat === cat && !rowSub && !fallback) fallback = row;
+  }
+  return fallback;
+}
+
+function resolveMappedAttendanceLocation(user, tenantId) {
+  var cat = userCategoryOf(user);
+  var sub = userSubcategoryOf(user);
+  var mapping = findCategoryLocationMap(cat, sub, tenantId);
+  if (!mapping && cat) mapping = findCategoryLocationMap(cat, '', tenantId);
+  if (!mapping) return null;
+  var location = findLocationById(mapping.attendance_location_id, tenantId);
+  if (!location) return null;
+  var allowedDistance = parseInt(mapping.allowed_distance || location.geofence_radius || DEFAULT_RADIUS, 10) || DEFAULT_RADIUS;
+  return {
+    categoryId: cat,
+    subcategoryId: sub,
+    attendanceLocationId: location.attendance_location_id,
+    allowedDistance: allowedDistance,
+    anchorLat: parseFloat(location.latitude),
+    anchorLng: parseFloat(location.longitude),
+    location: location,
+    mapping: mapping
+  };
 }
 
 function tenantScopedKey(key) {
@@ -572,7 +726,10 @@ function getUserByEmail(email) {
   var data  = idx.getDataRange().getValues();
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][1]).toLowerCase() === lower) {
-      return fetchUserRow(data[i][2]);
+      var user = fetchUserRow(data[i][2]);
+      if (!user) continue;
+      if (user.tenant_id && String(user.tenant_id).trim() && String(user.tenant_id).trim() !== currentGuid()) continue;
+      return user;
     }
   }
   return null;
@@ -584,7 +741,10 @@ function getUserById(userId) {
   var idStr = String(userId);
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][0]) === idStr) {
-      return fetchUserRow(data[i][2]);
+      var user = fetchUserRow(data[i][2]);
+      if (!user) continue;
+      if (user.tenant_id && String(user.tenant_id).trim() && String(user.tenant_id).trim() !== currentGuid()) continue;
+      return user;
     }
   }
   return null;
@@ -601,7 +761,7 @@ function fetchUserRow(rowNum) {
 
 function addToUserIndex(userId, email) {
   var rowNum = getSheet(SH.USERS).getLastRow();
-  getSheet(SH.USER_INDEX).appendRow([userId, String(email).toLowerCase(), rowNum]);
+  getSheet(SH.USER_INDEX).appendRow([userId, String(email).toLowerCase(), rowNum, currentGuid()]);
 }
 
 function updateUserPasswordHash(userId, passwordHash) {
@@ -1096,7 +1256,8 @@ function createAuthSession(userId, roleName, deviceId, guid) {
     'ACTIVE',
     normalizeGuid(guid || currentGuid()),
     String(roleName || ''),
-    createdAt.toISOString()
+    createdAt.toISOString(),
+    normalizeGuid(guid || currentGuid())
   ]);
   return {
     authToken: token,
@@ -1262,6 +1423,8 @@ function authorize(user, action, body) {
     addDepartment: true,
     addAttendanceLocation: true,
     addUserLocMap: true,
+    addCategoryLocationMap: true,
+    getCategoryLocationMap: true,
     setupSheets: true,
     resetUsersSheet: true,
     debug: true
@@ -1299,7 +1462,8 @@ function appendAuditLog(eventType, actorUserId, actorRole, targetUserId, details
       String(targetUserId || ''),
       JSON.stringify(metadata || {}),
       '',
-      new Date().toISOString()
+      new Date().toISOString(),
+      currentGuid()
     ]);
   } catch(e) {}
 }
@@ -1543,6 +1707,7 @@ function finishWebAuthnLogin(b) {
       roleKey: roleName,
       roleDbId: String(user.role_id || ''),
       deptId: user.department_id,
+      subcategoryId: user.subcategory_id || '',
       authToken: auth.authToken,
       refreshToken: auth.refreshToken,
       authExpiresAt: auth.expiresAt,
@@ -1607,6 +1772,7 @@ function refreshAuthSession(b) {
       roleKey: roleName,
       roleDbId: String(user.role_id || ''),
       deptId: user.department_id,
+      subcategoryId: user.subcategory_id || '',
       sessionId: String(session.session_id || ''),
       deviceId: String(session.device_id || ''),
       guid: String(session.guid || currentGuid())
@@ -1649,28 +1815,30 @@ function getOpenSessionForToday() {
 }
 
 function resolveUserTrackingLocation(userId) {
-  var userLocRows = getRows(getSheet(SH.USER_LOC_MAP));
-  var userLocMap = null;
-  for (var i = 0; i < userLocRows.length; i++) {
-    if (String(userLocRows[i].user_id) === String(userId)) {
-      userLocMap = userLocRows[i];
-      break;
-    }
-  }
-  var locId = userLocMap ? userLocMap.attendance_location_id : 1;
   var geofence = getTenantGeofence(currentGuid());
-  var allowedDist = userLocMap ? Math.max(parseInt(userLocMap.allowed_distance || 0, 10) || 0, geofence.radius) : geofence.radius;
-  var anchorLat = geofence.latitude;
-  var anchorLng = geofence.longitude;
-  var locRows = getCached(SH.ATT_LOCATIONS, TTL_LOOKUP);
-  for (var j = 0; j < locRows.length; j++) {
-    if (String(locRows[j].attendance_location_id) === String(locId)) {
-      anchorLat = parseFloat(locRows[j].latitude || geofence.latitude);
-      anchorLng = parseFloat(locRows[j].longitude || geofence.longitude);
-      break;
-    }
+  var user = getUserById(userId);
+  if (!user) {
+    return {
+      attendanceLocationId: 1,
+      allowedDistance: geofence.radius,
+      anchorLat: geofence.latitude,
+      anchorLng: geofence.longitude,
+      location: null,
+      mapping: null
+    };
   }
-  return { attendanceLocationId: locId, allowedDistance: allowedDist, anchorLat: anchorLat, anchorLng: anchorLng };
+  var mapping = resolveMappedAttendanceLocation(user, currentGuid());
+  if (!mapping) {
+    return {
+      attendanceLocationId: 1,
+      allowedDistance: geofence.radius,
+      anchorLat: geofence.latitude,
+      anchorLng: geofence.longitude,
+      location: null,
+      mapping: null
+    };
+  }
+  return mapping;
 }
 
 function getAllowedDistance(userId) {
@@ -1685,7 +1853,7 @@ function getAttendanceCenter(userId) {
 function saveLocation(userId, lat, lng, distance) {
   var now = new Date();
   var lmId = nextId(SH.LOC_MONITOR);   // â† integer
-  getSheet(SH.LOC_MONITOR).appendRow([lmId, userId, lat, lng, distance, now.toISOString()]);
+  getSheet(SH.LOC_MONITOR).appendRow([lmId, userId, lat, lng, distance, now.toISOString(), currentGuid()]);
   touchLiveState('location_write');
   return lmId;
 }
@@ -1763,7 +1931,7 @@ function validateSession(userId, locationId) {
 function attendanceReadColumnCount(sheet) {
   var count = sheet.getLastColumn();
   if (count < 13) count = 13;
-  if (count > 14) count = 14;
+  if (count > 17) count = 17;
   return count;
 }
 
@@ -1775,8 +1943,8 @@ function attendanceReadColumnCount(sheet) {
 
 function registerUser(b) {
   try {
-    if (!b.name || !b.email || !b.password || !b.roleId)
-      return { success: false, message: 'name, email, password and roleId are required' };
+    if (!b.name || !b.email || !b.password || !b.roleId || !b.departmentId || !b.subcategoryId)
+      return { success: false, message: 'name, email, password, roleId, category and subcategory are required' };
     if (!isValidEmail(b.email))
       return { success: false, message: 'Valid email required' };
     var resolvedRoleId = resolveRoleId(b.roleId);
@@ -1796,7 +1964,8 @@ function registerUser(b) {
       // ── Numeric user_id ──
       var userId = nextId(SH.USERS);
       var roleId = String(resolvedRoleId).trim();
-      var departmentId = toCleanText(b.departmentId || '', 120);
+      var categoryId = toCleanText(b.departmentId || '', 120);
+      var subcategoryId = toCleanText(b.subcategoryId || '', 120);
 
       // Default location: first row of AttendanceLocations (id = 1)
       var defaultLoc = getCached(SH.ATT_LOCATIONS, TTL_LOOKUP)[0];
@@ -1807,7 +1976,7 @@ function registerUser(b) {
       getSheet(SH.USERS).appendRow([
         userId,
         toCleanText(b.instituteId || instituteName, 120),
-        departmentId,
+        categoryId,
         parseInt(roleId, 10),
         toCleanText(b.name, 120),
         b.dob     || '',
@@ -1815,7 +1984,9 @@ function registerUser(b) {
         String(b.email).toLowerCase(),
         hashPw(b.password),
         toCleanText(b.biometricCode || b.credentialId || '', 120),
-        toCleanText(b.deviceId, 120)
+        toCleanText(b.deviceId, 120),
+        subcategoryId,
+        currentGuid()
       ]);
 
       addToUserIndex(userId, b.email);
@@ -1835,7 +2006,8 @@ function registerUser(b) {
       invalidate(SH.USERS);
       appendAuditLog('register_user', userId, normalizeRoleValue(roleId), userId, {
         email: String(b.email).toLowerCase(),
-        departmentId: departmentId
+        categoryId: categoryId,
+        subcategoryId: subcategoryId
       });
       return { success: true, userId: userId, message: 'Account created successfully' };
     } finally { lock.releaseLock(); }
@@ -1879,6 +2051,7 @@ function signInUser(b) {
       roleKey:   roleName || String(user.role_id || ''),
       roleDbId:  String(user.role_id || ''),
       deptId:    user.department_id,
+      subcategoryId: user.subcategory_id || '',
       authToken: auth.authToken,
       refreshToken: auth.refreshToken,
       authExpiresAt: auth.expiresAt,
@@ -1924,27 +2097,16 @@ function markEntry(b) {
     if (boundDevice && deviceCheck && boundDevice !== deviceCheck)
       return { success: false, message: 'Attendance blocked: device mismatch' };
 
-    // Resolve location
-    var userLocRows = getRows(getSheet(SH.USER_LOC_MAP));
-    var userLocMap  = null;
-    for (var x = 0; x < userLocRows.length; x++) {
-      if (String(userLocRows[x].user_id) === String(b.userId)) { userLocMap = userLocRows[x]; break; }
-    }
+    // Resolve mapped attendance location for the user's category/subcategory
+    var userLoc = resolveUserTrackingLocation(b.userId);
     var geofence = getTenantGeofence(currentGuid());
-    var allowedDist = userLocMap ? Math.max(parseInt(userLocMap.allowed_distance || 0, 10) || 0, geofence.radius) : geofence.radius;
-    var locId       = userLocMap ? userLocMap.attendance_location_id : 1;
+    var allowedDist = userLoc.allowedDistance || geofence.radius;
+    var locId       = userLoc.attendanceLocationId || 1;
     var sessionCheck = validateSession(b.userId, locId);
     if (!sessionCheck.success) return sessionCheck;
 
-    var anchorLat = geofence.latitude, anchorLng = geofence.longitude;
-    var locRows = getCached(SH.ATT_LOCATIONS, TTL_LOOKUP);
-    for (var lx = 0; lx < locRows.length; lx++) {
-      if (String(locRows[lx].attendance_location_id) === String(locId)) {
-        anchorLat = parseFloat(locRows[lx].latitude  || geofence.latitude);
-        anchorLng = parseFloat(locRows[lx].longitude || geofence.longitude);
-        break;
-      }
-    }
+    var anchorLat = isNaN(parseFloat(userLoc.anchorLat)) ? geofence.latitude : parseFloat(userLoc.anchorLat);
+    var anchorLng = isNaN(parseFloat(userLoc.anchorLng)) ? geofence.longitude : parseFloat(userLoc.anchorLng);
 
     var lat = latCheck, lng = lngCheck, dist = 0;
     if (lat !== null && !isNaN(lat)) {
@@ -1993,7 +2155,10 @@ function markEntry(b) {
         locId,
         b.address || '',
         dist || '',
-        'IN'
+        'IN',
+        currentGuid(),
+        userCategoryOf(user),
+        userSubcategoryOf(user)
       ]);
 
       if (lat !== null) {
@@ -2018,7 +2183,7 @@ function markEntry(b) {
         });
       }
       appendAuditLog('mark_entry', b.userId, normalizeRoleValue(user.role_id), b.userId,
-        { time: timeStr, date: dateStr, locationId: locId, distance: dist });
+        { time: timeStr, date: dateStr, locationId: locId, distance: dist, categoryId: userCategoryOf(user), subcategoryId: userSubcategoryOf(user) });
 
       return {
         success: true, attendanceId: attId,
@@ -2073,8 +2238,8 @@ function markExit(b) {
 
       var xlat  = latCheck !== null ? latCheck : '';
       var xlng  = lngCheck !== null ? lngCheck : '';
-      var geofence = getTenantGeofence(currentGuid());
-      var xdist = (xlat !== '' && xlng !== '') ? haversine(xlat, xlng, geofence.latitude, geofence.longitude) : '';
+      var mapped = resolveUserTrackingLocation(b.userId);
+      var xdist = (xlat !== '' && xlng !== '') ? haversine(xlat, xlng, mapped.anchorLat, mapped.anchorLng) : '';
 
       var lock = LockService.getScriptLock();
       lock.waitLock(6000);
@@ -2095,7 +2260,7 @@ function markExit(b) {
         touchLiveState('mark_exit');
       } finally { lock.releaseLock(); }
 
-      appendAuditLog('mark_exit', b.userId, '', b.userId, { time: timeStr, date: dateStr, distance: xdist });
+      appendAuditLog('mark_exit', b.userId, '', b.userId, { time: timeStr, date: dateStr, distance: xdist, categoryId: userCategoryOf(user), subcategoryId: userSubcategoryOf(user) });
       var hrs = durationMins !== '' ? Math.floor(durationMins / 60) : 0;
       var mins = durationMins !== '' ? durationMins % 60 : 0;
       var durLabel = durationMins !== '' ? (hrs > 0 ? hrs + 'h ' + mins + 'm' : mins + 'm') : '';
@@ -2207,7 +2372,7 @@ function trackStudentLocation(b) {
     var track = resolveUserTrackingLocation(b.userId);
     var dist = haversine(lat, lng, track.anchorLat, track.anchorLng);
     var lmId = nextId(SH.LOC_MONITOR);   // ← integer
-    getSheet(SH.LOC_MONITOR).appendRow([lmId, b.userId, lat, lng, dist, now.toISOString()]);
+    getSheet(SH.LOC_MONITOR).appendRow([lmId, b.userId, lat, lng, dist, now.toISOString(), currentGuid()]);
     touchLiveState('track_student_location');
     return { success: true, message: 'Location tracked', distanceFromCentre: dist,
              attendanceLocationId: track.attendanceLocationId };
@@ -2275,7 +2440,7 @@ function createSession(b) {
       if (String(data[i][1]) === String(auth.session.user_id) && data[i][7] === 'open')
         sheet.getRange(i+1, 8).setValue('closed');
     }
-    sheet.appendRow([sessId, auth.session.user_id, b.teacherName||'', b.subject, date, start, end, 'open', b.windowMinutes]);
+    sheet.appendRow([sessId, auth.session.user_id, b.teacherName||'', b.subject, date, start, end, 'open', b.windowMinutes, currentGuid()]);
         CacheService.getScriptCache().put(tenantScopedKey('active_session'), JSON.stringify({
       session_id: sessId, teacher_id: auth.session.user_id, subject: b.subject,
       date: date, start_time: start, end_time: end, status: 'open', window_minutes: b.windowMinutes
@@ -3341,7 +3506,8 @@ function addDepartment(b) {
         deptId,
         toCleanText(b.name, 120),
         toCleanText(b.inCharge, 120),
-        toCleanText(b.email, 120)
+        toCleanText(b.email, 120),
+        currentGuid()
       ]);
       invalidate(SH.DEPARTMENTS);
       appendAuditLog('add_department', auth.session.user_id, auth.session.role_name, '', { departmentId: deptId });
@@ -3357,45 +3523,117 @@ function addAttendanceLocation(b) {
     if (!b.name || !b.latitude || !b.longitude)
       return { success: false, message: 'name, latitude and longitude required' };
     var lat = parseNumber(b.latitude), lng = parseNumber(b.longitude);
+    var radius = parseInt(b.geofenceRadius || b.geofence_radius || DEFAULT_RADIUS, 10) || DEFAULT_RADIUS;
+    var address = toCleanText(b.address || '', 240);
     if (lat === null || lng === null)
       return { success: false, message: 'Valid latitude and longitude required' };
+
+    var tenantId = currentGuid();
+    var nearby = findNearbyAttendanceLocations(lat, lng, tenantId, b.reuseLocationId || '');
+    if (String(b.reuseLocationId || '').trim()) {
+      var reuseLoc = findLocationById(b.reuseLocationId, tenantId);
+      if (!reuseLoc) return { success: false, message: 'Existing location not found for reuse' };
+      return {
+        success: true,
+        reused: true,
+        locationId: reuseLoc.attendance_location_id,
+        message: 'Reused existing location'
+      };
+    }
+    if (nearby.length && String(b.confirmDuplicate || '').toLowerCase() !== 'true') {
+      return {
+        success: false,
+        duplicateWarning: true,
+        message: 'A location already exists within 20 meters.',
+        nearbyLocations: nearby,
+        canReuse: true
+      };
+    }
 
     var lock = LockService.getScriptLock();
     lock.waitLock(6000);
     try {
-      var locId = nextId(SH.ATT_LOCATIONS);  // ← integer (1, 2, 3…)
-      getSheet(SH.ATT_LOCATIONS).appendRow([locId, toCleanText(b.name, 120), lat, lng]);
+      var locId = nextId(SH.ATT_LOCATIONS);  // integer
+      getSheet(SH.ATT_LOCATIONS).appendRow([
+        locId,
+        toCleanText(b.name, 120),
+        address,
+        lat,
+        lng,
+        radius,
+        tenantId
+      ]);
       invalidate(SH.ATT_LOCATIONS);
-      appendAuditLog('add_location', auth.session.user_id, auth.session.role_name, '', { locationId: locId });
-      return { success: true, locationId: locId, message: 'Location added' };
+      appendAuditLog('add_location', auth.session.user_id, auth.session.role_name, '', {
+        locationId: locId,
+        address: address,
+        geofenceRadius: radius
+      });
+      return {
+        success: true,
+        locationId: locId,
+        message: nearby.length ? 'Location added after confirmation' : 'Location added'
+      };
     } finally { lock.releaseLock(); }
   } catch(err) { return { success: false, message: 'addAttendanceLocation: ' + err }; }
 }
 
-function addUserLocMap(b) {
+function addCategoryLocationMap(b) {
   try {
     var auth = requireAuth(b, ['admin']);
     if (!auth.ok) return auth.error;
-    if (!b.userId || !b.locationId) return { success: false, message: 'userId and locationId required' };
-    if (!getUserById(b.userId)) return { success: false, message: 'User not found' };
-    var locRows = getCached(SH.ATT_LOCATIONS, TTL_LOOKUP);
-    var hasLoc = locRows.some(function(r) { return String(r.attendance_location_id) === String(b.locationId); });
-    if (!hasLoc) return { success: false, message: 'attendance location not found' };
+    var categoryId = toCleanText(b.categoryId || b.departmentId || '', 120);
+    var subcategoryId = toCleanText(b.subcategoryId || '', 120);
+    var locationId = String(b.locationId || b.attendanceLocationId || '').trim();
+    if (!categoryId || !locationId) {
+      return { success: false, message: 'categoryId and locationId required' };
+    }
+    var loc = findLocationById(locationId, currentGuid());
+    if (!loc) return { success: false, message: 'attendance location not found' };
 
+    var allowedDistance = parseInt(b.allowedDistance || b.allowed_distance || loc.geofence_radius || DEFAULT_RADIUS, 10) || DEFAULT_RADIUS;
     var lock = LockService.getScriptLock();
     lock.waitLock(6000);
     try {
-      var mapId = nextId(SH.USER_LOC_MAP);   // ← integer
-      getSheet(SH.USER_LOC_MAP).appendRow([
-        mapId, b.userId,
-        parseInt(b.locationId, 10),
-        parseInt(b.allowedDistance || DEFAULT_RADIUS, 10)
+      var mapId = nextId(SH.CATEGORY_LOC_MAP);
+      getSheet(SH.CATEGORY_LOC_MAP).appendRow([
+        mapId,
+        categoryId,
+        subcategoryId,
+        parseInt(locationId, 10) || locationId,
+        allowedDistance,
+        currentGuid(),
+        String(b.status || 'active')
       ]);
-      appendAuditLog('add_user_location_map', auth.session.user_id, auth.session.role_name, b.userId,
-        { locationId: b.locationId });
+      invalidate(SH.CATEGORY_LOC_MAP);
+      appendAuditLog('add_category_location_map', auth.session.user_id, auth.session.role_name, '', {
+        categoryId: categoryId,
+        subcategoryId: subcategoryId,
+        locationId: locationId,
+        allowedDistance: allowedDistance
+      });
       return { success: true, mapId: mapId, message: 'Mapping added' };
     } finally { lock.releaseLock(); }
-  } catch(err) { return { success: false, message: 'addUserLocMap: ' + err }; }
+  } catch(err) { return { success: false, message: 'addCategoryLocationMap: ' + err }; }
+}
+
+function addUserLocMap(b) {
+  return addCategoryLocationMap(b);
+}
+
+function getCategoryLocationMap(b) {
+  try {
+    var auth = requireAuth(b, ['admin']);
+    if (!auth.ok) return auth.error;
+    var rows = getRows(getSheet(SH.CATEGORY_LOC_MAP));
+    if (b.categoryId || b.subcategoryId) {
+      rows = rows.filter(function(r) {
+        return (!b.categoryId || String(r.category_id) === String(b.categoryId)) &&
+               (!b.subcategoryId || String(r.subcategory_id) === String(b.subcategoryId));
+      });
+    }
+    return { success: true, data: rows };
+  } catch(err) { return { success: false, message: 'getCategoryLocationMap: ' + err }; }
 }
 
 // ============================================================
@@ -3439,9 +3677,9 @@ function setupSheets() {
     if (locSheet.getLastRow() < 2) {
       var fence = getTenantGeofence(currentGuid());
       var label = fence.label || 'Campus';
-      locSheet.appendRow([1, label + ' Campus Main Block', fence.latitude, fence.longitude]);
-      locSheet.appendRow([2, label + ' Campus CS Lab Block', fence.latitude + 0.00012, fence.longitude + 0.00012]);
-      locSheet.appendRow([3, label + ' Campus Seminar Hall', fence.latitude - 0.00012, fence.longitude - 0.00012]);
+      locSheet.appendRow([1, label + ' Campus Main Block', 'Main entry point', fence.latitude, fence.longitude, fence.radius, currentGuid()]);
+      locSheet.appendRow([2, label + ' Campus CS Lab Block', 'Computer science block', fence.latitude + 0.00012, fence.longitude + 0.00012, fence.radius, currentGuid()]);
+      locSheet.appendRow([3, label + ' Campus Seminar Hall', 'Seminar hall', fence.latitude - 0.00012, fence.longitude - 0.00012, fence.radius, currentGuid()]);
     }
 
     return { success: true, message: 'All sheets created and seeded with numeric IDs.', sheets: created };
@@ -3457,10 +3695,12 @@ function resetUsersSheet() {
     ensureExactRows(SH.USERS, []);
     ensureExactRows(SH.USER_INDEX, []);
     ensureExactRows(SH.USER_LOC_MAP, []);
+    ensureExactRows(SH.CATEGORY_LOC_MAP, []);
     invalidate(SH.USERS);
     invalidate(SH.USER_INDEX);
     invalidate(SH.USER_LOC_MAP);
-    return { success: true, message: 'Users, UserIndex and UserLocMap cleared.' };
+    invalidate(SH.CATEGORY_LOC_MAP);
+    return { success: true, message: 'Users, UserIndex, UserLocMap and CategoryLocationMap cleared.' };
   } catch(err) { return { success: false, message: 'resetUsersSheet: ' + err }; }
 }
 

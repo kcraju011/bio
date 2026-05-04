@@ -100,9 +100,10 @@ function switchAdmin(tab) {
   });
   if (tab==='dept')   loadDepts();
   if (tab==='loc')    loadLocs();
+  if (tab==='ulmap')  loadCategoryLocMaps();
 }
 
-// â”€â”€ Device fingerprint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Device fingerprint
 async function getDeviceId() {
   if (deviceId) return deviceId;
   try { const s = localStorage.getItem('ba_did'); if(s){deviceId=s;return s;} } catch(e){}
@@ -116,7 +117,7 @@ async function getDeviceId() {
   return deviceId;
 }
 
-// â”€â”€ GPS (fine, watchPosition) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// GPS (fine, watchPosition)
 function getLocation() {
   return new Promise(resolve => {
     if (!navigator.geolocation) return resolve({latitude:'',longitude:'',accuracy:null,denied:false});
@@ -144,7 +145,7 @@ function getLocation() {
 
 async function getLocationWithAddress() {
   const loc = await getLocation();
-  if(loc.denied){showLocBar('fail','Location blocked â€” allow in browser settings and retry');return loc;}
+  if(loc.denied){showLocBar('fail','Location blocked - allow in browser settings and retry');return loc;}
   if(!loc.latitude)return loc;
   try {
     const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.latitude}&lon=${loc.longitude}&format=json`,{headers:{'Accept-Language':'en'}});
@@ -156,9 +157,13 @@ async function getLocationWithAddress() {
 
 function showLocBar(state,msg,accuracy){
   const el=document.getElementById('loc-status-bar');if(!el)return;
-  const icons={getting:'ðŸ“¡',ok:'ðŸ“',fail:'âš ï¸'};
-  const acc=accuracy?` <span style="opacity:.6;font-size:10px">Â±${Math.round(accuracy)}m</span>`:'';
-  el.innerHTML=`<div class="loc-bar ${state}">${icons[state]||''} ${msg}${acc}</div>`;
+  const icons={
+    getting:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3c-4.4 0-8 3.3-8 7.3 0 5 8 10.7 8 10.7s8-5.7 8-10.7C20 6.3 16.4 3 12 3Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10.2" r="2.4" stroke="currentColor" stroke-width="2"/></svg>',
+    ok:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-7.6 7-13a7 7 0 1 0-14 0c0 5.4 7 13 7 13Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="8.5" r="2.4" stroke="currentColor" stroke-width="2"/></svg>',
+    fail:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 2.8 19h18.4L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1" fill="currentColor"/></svg>'
+  };
+  const acc=accuracy?` <span style="opacity:.6;font-size:10px">&plusmn;${Math.round(accuracy)}m</span>`:'';
+  el.innerHTML=`<div class="loc-bar ${state}">${icons[state]||''}<span>${msg}</span>${acc}</div>`;
 }
 
 function startTracking(userId) {
@@ -211,21 +216,21 @@ async function trackLocation(pos) {
   }
 }
 
-// â”€â”€ Attendance card (shown after marking) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Attendance card (shown after marking)
 function showAttendanceCard(data, userId) {
   markedUserId = userId;
   const el = document.getElementById('att-success-card');
   el.style.display = 'block';
   el.innerHTML = `
     <div class="att-card">
-      <div class="att-name">âœ“ Attendance Marked</div>
+      <div class="att-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="vertical-align:-2px;margin-right:4px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="m9.2 7.1 1.8 1.8 3.8-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Attendance Marked</div>
       <div class="att-row"><span>full_name</span><span class="att-val">${data.name||''}</span></div>
       <div class="att-row"><span>attendance_date</span><span class="att-val">${data.date||''}</span></div>
       <div class="att-row"><span>entry_time</span><span class="att-val">${data.time||''}</span></div>
       <div class="att-row"><span>latitude</span><span class="att-val">${data.latitude||'not captured'}</span></div>
       <div class="att-row"><span>longitude</span><span class="att-val">${data.longitude||'not captured'}</span></div>
       <div class="att-row"><span>address</span><span class="att-val">${data.location||'not captured'}</span></div>
-      <div class="att-row"><span>distance_from_centre</span><span class="att-val">${data.distanceFromCentre||'â€”'} m</span></div>
+      <div class="att-row"><span>distance_from_centre</span><span class="att-val">${data.distanceFromCentre||'-'} m</span></div>
       <div class="att-row"><span>login_method</span><span class="att-val">${data.method||'biometric'}</span></div>
       <div class="att-row"><span>type_attendance</span><span class="att-val">entry</span></div>
     </div>
@@ -471,7 +476,7 @@ function setFieldState(fieldId, message) {
 function clearRegisterErrors() {
   [
     'field-r-name','field-r-dob','field-r-email','field-r-mobile','field-r-emp-id',
-    'field-r-institute','field-r-org-type','field-r-role','field-r-dept',
+    'field-r-institute','field-r-org-type','field-r-role','field-r-dept','field-r-subcategory',
     'field-r-study-level','field-r-designation','field-r-password','field-r-confirm-password'
   ].forEach(id => setFieldState(id, ''));
 }
@@ -583,16 +588,16 @@ function renderStudentAttendancePanel(user, locations) {
   panel.innerHTML = `
     <div class="section-label">Attendance Workspace</div>
     <div class="info-box green">
-      <span>Signed in as ${user.name} Â· Department: ${user.deptId || 'N/A'}</span>
+      <span>Signed in as ${user.name} - Category: ${user.deptId || 'N/A'}${user.subcategoryId ? ' / Subcategory: ' + user.subcategoryId : ''}</span>
     </div>
     <div class="field">
-      <label>Classroom / Lab <span class="req">*</span></label>
+      <label>Location <span class="req">*</span></label>
       <select id="student-location-select">
-        <option value="">Select your ${deptCode || 'department'} location...</option>
+        <option value="">Select your ${deptCode || 'category'} location...</option>
         ${opts}
       </select>
     </div>
-    <div class="hint">Only locations matching your department are shown, for example ${deptCode || 'CSE'}001.</div>
+    <div class="hint">Only locations matching your category are shown, for example ${deptCode || 'CSE'}001.</div>
     <button class="btn btn-primary" id="btn-student-attendance" onclick="submitStudentAttendance()">
       Mark Attendance
     </button>
@@ -615,30 +620,30 @@ function renderAdminPanel(user) {
   panel.innerHTML = `
     <div class="section-label">Admin Workspace</div>
     <div class="info-box green">
-      <span>Signed in as ${user.name}. Add departments and department locations like labs or classrooms.</span>
+      <span>Signed in as ${user.name}. Add categories, locations, and category-based attendance mappings.</span>
     </div>
-    <div class="section-label">Add Department</div>
+    <div class="section-label">Add Category</div>
     <div class="row2">
       <div class="field">
-        <label>Department Code <span class="req">*</span></label>
+        <label>Category Code <span class="req">*</span></label>
         <input type="text" id="admin-dept-id" placeholder="e.g. CSE"/>
       </div>
       <div class="field">
-        <label>Department Name <span class="req">*</span></label>
+        <label>Category Name <span class="req">*</span></label>
         <input type="text" id="admin-dept-name" placeholder="e.g. Computer Science"/>
       </div>
     </div>
-    <button class="btn btn-primary" onclick="addDepartmentFromWorkspace()">Add Department</button>
+    <button class="btn btn-primary" onclick="addDepartmentFromWorkspace()">Add Category</button>
     <div id="dept-list" class="att-list" style="margin-top:12px"></div>
-    <div class="section-label" style="margin-top:14px">Add Classroom / Lab</div>
+    <div class="section-label" style="margin-top:14px">Add Attendance Location</div>
     <div class="row2">
       <div class="field">
-        <label>Department <span class="req">*</span></label>
-        <select id="admin-location-dept"></select>
+        <label>Location Name <span class="req">*</span></label>
+        <input type="text" id="admin-location-name" placeholder="e.g. CSE001"/>
       </div>
       <div class="field">
-        <label>Classroom / Lab Name <span class="req">*</span></label>
-        <input type="text" id="admin-location-name" placeholder="e.g. CSE001"/>
+        <label>Address</label>
+        <input type="text" id="admin-location-address" placeholder="Building, floor, room or landmark"/>
       </div>
     </div>
     <div class="row2">
@@ -651,8 +656,41 @@ function renderAdminPanel(user) {
         <input type="number" id="admin-location-lng" step="0.00001" placeholder="77.12621"/>
       </div>
     </div>
+    <div class="row2">
+      <div class="field">
+        <label>Geofence Radius (m)</label>
+        <input type="number" id="admin-location-radius" min="1" step="1" value="200" placeholder="200"/>
+      </div>
+      <div class="field">
+        <label>Reuse Existing Location ID</label>
+        <input type="text" id="admin-location-reuse" placeholder="Optional duplicate reuse"/>
+      </div>
+    </div>
     <button class="btn btn-primary" onclick="addLocationFromWorkspace()">Add Location</button>
     <div id="loc-list" class="att-list" style="margin-top:12px"></div>
+    <div class="section-label" style="margin-top:14px">Category Mapping</div>
+    <div class="row2">
+      <div class="field">
+        <label>Category <span class="req">*</span></label>
+        <select id="admin-map-category"></select>
+      </div>
+      <div class="field">
+        <label>Subcategory <span class="req">*</span></label>
+        <input type="text" id="admin-map-subcategory" placeholder="e.g. A, B, Section 1"/>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Attendance Location <span class="req">*</span></label>
+        <select id="admin-map-location"></select>
+      </div>
+      <div class="field">
+        <label>Allowed Distance (m)</label>
+        <input type="number" id="admin-map-distance" min="1" step="1" value="200"/>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addUserLocMap()">Save Mapping</button>
+    <div id="map-list" class="att-list" style="margin-top:12px"></div>
     <button class="btn btn-secondary" onclick="resetBiometricWorkspace()">Logout</button>
   `;
   panel.style.display = 'block';
@@ -660,16 +698,26 @@ function renderAdminPanel(user) {
 }
 
 async function loadAdminWorkspaceData() {
-  await Promise.all([loadDepts(), loadLocs()]);
-  populateAdminDepartmentSelect();
+  await Promise.all([loadDepts(), loadLocs(), loadCategoryLocMaps()]);
+  populateAdminCategorySelect();
+  populateAdminLocationSelect();
 }
 
-function populateAdminDepartmentSelect() {
-  const select = document.getElementById('admin-location-dept');
+function populateAdminCategorySelect() {
+  const select = document.getElementById('admin-map-category');
   if (!select) return;
   const departments = registerLookupState.departments || [];
-  select.innerHTML = '<option value="">Select department...</option>' + departments.map(d =>
+  select.innerHTML = '<option value="">Select category...</option>' + departments.map(d =>
     `<option value="${d.department_id}">${d.name || d.department_id}</option>`
+  ).join('');
+}
+
+function populateAdminLocationSelect() {
+  const select = document.getElementById('admin-map-location');
+  if (!select) return;
+  const locations = registerLookupState.locations || [];
+  select.innerHTML = '<option value="">Select location...</option>' + locations.map(l =>
+    `<option value="${l.attendance_location_id}">${l.name || l.attendance_location_id}</option>`
   ).join('');
 }
 
@@ -755,6 +803,7 @@ function validateRegisterStep(step) {
   if (current === 2) {
     const role = getRegisterValue('r-role');
     const dept = getRegisterValue('r-dept');
+    const subcategory = getRegisterValue('r-subcategory');
     const roleKey = getRegisterRoleKey();
     const studyLevel = getRegisterValue('r-study-level');
     const designation = getRegisterValue('r-designation');
@@ -764,7 +813,8 @@ function validateRegisterStep(step) {
     if (!tenantOrgName) { setFieldState('field-r-institute', 'Tenant organization is not loaded.'); valid = false; } else setFieldState('field-r-institute', '');
     if (!tenantOrgType) { setFieldState('field-r-org-type', 'Tenant organization type is not loaded.'); valid = false; } else setFieldState('field-r-org-type', '');
     if (!role) { setFieldState('field-r-role', 'Select a role.'); valid = false; } else setFieldState('field-r-role', '');
-    if (!dept) { setFieldState('field-r-dept', 'Department is required.'); valid = false; } else if (!isValidDepartmentValue(dept)) { setFieldState('field-r-dept', 'Enter a valid department.'); valid = false; } else setFieldState('field-r-dept', '');
+    if (!dept) { setFieldState('field-r-dept', 'Category is required.'); valid = false; } else if (!isValidDepartmentValue(dept)) { setFieldState('field-r-dept', 'Enter a valid category.'); valid = false; } else setFieldState('field-r-dept', '');
+    if (!subcategory) { setFieldState('field-r-subcategory', 'Subcategory is required.'); valid = false; } else setFieldState('field-r-subcategory', '');
 
     if (roleKey === 'student') {
       if (!studyLevel) { setFieldState('field-r-study-level', 'Select a semester or year of study.'); valid = false; } else setFieldState('field-r-study-level', '');
@@ -806,7 +856,8 @@ async function loadRegisterLookups() {
     registerLookupState.locations = locations;
     tenantState.attendanceLocations = locations;
     updateRegisterFormByRole();
-    populateAdminDepartmentSelect();
+    populateAdminCategorySelect();
+    populateAdminLocationSelect();
   } catch (e) {
     if (!registerLookupState.departments || !registerLookupState.departments.length) {
       registerLookupState.departments = DEFAULT_DEPARTMENT_OPTIONS;
@@ -837,12 +888,12 @@ async function handleBiometricSignIn() {
   if(navigator.permissions){
     try{
       const p=await navigator.permissions.query({name:'geolocation'});
-      if(p.state==='denied'){showLocBar('fail','Location blocked â€” allow in Settings â†’ Site permissions');toast('ðŸ“ Allow location in browser settings and retry','error');return;}
+      if(p.state==='denied'){showLocBar('fail','Location blocked - allow in Settings > Site permissions');toast('Allow location in browser settings and retry','error');return;}
     }catch(e){}
   }
 
   const btn=document.getElementById('btn-bio-signin');
-  if(btn){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> Verifyingâ€¦';btn.disabled=true;}
+  if(btn){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> Verifying...';btn.disabled=true;}
   try{
     const begin = await api({action:'beginWebAuthnLogin', email, guid: tenantState.guid});
     if(!begin.success||!begin.credentialId||!begin.challenge){toast(begin.message||'No biometric registered','error');return;}
@@ -875,7 +926,7 @@ async function handleBiometricSignIn() {
     showLocBar('ok','Fingerprint / Face ID verified');
 
     if (isAdminRole(roleValue)) {
-      toast('âœ“ Admin signed in','success');
+      toast('Admin signed in','success');
       return;
     }
 
@@ -894,7 +945,7 @@ async function handlePasswordSignIn() {
   if(!email || !password){toast('Enter email and password first','error');return;}
 
   const btn = document.getElementById('btn-pass-signin');
-  if(btn){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> Verifyingâ€¦';btn.disabled=true;}
+  if(btn){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> Verifying...';btn.disabled=true;}
   try{
     const deviceId = await getDeviceId();
     const info = await api({action:'loginUser', email, password, deviceId, guid: tenantState.guid});
@@ -906,7 +957,7 @@ async function handlePasswordSignIn() {
     showLocBar('ok','Password verified');
 
     if (isAdminRole(roleValue)) {
-      toast('âœ“ Admin signed in','success');
+      toast('Admin signed in','success');
       return;
     }
 
@@ -926,9 +977,9 @@ async function handlePasswordSignIn() {
 async function handleExit() {
   if(!markedUserId){toast('Mark attendance first','error');return;}
   const btn=document.getElementById('btn-exit');
-  if(btn){btn.disabled=true;btn.textContent='Getting exit locationâ€¦';}
+  if(btn){btn.disabled=true;btn.textContent='Getting exit location...';}
   try{
-    showLocBar('getting','Getting exit locationâ€¦');
+    showLocBar('getting','Getting exit location...');
     const loc = await getLocationWithAddress();
     if(loc.latitude)showLocBar('ok','Exit: '+(loc.address||`${loc.latitude}, ${loc.longitude}`),loc.accuracy);
     else showLocBar('fail','Exit location not captured');
@@ -942,10 +993,10 @@ async function handleExit() {
     });
 
     if(res.success){
-      toast('âœ“ '+res.message,'success');
+      toast('Success: '+res.message,'success');
       const card=document.querySelector('.att-card');
       if(card){
-        card.querySelector('.att-name').textContent='âœ“ Entry & Exit Recorded';
+        card.querySelector('.att-name').innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="vertical-align:-2px;margin-right:4px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="m9.2 7.1 1.8 1.8 3.8-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Entry & Exit Recorded';
         card.innerHTML+=`
           <div class="att-row"><span>exit_time</span><span class="att-val">${res.exitTime||''}</span></div>
           <div class="att-row"><span>type_attendance</span><span class="att-val">exit</span></div>
@@ -953,7 +1004,7 @@ async function handleExit() {
           <div class="att-row"><span>address (exit)</span><span class="att-val">${res.location||'not captured'}</span></div>`;
       }
       stopTracking();
-      if(btn){btn.disabled=true;btn.textContent='Exit recorded âœ“';btn.style.opacity='.5';}
+      if(btn){btn.disabled=true;btn.textContent='Exit recorded';btn.style.opacity='.5';}
       markedUserId=null;
       setTimeout(()=>restoreSignInForm(),4000);
     }else{
@@ -971,11 +1022,11 @@ async function submitStudentAttendance(loginMethod = 'biometric') {
   const btn = document.getElementById('btn-student-attendance');
   if (btn) setLoading('btn-student-attendance', true);
   try {
-    showLocBar('getting','Getting your locationâ€¦');
+    showLocBar('getting','Getting your location...');
     const loc = await getLocationWithAddress();
     if(loc.denied){ if (btn) setLoading('btn-student-attendance', false); return; }
     if(!loc.latitude || !loc.longitude){
-      showLocBar('fail','Location not captured â€” attendance blocked');
+      showLocBar('fail','Location not captured - attendance blocked');
       toast('GPS location is required to mark attendance','error');
       if (btn) setLoading('btn-student-attendance', false);
       return;
@@ -992,11 +1043,11 @@ async function submitStudentAttendance(loginMethod = 'biometric') {
     });
 
     if(att.success){
-      toast('âœ“ '+att.message,'success');
+      toast('Success: '+att.message,'success');
       showAttendanceCard({...att, method: loginMethod}, signedInUser.userId);
     } else if(att.code==='TOO_FAR'){
-      showLocBar('fail',`${att.distance}m from location â€” must be within ${att.allowed}m`);
-      toast(`ðŸ“ Too far (${att.distance}m). Move closer and try again`,'error');
+      showLocBar('fail',`${att.distance}m from location - must be within ${att.allowed}m`);
+      toast(`Too far (${att.distance}m). Move closer and try again`,'error');
     } else {
       toast(att.message,'error');
     }
@@ -1016,19 +1067,19 @@ async function toggleMyAtt() {
   list.style.display='block';
   const uid=sessionStorage.getItem('ba_uid')||markedUserId;
   if(!uid){list.innerHTML='<div style="color:var(--muted);font-size:11.5px;text-align:center;padding:8px">Sign in first to view history</div>';return;}
-  list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11.5px;padding:8px">Loadingâ€¦</div>';
+  list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11.5px;padding:8px">Loading...</div>';
   try{
     const d=await api({action:'getMyAttendance',userId:uid});
     if(!d.records||!d.records.length){list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11.5px;padding:8px">No records yet</div>';return;}
     list.innerHTML=d.records.map(r=>`
       <div class="my-item">
         <div class="my-date">${r.date}</div>
-        <div class="my-row"><span>entry_time</span><span>${r.entryTime||'â€”'}</span></div>
-        <div class="my-row"><span>exit_time</span><span>${r.exitTime||'â€”'}</span></div>
-        <div class="my-row"><span>duration</span><span>${r.duration||'â€”'}</span></div>
-        <div class="my-row"><span>login_method</span><span>${r.loginMethod||'â€”'}</span></div>
+        <div class="my-row"><span>entry_time</span><span>${r.entryTime||'-'}</span></div>
+        <div class="my-row"><span>exit_time</span><span>${r.exitTime||'-'}</span></div>
+        <div class="my-row"><span>duration</span><span>${r.duration||'-'}</span></div>
+        <div class="my-row"><span>login_method</span><span>${r.loginMethod||'-'}</span></div>
         <div class="my-row"><span>address</span><span>${r.address||'not captured'}</span></div>
-        <div class="my-row"><span>distance_from_centre</span><span>${r.distanceFromCentre||'â€”'} m</span></div>
+        <div class="my-row"><span>distance_from_centre</span><span>${r.distanceFromCentre||'-'} m</span></div>
       </div>`).join('');
   }catch(e){list.innerHTML='<div style="color:var(--danger);font-size:11.5px;text-align:center;padding:8px">Error: '+e.message+'</div>';}
 }
@@ -1091,6 +1142,7 @@ async function handleRegisterV2() {
   const dob    = getRegisterValue('r-dob');
   const mobile = getRegisterValue('r-mobile');
   const dept   = getRegisterValue('r-dept');
+  const subcategory = getRegisterValue('r-subcategory');
   const role   = document.getElementById('r-role').value;
   const inst   = String(window.TENANT?.institution?.name || tenantState.institution?.name || '').trim();
   const orgType = String(window.TENANT?.orgType || tenantState.orgType || '').trim();
@@ -1106,6 +1158,7 @@ async function handleRegisterV2() {
       action:               'registerUser',
       name, email, password:pass, dob, mobile,
       departmentId:         dept,
+      subcategoryId:        subcategory,
       roleId:               role,
       instituteId:          inst,
       orgType:              orgType,
@@ -1118,7 +1171,7 @@ async function handleRegisterV2() {
     if(d.success){
       registeredUid=d.userId;
       registerFlowState.accountCreated = true;
-      toast('âœ“ Account created with biometric access.','success');
+      toast('Account created with biometric access.','success');
     }else toast(d.message,'error');
   }catch(e){
     if(e.name==='NotAllowedError') toast('Biometric cancelled','warn');
@@ -1190,7 +1243,7 @@ async function checkActiveSess(){
     if(d.active){
       let secs=d.secondsLeft; liveSessionId=d.session.session_id;
       el.innerHTML=`<div class="sess-card">
-        <div class="sess-subj">ðŸŸ¢ ${d.session.subject} â€” LIVE</div>
+        <div class="sess-subj">${d.session.subject} - LIVE</div>
         <div class="sess-meta">Closes in <span id="t-timer" style="font-weight:700;color:var(--success)">${fmtTime(secs)}</span></div>
         <button onclick="closeSess('${d.session.session_id}')" class="btn btn-danger" style="margin-top:9px;padding:8px">Stop Session</button>
       </div>`;
@@ -1209,7 +1262,7 @@ async function openSession(){
   try{
     const d=await api({action:'createSession',userId:teacherData.userId,teacherName:teacherData.name,
                        roleId:teacherData.roleId,subject:subj,windowMinutes:win});
-    if(d.success){toast('âœ“ Session opened','success');document.getElementById('t-subject').value='';liveLastSyncTime='';checkActiveSess();if(document.getElementById('sp-live')?.classList.contains('active')) refreshLive(true);}
+    if(d.success){toast('Session opened','success');document.getElementById('t-subject').value='';liveLastSyncTime='';checkActiveSess();if(document.getElementById('sp-live')?.classList.contains('active')) refreshLive(true);}
     else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
   setLoading('btn-open-sess',false);
@@ -1253,7 +1306,7 @@ async function refreshLive(force = false, internal = false){
   const refEl=document.getElementById('live-refresh');
   try{const chk=await api({action:'getActiveSession'});if(chk.active)liveSessionId=chk.session.session_id;}catch(e){}
   if(!liveSessionId){
-    infoEl.className='no-session';infoEl.style.display='block';infoEl.textContent='No active session â€” open one from Session tab';
+    infoEl.className='no-session';infoEl.style.display='block';infoEl.textContent='No active session - open one from Session tab';
     statEl.style.display='none';toolEl.style.display='none';refEl.style.display='none';listEl.innerHTML='';
     renderLiveMap([]);
     stopLivePolling();
@@ -1555,7 +1608,7 @@ async function forceExitLiveUser(userId){
 async function loadHistory(){
   const date=document.getElementById('hist-date').value;
   const el=document.getElementById('hist-list');
-  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">Loadingâ€¦</div>';
+  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">Loading...</div>';
   try{
     const d=await api({action:'getSessions',userId:teacherData.userId});
     let sessions=d.sessions||[];
@@ -1566,7 +1619,7 @@ async function loadHistory(){
     el.innerHTML=sessions.map(s=>`
       <div class="att-item clickable" style="flex-direction:column;align-items:stretch" onclick="toggleSessDet('${s.sessionId}','${(s.subject||'').replace(/'/g,"\\'")}')">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div class="iname">${s.subject}</div><div class="imeta">${s.date} Â· ${s.startTime}â€“${s.endTime}</div></div>
+          <div><div class="iname">${s.subject}</div><div class="imeta">${s.date} &middot; ${s.startTime}-${s.endTime}</div></div>
           <div style="text-align:right"><span class="badge ${s.status==='open'?'':'closed'}">${s.presentCount||0} present</span><div style="font-size:9.5px;margin-top:2px;color:var(--muted)">${s.status}</div></div>
         </div>
         <div id="sd-${s.sessionId}" style="display:none;margin-top:9px;border-top:1px solid var(--border);padding-top:9px"></div>
@@ -1577,19 +1630,19 @@ async function loadHistory(){
 async function toggleSessDet(sid,subj){
   const el=document.getElementById('sd-'+sid);if(!el)return;
   if(el.style.display==='block'){el.style.display='none';return;}
-  el.style.display='block';el.innerHTML='<div style="color:var(--muted);font-size:11px">Loadingâ€¦</div>';
+  el.style.display='block';el.innerHTML='<div style="color:var(--muted);font-size:11px">Loading...</div>';
   try{
     const d=await api({action:'getDashboard',sessionId:sid});
     if(!d.success){el.innerHTML='<div style="color:var(--danger);font-size:11px">'+d.message+'</div>';return;}
     el.innerHTML=`
       <div style="display:flex;gap:10px;margin-bottom:7px;font-size:11px">
-        <span style="color:var(--success)">âœ“ ${d.presentCount}</span>
-        <span style="color:var(--danger)">âœ— ${d.absentCount}</span>
-        <span style="color:var(--muted)">${d.total} total Â· ${d.total?Math.round(d.presentCount/d.total*100):0}%</span>
+        <span style="color:var(--success)">Present: ${d.presentCount}</span>
+        <span style="color:var(--danger)">Absent: ${d.absentCount}</span>
+        <span style="color:var(--muted)">${d.total} total &middot; ${d.total?Math.round(d.presentCount/d.total*100):0}%</span>
       </div>
-      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.entryTime}${s.exitTime?' â†’ '+s.exitTime:''} Â· ${s.method}</span></div>`).join('')}
+      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.entryTime}${s.exitTime?' -> '+s.exitTime:''} &middot; ${s.method}</span></div>`).join('')}
       ${!d.present.length?'<div style="font-size:11px;color:var(--muted)">No students marked</div>':''}
-      <button onclick="event.stopPropagation();exportSession('${sid}','${subj}')" class="export-btn" style="float:none;margin-top:9px">â†“ Export CSV</button>`;
+      <button onclick="event.stopPropagation();exportSession('${sid}','${subj}')" class="export-btn" style="float:none;margin-top:9px">Export CSV</button>`;
   }catch(e){el.innerHTML='<div style="color:var(--danger);font-size:11px">Error</div>';}
 }
 
@@ -1613,7 +1666,7 @@ async function exportHistory(){
 // â”€â”€ Students roster â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadStudents(){
   const el=document.getElementById('stud-list');
-  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">Loadingâ€¦</div>';
+  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">Loading...</div>';
   try{
     const d=await api({action:'getStudents'});
     allStudents=d.students||[];
@@ -1634,10 +1687,10 @@ function renderStudents(list){
   if(!list.length){el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">No students found</div>';return;}
   el.innerHTML=list.map((s,i)=>`
     <div class="att-item">
-      <div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} Â· dept: ${s.department||'â€”'}</div></div>
+      <div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} - category: ${s.department||'-'}</div></div>
       <div style="text-align:right;font-size:10px;line-height:1.8">
-        <span style="color:${s.hasBio?'var(--success)':'var(--muted)'}">${s.hasBio?'ðŸ” bio':'ðŸ” none'}</span><br>
-        <span style="color:${s.hasDevice?'var(--success)':'var(--muted)'}">${s.hasDevice?'ðŸ“± bound':'ðŸ“± none'}</span>
+        <span style="color:${s.hasBio?'var(--success)':'var(--muted)'}">${s.hasBio?'Bio enrolled':'Bio missing'}</span><br>
+        <span style="color:${s.hasDevice?'var(--success)':'var(--muted)'}">${s.hasDevice?'Device bound':'Device unbound'}</span>
       </div>
     </div>`).join('');
 }
@@ -1652,11 +1705,11 @@ async function addDepartment(){
   const name=document.getElementById('ad-name').value.trim();
   const incharge=document.getElementById('ad-incharge').value.trim();
   const email=document.getElementById('ad-email').value.trim();
-  if(!id||!name){toast('department_id and name are required','error');return;}
+  if(!id||!name){toast('category_id and name are required','error');return;}
   try{
     // Write directly to Departments sheet via a dedicated action
     const d=await api({action:'addDepartment',departmentId:id,name,inCharge:incharge,email});
-    if(d.success){toast('âœ“ Department added','success');document.getElementById('ad-id').value='';document.getElementById('ad-name').value='';loadDepts();}
+    if(d.success){toast('Category added','success');document.getElementById('ad-id').value='';document.getElementById('ad-name').value='';loadDepts();}
     else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
 }
@@ -1664,11 +1717,11 @@ async function addDepartment(){
 async function addDepartmentFromWorkspace() {
   const deptId = document.getElementById('admin-dept-id')?.value.trim();
   const name = document.getElementById('admin-dept-name')?.value.trim();
-  if(!deptId||!name){toast('Department code and name are required','error');return;}
+  if(!deptId||!name){toast('Category code and name are required','error');return;}
   try{
     const d=await api({action:'addDepartment',departmentId:normalizeCode(deptId),name});
     if(d.success){
-      toast('âœ“ Department added','success');
+      toast('Category added','success');
       document.getElementById('admin-dept-id').value='';
       document.getElementById('admin-dept-name').value='';
       await loadRegisterLookups();
@@ -1682,52 +1735,80 @@ async function loadDepts(){
   try{
     const d=await api({action:'getDepartments'});
     const rows=d.data||[];
-    el.innerHTML=rows.length?rows.map(r=>`<div class="att-item"><div><div class="iname">${r.department_id} â€” ${r.name}</div><div class="imeta">in_charge: ${r.in_charge||'â€”'} Â· ${r.email||'â€”'}</div></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No departments yet</div>';
+    registerLookupState.departments = rows;
+    tenantState.departments = rows;
+    el.innerHTML=rows.length?rows.map(r=>`<div class="att-item"><div><div class="iname">${r.department_id} - ${r.name}</div><div class="imeta">in_charge: ${r.in_charge||'-'} - ${r.email||'-'}</div></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No categories yet</div>';
   }catch(e){}
 }
 
 // Attendance Locations
 async function addLocation(){
-  const id=document.getElementById('al-id').value.trim();
   const name=document.getElementById('al-name').value.trim();
+  const address=document.getElementById('al-address')?.value.trim() || '';
   const lat=document.getElementById('al-lat').value.trim();
   const lng=document.getElementById('al-lng').value.trim();
-  if(!id||!name||!lat||!lng){toast('All location fields are required','error');return;}
+  const radius=document.getElementById('al-radius')?.value.trim() || '200';
+  const reuseLocationId=document.getElementById('al-reuse')?.value.trim() || '';
+  if(!name||!lat||!lng){toast('Location name, latitude and longitude are required','error');return;}
   try{
-    const d=await api({action:'addAttendanceLocation',locationId:id,name,latitude:parseFloat(lat),longitude:parseFloat(lng)});
-    if(d.success){toast('âœ“ Location added','success');document.getElementById('al-id').value='';document.getElementById('al-name').value='';loadLocs();}
-    else toast(d.message,'error');
+    const payload = { action:'addAttendanceLocation',name,address,latitude:parseFloat(lat),longitude:parseFloat(lng),geofenceRadius:parseInt(radius)||200,reuseLocationId };
+    const d=await api(payload);
+    if(d.success){
+      toast(d.reused ? 'Existing location reused' : 'Location added','success');
+      if (document.getElementById('al-name')) document.getElementById('al-name').value='';
+      if (document.getElementById('al-address')) document.getElementById('al-address').value='';
+      if (document.getElementById('al-lat')) document.getElementById('al-lat').value='';
+      if (document.getElementById('al-lng')) document.getElementById('al-lng').value='';
+      if (document.getElementById('al-radius')) document.getElementById('al-radius').value='200';
+      if (document.getElementById('al-reuse')) document.getElementById('al-reuse').value='';
+      await loadLocs();
+      await loadRegisterLookups();
+      return;
+    }
+    if(d.duplicateWarning && d.nearbyLocations && d.nearbyLocations.length){
+      await addLocationWithDuplicateHandling(payload, d.nearbyLocations);
+      return;
+    }
+    toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
 async function addLocationFromWorkspace() {
-  const deptId = document.getElementById('admin-location-dept')?.value.trim();
   const name = document.getElementById('admin-location-name')?.value.trim();
+  const address = document.getElementById('admin-location-address')?.value.trim() || '';
   const lat = document.getElementById('admin-location-lat')?.value.trim();
   const lng = document.getElementById('admin-location-lng')?.value.trim();
-  if(!deptId||!name||!lat||!lng){toast('Department, classroom/lab name, latitude and longitude are required','error');return;}
-  const normalizedName = normalizeCode(name);
-  if (!normalizedName.startsWith(normalizeCode(deptId))) {
-    toast('Location name should start with department code, for example CSE001','error');
-    return;
-  }
-  const locationId = `${normalizeCode(deptId)}_${Date.now().toString().slice(-6)}`;
+  const radius = document.getElementById('admin-location-radius')?.value.trim() || '200';
+  const reuseLocationId = document.getElementById('admin-location-reuse')?.value.trim() || '';
+  if(!name||!lat||!lng){toast('Location name, latitude and longitude are required','error');return;}
   try{
-    const d=await api({
+    const payload = {
       action:'addAttendanceLocation',
-      locationId,
-      name: normalizedName,
+      name,
+      address,
       latitude: parseFloat(lat),
-      longitude: parseFloat(lng)
-    });
+      longitude: parseFloat(lng),
+      geofenceRadius: parseInt(radius)||200,
+      reuseLocationId
+    };
+    const d=await api(payload);
     if(d.success){
-      toast('âœ“ Location added','success');
+      toast(d.reused ? 'Existing location reused' : 'Location added','success');
       document.getElementById('admin-location-name').value='';
+      document.getElementById('admin-location-address').value='';
       document.getElementById('admin-location-lat').value='';
       document.getElementById('admin-location-lng').value='';
+      document.getElementById('admin-location-radius').value='200';
+      document.getElementById('admin-location-reuse').value='';
       await loadRegisterLookups();
       await loadLocs();
-    } else toast(d.message,'error');
+      return;
+    }
+    if(d.duplicateWarning && d.nearbyLocations && d.nearbyLocations.length){
+      await addLocationWithDuplicateHandling(payload, d.nearbyLocations);
+      return;
+    }
+    toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -1736,21 +1817,72 @@ async function loadLocs(){
   try{
     const d=await api({action:'getLocations'});
     const rows=d.data||[];
-    el.innerHTML=rows.length?rows.map(r=>`<div class="att-item"><div><div class="iname">${r.attendance_location_id} â€” ${r.name}</div><div class="imeta">lat: ${r.latitude} Â· lng: ${r.longitude}</div></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No locations yet</div>';
+    registerLookupState.locations = rows;
+    tenantState.attendanceLocations = rows;
+    el.innerHTML=rows.length?rows.map(r=>`<div class="att-item"><div><div class="iname">${r.attendance_location_id} - ${r.name}</div><div class="imeta">${r.address || '-'} &middot; lat: ${r.latitude} &middot; lng: ${r.longitude} &middot; radius: ${r.geofence_radius || 200}m</div></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No locations yet</div>';
   }catch(e){}
 }
 
-// User â†’ Location map
+// User to Location map
 async function addUserLocMap(){
-  const uid=document.getElementById('ulm-uid').value.trim();
-  const lid=document.getElementById('ulm-lid').value.trim();
-  const dist=document.getElementById('ulm-dist').value.trim();
-  if(!uid||!lid){toast('user_id and attendance_location_id are required','error');return;}
+  const category=document.getElementById('admin-map-category')?.value.trim() || document.getElementById('ulm-category')?.value.trim();
+  const subcategory=document.getElementById('admin-map-subcategory')?.value.trim() || document.getElementById('ulm-subcategory')?.value.trim();
+  const lid=document.getElementById('admin-map-location')?.value.trim() || document.getElementById('ulm-lid')?.value.trim();
+  const dist=document.getElementById('admin-map-distance')?.value.trim() || document.getElementById('ulm-dist')?.value.trim();
+  if(!category||!subcategory||!lid){toast('category, subcategory and attendance location are required','error');return;}
   try{
-    const d=await api({action:'addUserLocMap',userId:uid,locationId:lid,allowedDistance:parseInt(dist)||200});
-    if(d.success){toast('âœ“ Mapping added','success');document.getElementById('ulm-uid').value='';}
+    const d=await api({action:'addCategoryLocationMap',categoryId:category,subcategoryId:subcategory,locationId:lid,allowedDistance:parseInt(dist)||200});
+    if(d.success){
+      toast('Mapping added','success');
+      if (document.getElementById('admin-map-subcategory')) document.getElementById('admin-map-subcategory').value='';
+      if (document.getElementById('admin-map-distance')) document.getElementById('admin-map-distance').value='200';
+      await loadCategoryLocMaps();
+      return;
+    }
     else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function addLocationWithDuplicateHandling(payload, nearbyLocations) {
+  if (!nearbyLocations || !nearbyLocations.length) return;
+  const existing = nearbyLocations[0];
+  const reuse = window.confirm(
+    `A location already exists within 20 meters: ${existing.name || existing.attendance_location_id}. Click OK to reuse it, or Cancel to create a duplicate.`
+  );
+  try {
+    const d = await api({
+      ...payload,
+      action: 'addAttendanceLocation',
+      ...(reuse ? { reuseLocationId: existing.attendance_location_id } : { confirmDuplicate: true })
+    });
+    if (d.success) {
+      toast(reuse ? 'Existing location reused' : 'Location added with confirmation', 'success');
+      await loadLocs();
+      await loadRegisterLookups();
+    } else {
+      toast(d.message, 'error');
+    }
+  } catch (e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+async function loadCategoryLocMaps() {
+  const el = document.getElementById('map-list');
+  if (!el) return;
+  try {
+    const d = await api({ action: 'getCategoryLocationMap' });
+    const rows = d.data || [];
+    el.innerHTML = rows.length ? rows.map(r => `
+      <div class="att-item">
+        <div>
+          <div class="iname">${r.category_id || '-'} / ${r.subcategory_id || '-'}</div>
+          <div class="imeta">location: ${r.attendance_location_id || '-'} &middot; allowed: ${r.allowed_distance || 200}m</div>
+        </div>
+      </div>`).join('') : '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No mappings yet</div>';
+    populateAdminCategorySelect();
+    populateAdminLocationSelect();
+  } catch (e) {}
 }
 
 // â”€â”€ CSV download â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
