@@ -13,7 +13,7 @@
 function credentialIdToUint8Array(value) {
   const raw = String(value || '').trim();
   if (!raw) return new Uint8Array();
-  // Handle both base64 and base64url
+  
   const normalized = raw.replace(/-/g, '+').replace(/_/g, '/');
   const padded = normalized + '='.repeat((4 - (normalized.length % 4 || 4)) % 4);
   try { return Uint8Array.from(atob(padded), c => c.charCodeAt(0)); }
