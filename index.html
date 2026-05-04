@@ -280,9 +280,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </div>
 
   <div class="form-body">
-
-<!-- Section -->
-         SIGN IN — biometric only
     <div class="pane active" id="pane-signin">
       <div id="loc-status-bar"></div>
       <div id="att-success-card" style="display:none"></div>
@@ -309,12 +306,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <div id="my-att-list" style="display:none;margin-top:9px;text-align:left"></div>
       </div>
     </div>
-
-<!-- Section -->
-         REGISTER — User table form
-         user_id(auto), institute_id, department_id, role_id,
-         full_name, dob, mobile, email, password_hash(auto),
-         biometric_code(post), device_identification(auto)
     <div class="pane" id="pane-register">
       <div class="section-label">New user registration</div>
 
@@ -507,6 +498,29 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <!-- Section -->
          ADMIN — manage lookup tables
     <div class="pane" id="pane-admin">
+      <!-- Admin gate -->
+      <div id="admin-gate" style="display:block">
+        <div class="info-box orange">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10v2H1v11h22V12h-2v-2c0-4.97-4.03-9-9-9zm0 2c3.87 0 7 3.13 7 7v2H5v-2c0-3.87 3.13-7 7-7zm0 10c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z"/></svg>
+          <span>Admin access required. Sign in with your admin account.</span>
+        </div>
+        <div class="field"><label>Admin Email</label><input type="email" id="admin-email" placeholder="admin@sit.ac.in"/></div>
+        <div class="field"><label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="admin-password" placeholder="••••••••"/>
+            <button class="pw-eye" onclick="togglePw('admin-password')" type="button">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-admin-login" onclick="handleAdminLogin()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Sign in as Admin
+        </button>
+      </div>
+
+      <!-- Admin content (hidden until signed in) -->
+      <div id="admin-content" style="display:none">
       <div class="section-label">Database administration</div>
 
       <!-- Admin sub-tabs -->
@@ -552,6 +566,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <div class="field"><label>longitude <span class="req">*</span></label>
             <input type="number" id="al-lng" step="0.00001" placeholder="77.12621"/></div>
         </div>
+        <button type="button" class="btn btn-secondary" id="btn-use-location" onclick="fetchAdminLocation()" style="margin-bottom:10px;margin-top:0">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          Use my current location
+        </button>
+        <div id="admin-loc-status" style="font-size:11px;color:var(--muted);margin-bottom:8px;min-height:16px"></div>
         <div class="row2">
           <div class="field"><label>geofence radius (m)</label>
             <input type="number" id="al-radius" value="200" placeholder="200"/></div>
@@ -596,6 +615,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
           <span>Entry and Exit types are seeded automatically when you run setupSheets from Apps Script editor.</span>
         </div>
+      </div>
       </div>
 
     </div><!-- /pane-admin -->
@@ -706,6 +726,48 @@ function switchAdmin(tab) {
   });
   if (tab==='dept')   loadDepts();
   if (tab==='loc')    loadLocs();
+}
+
+async function fetchAdminLocation() {
+  const btn = document.getElementById('btn-use-location');
+  const statusEl = document.getElementById('admin-loc-status');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Getting location…'; }
+  if (statusEl) statusEl.textContent = '';
+  try {
+    const loc = await new Promise((resolve, reject) => {
+      if (!navigator.geolocation) return reject(new Error('Geolocation not supported'));
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve(pos),
+        err => reject(err),
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      );
+    });
+    const lat = loc.coords.latitude;
+    const lng = loc.coords.longitude;
+    const acc = loc.coords.accuracy;
+    const latEl = document.getElementById('al-lat');
+    const lngEl = document.getElementById('al-lng');
+    if (latEl) latEl.value = lat.toFixed(6);
+    if (lngEl) lngEl.value = lng.toFixed(6);
+    if (statusEl) statusEl.innerHTML = `<span style="color:var(--success)">📍 Location captured — accuracy ±${Math.round(acc)}m</span>`;
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, { headers: { 'Accept-Language': 'en' } });
+      const d = await r.json();
+      if (d.display_name) {
+        const addrEl = document.getElementById('al-address');
+        if (addrEl && !addrEl.value) addrEl.value = d.display_name.split(',').slice(0, 4).join(',').trim();
+      }
+    } catch (e) {}
+  } catch (e) {
+    const msg = e.code === 1 ? 'Location access denied — allow in browser settings' : 'Could not get location: ' + e.message;
+    if (statusEl) statusEl.innerHTML = `<span style="color:var(--danger)">⚠️ ${msg}</span>`;
+    toast(msg, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> Use my current location';
+    }
+  }
 }
 
 // Section
@@ -1516,6 +1578,46 @@ async function addUserLocMap(){
     if(d.success){toast('✓ Mapping added','success');document.getElementById('ulm-category').value='';document.getElementById('ulm-subcategory').value='';}
     else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function handleAdminLogin() {
+  const email = document.getElementById('admin-email').value.trim();
+  const pass = document.getElementById('admin-password').value;
+  if (!email || !pass) { toast('Enter email and password', 'error'); return; }
+  setLoading('btn-admin-login', true);
+  try {
+    const d = await api({ action: 'signIn', email, password: pass, guid: tenantState.guid });
+    if (!d.success) { toast(d.message || 'Invalid credentials', 'error'); return; }
+    const role = String(d.roleId || d.roleKey || '').toLowerCase();
+    if (!role.includes('admin') && !role.includes('teacher')) {
+      toast('Admin or teacher account required', 'error');
+      return;
+    }
+    const gate = document.getElementById('admin-gate');
+    const content = document.getElementById('admin-content');
+    const label = document.getElementById('admin-logged-label');
+    if (gate) gate.style.display = 'none';
+    if (content) content.style.display = 'block';
+    if (label) label.textContent = 'Signed in as ' + (d.name || email);
+    loadDepts();
+    toast('✓ Admin access granted', 'success');
+  } catch (e) {
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    setLoading('btn-admin-login', false);
+  }
+}
+
+function adminLogout() {
+  const gate = document.getElementById('admin-gate');
+  const content = document.getElementById('admin-content');
+  const email = document.getElementById('admin-email');
+  const pass = document.getElementById('admin-password');
+  if (gate) gate.style.display = 'block';
+  if (content) content.style.display = 'none';
+  if (email) email.value = '';
+  if (pass) pass.value = '';
+  toast('Admin signed out', 'success');
 }
 
 // Section
