@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -32,7 +32,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   animation:up .45s cubic-bezier(.22,1,.36,1) both}
 @keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Header Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 .header{padding:24px 20px 16px;background:linear-gradient(160deg,#0d1a40,#080f2a);text-align:center}
 .logo-ring{width:54px;height:54px;margin:0 auto 10px;border-radius:50%;
   background:linear-gradient(135deg,var(--acc),var(--acc2));
@@ -46,7 +46,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:rgba(79,110,247,.15);border:1px solid rgba(79,110,247,.3);border-radius:20px;
   font-size:10px;color:var(--acc)}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Tabs Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 .main-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
 .main-tabs::-webkit-scrollbar{display:none}
 .mtab{flex-shrink:0;padding:10px 14px;background:transparent;border:none;cursor:pointer;
@@ -56,7 +56,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mtab.active::after{content:'';position:absolute;bottom:0;left:8px;right:8px;
   height:2px;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:2px 2px 0 0}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Form body Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 .form-body{padding:18px 18px 22px}
 .pane{display:none}.pane.active{display:block;animation:fadeIn .25s ease both}
 @keyframes fadeIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
@@ -82,7 +82,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center}
 .pw-eye:hover{color:var(--text)}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Buttons Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 .btn{width:100%;padding:11px;border:none;border-radius:var(--rad);font-family:'Sora',sans-serif;
   font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;
   justify-content:center;gap:7px;transition:opacity .2s,transform .1s}
@@ -108,7 +108,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .hint{text-align:center;font-size:11px;color:var(--muted);margin-top:6px}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Info / status Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 .info-box{border-radius:10px;padding:9px 12px;font-size:12px;margin-bottom:11px;
   display:flex;align-items:flex-start;gap:8px}
 .info-box.blue{background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.25);color:#a5b4fc}
@@ -123,7 +123,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .loc-bar.ok{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:var(--success)}
 .loc-bar.fail{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:var(--danger)}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Attendance card Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 .att-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);
   border-radius:12px;padding:13px 15px;margin-bottom:12px}
 .att-card .att-name{font-size:14px;font-weight:600;color:var(--success);margin-bottom:5px}
@@ -132,7 +132,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .att-card .att-row:last-child{border:none}
 .att-card .att-val{color:var(--text);font-weight:500;text-align:right;max-width:55%;font-size:11px}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Teacher dashboard Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 .dash-header{display:flex;align-items:center;justify-content:space-between;
   margin-bottom:13px;padding-bottom:11px;border-bottom:1px solid var(--border)}
 .dash-name{font-size:13.5px;font-weight:600;color:var(--text)}
@@ -168,7 +168,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   color:var(--acc);font-size:11px;font-family:'Sora',sans-serif;cursor:pointer}
 .export-btn:hover{background:rgba(79,110,247,.18)}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Lists Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 .att-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow-y:auto;margin-top:9px}
 .notif-list{display:flex;flex-direction:column;gap:7px;max-height:160px;overflow-y:auto;margin-bottom:10px}
 .att-item{background:var(--inp);border:1px solid var(--border);border-radius:9px;
@@ -208,12 +208,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .no-session{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);
   border-radius:12px;padding:12px;text-align:center;color:var(--muted);font-size:12.5px;margin-bottom:12px}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Device badge Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 .device-badge{display:flex;align-items:center;gap:6px;padding:7px 11px;
   background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);
   border-radius:9px;margin-bottom:11px;font-size:11px;color:#86efac}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Toast Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(50px);
   background:#1a2a52;border:1px solid var(--acc);color:var(--text);padding:9px 18px;
   border-radius:40px;font-size:12px;opacity:0;transition:opacity .3s,transform .3s;
@@ -223,18 +223,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 #toast.success{border-color:var(--success)}
 #toast.warn{border-color:var(--warn)}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Spinner Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);
   border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Offline Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 #offline-bar{display:none;background:#7f1d1d;color:#fca5a5;font-size:11.5px;
   text-align:center;padding:5px;font-family:'Sora',sans-serif;
   position:fixed;top:0;left:0;right:0;z-index:9999}
 #offline-bar.show{display:block}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ PWA banner Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Section */
 #pwa-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;
   padding:11px 15px;background:#0d1530;border-top:1px solid var(--border)}
 #pwa-banner.show{display:flex;align-items:center;gap:11px}
@@ -255,10 +255,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <span id="tenant-loader-text">Loading organization...</span>
 </div>
 
-<div id="offline-bar">Ã°Å¸â€œÂ¡ Offline Ã¢â‚¬â€ attendance requires internet</div>
+<div id="offline-bar">📡 Offline — attendance requires internet</div>
 
 <div class="card">
-  <!-- Ã¢â€â‚¬Ã¢â€â‚¬ Header Ã¢â€â‚¬Ã¢â€â‚¬ -->
+<!-- Section -->
   <div class="header">
     <div class="logo-ring">
       <img id="org-logo" alt="Organization logo" style="display:none;width:54px;height:54px;object-fit:contain;border-radius:50%"/>
@@ -268,11 +268,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="tagline" id="org-tagline">Biometric Attendance System</div>
     <div class="college-badge" id="org-city-badge">
       <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-      <span id="org-city-text">Loading...</span>
+          <span id="org-city-text">Loading...</span>
     </div>
   </div>
 
-  <!-- Ã¢â€â‚¬Ã¢â€â‚¬ Main Tabs Ã¢â€â‚¬Ã¢â€â‚¬ -->
+<!-- Section -->
   <div class="main-tabs">
     <button class="mtab active" id="mtab-signin"   onclick="switchMain('signin')">Sign In</button>
     <button class="mtab" id="mtab-register" onclick="switchMain('register')">Register</button>
@@ -281,9 +281,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   <div class="form-body">
 
-    <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-         SIGN IN Ã¢â‚¬â€ biometric only
-    Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- Section -->
+         SIGN IN — biometric only
     <div class="pane active" id="pane-signin">
       <div id="loc-status-bar"></div>
       <div id="att-success-card" style="display:none"></div>
@@ -305,18 +304,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
       <div style="margin-top:12px;text-align:center">
         <button onclick="toggleMyAtt()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif">
-          View my attendance history Ã¢â€ â€œ
+          View my attendance history →
         </button>
         <div id="my-att-list" style="display:none;margin-top:9px;text-align:left"></div>
       </div>
     </div>
 
-    <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-         REGISTER Ã¢â‚¬â€ User table form
+<!-- Section -->
+         REGISTER — User table form
          user_id(auto), institute_id, department_id, role_id,
          full_name, dob, mobile, email, password_hash(auto),
          biometric_code(post), device_identification(auto)
-    Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
     <div class="pane" id="pane-register">
       <div class="section-label">New user registration</div>
 
@@ -355,16 +353,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
             <option value="company">Company</option>
           </select>
         </div>
-        <div class="field">
-          <label>Department <span class="req">*</span></label>
-          <input type="text" id="r-dept" placeholder="Enter department name"/>
+        <div class="row2">
+          <div class="field">
+            <label>Category <span class="req">*</span></label>
+            <input type="text" id="r-category" placeholder="Enter category name"/>
+          </div>
+          <div class="field">
+            <label>Subcategory <span class="req">*</span></label>
+            <input type="text" id="r-subcategory" placeholder="Enter section or subcategory"/>
+          </div>
         </div>
       </div>
 
       <div class="field">
         <label>Role <span class="req">*</span></label>
         <select id="r-role">
-          <option value="">Select roleâ€¦</option>
+          <option value="">Select role...</option>
         </select>
       </div>
 
@@ -392,9 +396,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <div class="hint" id="bio-hint">Create your account first, then register biometric</div>
     </div>
 
-    <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+<!-- Section -->
          TEACHER PANEL
-    Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
     <div class="pane" id="pane-teacher">
 
       <!-- Login -->
@@ -406,7 +409,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <div class="field"><label>Email</label><input type="email" id="t-email" placeholder="teacher@sit.ac.in"/></div>
         <div class="field"><label>Password</label>
           <div class="pw-wrap">
-            <input type="password" id="t-password" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"/>
+            <input type="password" id="t-password" placeholder="••••••••"/>
             <button class="pw-eye" onclick="togglePw('t-password')" type="button">
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
@@ -421,7 +424,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <!-- Dashboard -->
       <div id="t-dashboard" style="display:none">
         <div class="dash-header">
-          <div><div class="dash-name" id="t-welcome"></div><div class="dash-sub">Teacher Dashboard Ã‚Â· SIT</div></div>
+          <div><div class="dash-name" id="t-welcome"></div><div class="dash-sub">Teacher Dashboard · SIT</div></div>
           <button class="dash-logout" onclick="teacherLogout()">Logout</button>
         </div>
         <div class="sub-tabs">
@@ -440,7 +443,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           </div>
           <div id="open-sess-form">
             <div class="field"><label>Subject / Class <span class="req">*</span></label>
-              <input type="text" id="t-subject" placeholder="e.g. Data Structures Ã¢â‚¬â€œ 3CSE-B"/></div>
+              <input type="text" id="t-subject" placeholder="e.g. Data Structures – 3CSE-B"/></div>
             <div class="field"><label>Window</label>
               <select id="t-window">
                 <option value="5">5 minutes</option>
@@ -472,11 +475,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
               <button class="seg active" id="seg-p" onclick="showLive('present')">Present</button>
               <button class="seg" id="seg-a" onclick="showLive('absent')">Absent</button>
             </div>
-            <button class="export-btn" onclick="exportLive()">Ã¢â€ â€œ Export</button>
+            <button class="export-btn" onclick="exportLive()">↓ Export</button>
           </div>
           <div id="live-list" class="att-list"></div>
           <div id="live-refresh" style="display:none;text-align:center;margin-top:9px">
-            <button onclick="refreshLive()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">Ã¢â€ Â» Refresh</button>
+            <button onclick="refreshLive()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↻ Refresh</button>
             <div id="live-updated" style="font-size:10px;color:var(--muted);margin-top:3px"></div>
           </div>
         </div>
@@ -488,41 +491,40 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           </div>
           <div id="hist-list" class="att-list"></div>
           <div style="text-align:right;margin-top:8px;display:none" id="hist-export">
-            <button class="export-btn" onclick="exportHistory()">Ã¢â€ â€œ Export CSV</button>
+            <button class="export-btn" onclick="exportHistory()">↓ Export CSV</button>
           </div>
         </div>
 
         <!-- Students sub-pane -->
         <div class="sub-pane" id="sp-students">
-          <input type="text" id="student-search" placeholder="Search name, email or deptÃ¢â‚¬Â¦" oninput="filterStudents()"/>
+          <input type="text" id="student-search" placeholder="Search name, email, category or subcategory…" oninput="filterStudents()"/>
           <div id="stud-count" style="font-size:11px;color:var(--muted);margin-bottom:7px"></div>
           <div id="stud-list" class="att-list"></div>
         </div>
       </div>
     </div>
 
-    <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-         ADMIN Ã¢â‚¬â€ manage lookup tables
-    Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- Section -->
+         ADMIN — manage lookup tables
     <div class="pane" id="pane-admin">
       <div class="section-label">Database administration</div>
 
       <!-- Admin sub-tabs -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-        <button class="seg active" id="atab-dept"    onclick="switchAdmin('dept')"   style="padding:5px 10px">Departments</button>
+        <button class="seg active" id="atab-dept"    onclick="switchAdmin('dept')"   style="padding:5px 10px">Categories</button>
         <button class="seg" id="atab-loc"     onclick="switchAdmin('loc')"    style="padding:5px 10px">Locations</button>
-        <button class="seg" id="atab-ulmap"   onclick="switchAdmin('ulmap')"  style="padding:5px 10px">User-Loc Map</button>
+        <button class="seg" id="atab-ulmap"   onclick="switchAdmin('ulmap')"  style="padding:5px 10px">Category Map</button>
         <button class="seg" id="atab-atttype" onclick="switchAdmin('atttype')" style="padding:5px 10px">Att. Type</button>
       </div>
 
       <!-- Departments form -->
       <div id="ap-dept" class="sub-pane active">
-        <div class="section-label">Add Department</div>
+        <div class="section-label">Add Category</div>
         <div class="row2">
-          <div class="field"><label>department_id <span class="req">*</span></label>
+          <div class="field"><label>category_id <span class="req">*</span></label>
             <input type="text" id="ad-id" placeholder="e.g. CSE"/></div>
           <div class="field"><label>name <span class="req">*</span></label>
-            <input type="text" id="ad-name" placeholder="Dept name"/></div>
+            <input type="text" id="ad-name" placeholder="Category name"/></div>
         </div>
         <div class="row2">
           <div class="field"><label>in_charge</label>
@@ -530,19 +532,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <div class="field"><label>email</label>
             <input type="email" id="ad-email" placeholder="hod@sit.ac.in"/></div>
         </div>
-        <button class="btn btn-primary" onclick="addDepartment()">Add Department</button>
+        <button class="btn btn-primary" onclick="addDepartment()">Add Category</button>
         <div id="dept-list" class="att-list" style="margin-top:12px"></div>
-        <button onclick="loadDepts()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">Ã¢â€ Â» Refresh list</button>
+        <button onclick="loadDepts()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">↻ Refresh list</button>
       </div>
 
       <!-- Attendance Locations form -->
       <div id="ap-loc" class="sub-pane">
         <div class="section-label">Add Attendance Location</div>
         <div class="row2">
-          <div class="field"><label>attendance_location_id <span class="req">*</span></label>
-            <input type="text" id="al-id" placeholder="LOC004"/></div>
           <div class="field"><label>name <span class="req">*</span></label>
-            <input type="text" id="al-name" placeholder="Lab / Room name"/></div>
+            <input type="text" id="al-name" placeholder="Lab / room name"/></div>
+          <div class="field"><label>address</label>
+            <input type="text" id="al-address" placeholder="Full address"/></div>
         </div>
         <div class="row2">
           <div class="field"><label>latitude <span class="req">*</span></label>
@@ -550,16 +552,26 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <div class="field"><label>longitude <span class="req">*</span></label>
             <input type="number" id="al-lng" step="0.00001" placeholder="77.12621"/></div>
         </div>
+        <div class="row2">
+          <div class="field"><label>geofence radius (m)</label>
+            <input type="number" id="al-radius" value="200" placeholder="200"/></div>
+          <div class="field"><label>reuse existing location id</label>
+            <input type="text" id="al-reuse" placeholder="Optional"/></div>
+        </div>
         <button class="btn btn-primary" onclick="addLocation()">Add Location</button>
         <div id="loc-list" class="att-list" style="margin-top:12px"></div>
-        <button onclick="loadLocs()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">Ã¢â€ Â» Refresh list</button>
+        <button onclick="loadLocs()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:'Sora',sans-serif;margin-top:6px;display:block">↻ Refresh list</button>
       </div>
 
       <!-- User Attendance Location Map form -->
       <div id="ap-ulmap" class="sub-pane">
-        <div class="section-label">Map User Ã¢â€ â€™ Location</div>
-        <div class="field"><label>user_id <span class="req">*</span></label>
-          <input type="text" id="ulm-uid" placeholder="u_1234_abcde"/></div>
+        <div class="section-label">Map Category / Subcategory</div>
+        <div class="row2">
+          <div class="field"><label>category_id <span class="req">*</span></label>
+            <input type="text" id="ulm-category" placeholder="CSE"/></div>
+          <div class="field"><label>subcategory_id <span class="req">*</span></label>
+            <input type="text" id="ulm-subcategory" placeholder="A / B / section"/></div>
+        </div>
         <div class="row2">
           <div class="field"><label>attendance_location_id <span class="req">*</span></label>
             <input type="text" id="ulm-lid" placeholder="LOC001"/></div>
@@ -569,7 +581,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <button class="btn btn-primary" onclick="addUserLocMap()">Add Mapping</button>
         <div class="info-box orange" style="margin-top:10px">
           <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-          <span>user_id is auto-generated during registration. You can copy it from the Users sheet.</span>
+          <span>Map each category and subcategory to one attendance location and distance.</span>
         </div>
       </div>
 
@@ -594,16 +606,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <img src="/icon-192.png" class="pwa-icon" alt="BioAttend"/>
   <div class="pwa-text"><strong>Install BioAttend</strong><span>Add to home screen</span></div>
   <button class="pwa-install-btn" id="pwa-install-btn">Install</button>
-  <button class="pwa-dismiss" id="pwa-dismiss">Ã¢Å“â€¢</button>
 </div>
 
 <div id="toast"></div>
 
 <script>
-// Ã¢â€â‚¬Ã¢â€â‚¬ CONFIG Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 const API = 'https://script.google.com/macros/s/AKfycbyfgsjU607novJJlhwZfMdlSreCGP7OLaaj6ztikWQb4VawkisqPGLwdqDkDuqYfjQlZw/exec';
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ State Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 let markedUserId  = null;
 let registeredUid = null;
 let teacherData   = null;
@@ -620,7 +631,7 @@ let allStudents   = [];
 let historyData   = [];
 let deviceId      = null;
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ API Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 async function api(payload) {
   const base = window.TENANT_API || API;
   const url = base + '?data=' + encodeURIComponent(JSON.stringify(payload));
@@ -630,7 +641,7 @@ async function api(payload) {
   try { return JSON.parse(txt); } catch(e) { throw new Error('Server returned invalid response'); }
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Toast Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 function toast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'show ' + type;
@@ -639,14 +650,14 @@ function toast(msg, type = '') {
 
 function setLoading(id, on) {
   const b = document.getElementById(id); if (!b) return;
-  if (on) { b._h = b.innerHTML; b.innerHTML = '<span class="spin"></span> Please waitÃ¢â‚¬Â¦'; b.disabled = true; }
+  if (on) { b._h = b.innerHTML; b.innerHTML = '<span class="spin"></span> Please wait…'; b.disabled = true; }
   else { b.innerHTML = b._h || b.innerHTML; b.disabled = false; }
 }
 
 function togglePw(id) { const i = document.getElementById(id); i.type = i.type === 'password' ? 'text' : 'password'; }
 function fmtTime(s) { const m = Math.floor(Math.max(0,s)/60), x = Math.max(0,s)%60; return String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'); }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Tab navigation Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 function switchMain(tab) {
   ['signin','register','teacher','admin'].forEach(t => {
     const pane = document.getElementById('pane-'+t);
@@ -697,7 +708,7 @@ function switchAdmin(tab) {
   if (tab==='loc')    loadLocs();
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Device fingerprint Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 async function getDeviceId() {
   if (deviceId) return deviceId;
   try { const s = localStorage.getItem('ba_did'); if(s){deviceId=s;return s;} } catch(e){}
@@ -711,7 +722,7 @@ async function getDeviceId() {
   return deviceId;
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ GPS (fine, watchPosition) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 function getLocation() {
   return new Promise(resolve => {
     if (!navigator.geolocation) return resolve({latitude:'',longitude:'',accuracy:null,denied:false});
@@ -739,7 +750,7 @@ function getLocation() {
 
 async function getLocationWithAddress() {
   const loc = await getLocation();
-  if(loc.denied){showLocBar('fail','Location blocked Ã¢â‚¬â€ allow in browser settings and retry');return loc;}
+  if(loc.denied){showLocBar('fail','Location blocked — allow in browser settings and retry');return loc;}
   if(!loc.latitude)return loc;
   try {
     const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.latitude}&lon=${loc.longitude}&format=json`,{headers:{'Accept-Language':'en'}});
@@ -751,8 +762,8 @@ async function getLocationWithAddress() {
 
 function showLocBar(state,msg,accuracy){
   const el=document.getElementById('loc-status-bar');if(!el)return;
-  const icons={getting:'Ã°Å¸â€œÂ¡',ok:'Ã°Å¸â€œÂ',fail:'Ã¢Å¡Â Ã¯Â¸Â'};
-  const acc=accuracy?` <span style="opacity:.6;font-size:10px">Ã‚Â±${Math.round(accuracy)}m</span>`:'';
+  const icons={getting:'📡',ok:'📍',fail:'⚠️'};
+  const acc=accuracy?` <span style="opacity:.6;font-size:10px">±${Math.round(accuracy)}m</span>`:'';
   el.innerHTML=`<div class="loc-bar ${state}">${icons[state]||''} ${msg}${acc}</div>`;
 }
 
@@ -800,19 +811,19 @@ function stopStudentTracking(clearFlag=true){
   }
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Attendance card (shown after marking) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 function showAttendanceCard(data, userId) {
   markedUserId = userId;
   const el = document.getElementById('att-success-card');
   el.style.display = 'block';
   el.innerHTML = `
     <div class="att-card">
-      <div class="att-name">Ã¢Å“â€œ Attendance Marked</div>
+      <div class="att-name">✓ Attendance Marked</div>
       <div class="att-row"><span>full_name</span><span class="att-val">${data.name||''}</span></div>
       <div class="att-row"><span>attendance_date</span><span class="att-val">${data.date||''}</span></div>
       <div class="att-row"><span>entry_time</span><span class="att-val">${data.time||''}</span></div>
       <div class="att-row"><span>address</span><span class="att-val">${data.location||'not captured'}</span></div>
-      <div class="att-row"><span>distance_from_centre</span><span class="att-val">${data.distanceFromCentre||'Ã¢â‚¬â€'} m</span></div>
+      <div class="att-row"><span>distance_from_centre</span><span class="att-val">${data.distanceFromCentre||'—'} m</span></div>
       <div class="att-row"><span>login_method</span><span class="att-val">${data.method||'biometric'}</span></div>
       <div class="att-row"><span>type_attendance</span><span class="att-val">entry</span></div>
     </div>
@@ -852,10 +863,10 @@ function restoreSignInForm() {
   try{['ba_uid','ba_name','ba_date','ba_time','ba_loc','ba_meth','ba_dist'].forEach(k=>sessionStorage.removeItem(k));}catch(e){}
 }
 
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// Section
 // BIOMETRIC SIGN IN
-// Sends: getBiometric Ã¢â€ â€™ markEntry Ã¢â€ â€™ Attendance + LocationMonitor sheets
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// Section
+// Section
 async function handleBiometricSignIn() {
   if(!window.PublicKeyCredential){toast('WebAuthn not supported on this browser','error');return;}
   const email = document.getElementById('si-email').value.trim();
@@ -864,18 +875,18 @@ async function handleBiometricSignIn() {
   if(navigator.permissions){
     try{
       const p=await navigator.permissions.query({name:'geolocation'});
-      if(p.state==='denied'){showLocBar('fail','Location blocked Ã¢â‚¬â€ allow in Settings Ã¢â€ â€™ Site permissions');toast('Ã°Å¸â€œÂ Allow location in browser settings and retry','error');return;}
+  if(p.state==='denied'){showLocBar('fail','Location blocked — allow in Settings → Site permissions');toast('📍 Allow location in browser settings and retry','error');return;}
     }catch(e){}
   }
 
   const btn=document.getElementById('btn-bio-signin');
-  if(btn){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> VerifyingÃ¢â‚¬Â¦';btn.disabled=true;}
+  if(btn){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> Verifying…';btn.disabled=true;}
   try{
     // 1. Fetch biometric_code from Users table
     const info = await api({action:'getBiometric', email});
     if(!info.success||!info.credentialId){toast(info.message||'No biometric registered','error');return;}
 
-    // 2. WebAuthn Ã¢â‚¬â€ prompts device fingerprint/FaceID
+    // 2. WebAuthn — prompts device fingerprint/Face ID
     const challenge = crypto.getRandomValues(new Uint8Array(32));
     const rawId = credentialIdToUint8Array(info.credentialId);
     await navigator.credentials.get({publicKey:{
@@ -884,13 +895,13 @@ async function handleBiometricSignIn() {
     }});
 
     // 3. Get fine GPS (latitude, longitude for Attendance + LocationMonitor tables)
-    showLocBar('getting','Getting your locationÃ¢â‚¬Â¦');
+    showLocBar('getting','Getting your location…');
     const loc = await getLocationWithAddress();
     if(loc.denied){if(btn){btn.innerHTML=btn._h;btn.disabled=false;}return;}
     if(loc.latitude)showLocBar('ok',loc.address||`${loc.latitude}, ${loc.longitude}`,loc.accuracy);
-    else showLocBar('fail','Location not captured Ã¢â‚¬â€ marked without GPS');
+    else showLocBar('fail','Location not captured — marked without GPS');
 
-    // 4. markEntry Ã¢â€ â€™ writes to Attendance + LocationMonitor tables
+// Section
     const att = await api({
       action:      'markEntry',
       userId:      info.userId,
@@ -901,11 +912,11 @@ async function handleBiometricSignIn() {
     });
 
     if(att.success){
-      toast('Ã¢Å“â€œ '+att.message,'success');
+      toast('✓ '+att.message,'success');
       showAttendanceCard({...att, method:'biometric'}, info.userId);
     } else if(att.code==='TOO_FAR'){
-      showLocBar('fail',`${att.distance}m from campus Ã¢â‚¬â€ must be within ${att.allowed}m`);
-      toast(`Ã°Å¸â€œÂ Too far (${att.distance}m). Move closer and try again`,'error');
+      showLocBar('fail',`${att.distance}m from campus — must be within ${att.allowed}m`);
+      toast(`📍 Too far (${att.distance}m). Move closer and try again`,'error');
     } else {
       toast(att.message,'error');
     }
@@ -916,17 +927,17 @@ async function handleBiometricSignIn() {
   if(btn){btn.innerHTML=btn._h||btn.innerHTML;btn.disabled=false;}
 }
 
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// Section
 // MARK EXIT
-// Updates Attendance row: typeÃ¢â€ â€™exit, exit_time
+// Section
 // Also writes to LocationMonitor
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// Section
 async function handleExit() {
   if(!markedUserId){toast('Mark attendance first','error');return;}
   const btn=document.getElementById('btn-exit');
-  if(btn){btn.disabled=true;btn.textContent='Getting exit locationÃ¢â‚¬Â¦';}
+  if(btn){btn.disabled=true;btn.textContent='Getting exit location…';}
   try{
-    showLocBar('getting','Getting exit locationÃ¢â‚¬Â¦');
+    showLocBar('getting','Getting exit location…');
     const loc = await getLocationWithAddress();
     if(loc.latitude)showLocBar('ok','Exit: '+(loc.address||`${loc.latitude}, ${loc.longitude}`),loc.accuracy);
     else showLocBar('fail','Exit location not captured');
@@ -940,18 +951,18 @@ async function handleExit() {
     });
 
     if(res.success){
-      toast('Ã¢Å“â€œ '+res.message,'success');
+      toast('✓ '+res.message,'success');
       stopStudentTracking();
       const card=document.querySelector('.att-card');
       if(card){
-        card.querySelector('.att-name').textContent='Ã¢Å“â€œ Entry & Exit Recorded';
+        card.querySelector('.att-name').textContent='✓ Entry & Exit Recorded';
         card.innerHTML+=`
           <div class="att-row"><span>exit_time</span><span class="att-val">${res.exitTime||''}</span></div>
           <div class="att-row"><span>type_attendance</span><span class="att-val">exit</span></div>
           <div class="att-row"><span>duration</span><span class="att-val">${res.duration||res.durationMins+' min'||''}</span></div>
           <div class="att-row"><span>address (exit)</span><span class="att-val">${res.location||'not captured'}</span></div>`;
       }
-      if(btn){btn.disabled=true;btn.textContent='Exit recorded Ã¢Å“â€œ';btn.style.opacity='.5';}
+      if(btn){btn.disabled=true;btn.textContent='Exit recorded ✓';btn.style.opacity='.5';}
       markedUserId=null;
       setTimeout(()=>restoreSignInForm(),4000);
     }else{
@@ -961,35 +972,35 @@ async function handleExit() {
   }catch(e){toast('Error: '+e.message,'error');if(btn){btn.disabled=false;btn.textContent='Mark Exit (leaving classroom)';}}
 }
 
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// Section
 // MY ATTENDANCE
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// Section
 async function toggleMyAtt() {
   const list=document.getElementById('my-att-list');
   if(list.style.display==='block'){list.style.display='none';return;}
   list.style.display='block';
   const uid=sessionStorage.getItem('ba_uid')||markedUserId;
   if(!uid){list.innerHTML='<div style="color:var(--muted);font-size:11.5px;text-align:center;padding:8px">Sign in first to view history</div>';return;}
-  list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11.5px;padding:8px">LoadingÃ¢â‚¬Â¦</div>';
+  list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11.5px;padding:8px">Loading…</div>';
   try{
     const d=await api({action:'getMyAttendance',userId:uid});
     if(!d.records||!d.records.length){list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:11.5px;padding:8px">No records yet</div>';return;}
     list.innerHTML=d.records.map(r=>`
       <div class="my-item">
         <div class="my-date">${r.date}</div>
-        <div class="my-row"><span>entry_time</span><span>${r.entryTime||'Ã¢â‚¬â€'}</span></div>
-        <div class="my-row"><span>exit_time</span><span>${r.exitTime||'Ã¢â‚¬â€'}</span></div>
-        <div class="my-row"><span>duration</span><span>${r.duration||'Ã¢â‚¬â€'}</span></div>
-        <div class="my-row"><span>login_method</span><span>${r.loginMethod||'Ã¢â‚¬â€'}</span></div>
+        <div class="my-row"><span>entry_time</span><span>${r.entryTime||'—'}</span></div>
+        <div class="my-row"><span>exit_time</span><span>${r.exitTime||'—'}</span></div>
+        <div class="my-row"><span>duration</span><span>${r.duration||'—'}</span></div>
+        <div class="my-row"><span>login_method</span><span>${r.loginMethod||'—'}</span></div>
         <div class="my-row"><span>address</span><span>${r.address||'not captured'}</span></div>
-        <div class="my-row"><span>distance_from_centre</span><span>${r.distanceFromCentre||'Ã¢â‚¬â€'} m</span></div>
+        <div class="my-row"><span>distance_from_centre</span><span>${r.distanceFromCentre||'—'} m</span></div>
       </div>`).join('');
   }catch(e){list.innerHTML='<div style="color:var(--danger);font-size:11.5px;text-align:center;padding:8px">Error: '+e.message+'</div>';}
 }
 
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-// REGISTER Ã¢â‚¬â€ writes to Users + UserAttendanceLocationMap
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// Section
+// Section
+// Section
 const REGISTER_ROLE_OPTIONS = {
   school: [
     { value: 'student', label: 'Student' },
@@ -1029,7 +1040,7 @@ function renderRegisterRoles(orgType) {
   if (!roleEl) return;
   const key = String(orgType || 'college').toLowerCase();
   const roles = REGISTER_ROLE_OPTIONS[key] || REGISTER_ROLE_OPTIONS.college;
-  roleEl.innerHTML = '<option value="">Select roleâ€¦</option>' + roles.map(role =>
+  roleEl.innerHTML = '<option value="">Select role...</option>' + roles.map(role =>
     `<option value="${role.value}">${role.label}</option>`
   ).join('');
 }
@@ -1050,10 +1061,10 @@ async function loadRegisterLookups() {
     };
     window.__tenantMasterData = masterData;
 
-    const deptEl = document.getElementById('r-dept');
-    if (deptEl && deptEl.tagName === 'INPUT' && !deptEl.value) {
+    const catEl = document.getElementById('r-category');
+    if (catEl && catEl.tagName === 'INPUT' && !catEl.value) {
       const deptNames = masterData.departments.map(d => d.name || d.department_id).filter(Boolean);
-      deptEl.placeholder = deptNames.length ? `Enter department name e.g. ${deptNames[0]}` : 'Enter department name';
+      catEl.placeholder = deptNames.length ? `Enter category name e.g. ${deptNames[0]}` : 'Enter category name';
     }
 
     const roleEl = document.getElementById('r-role');
@@ -1061,7 +1072,7 @@ async function loadRegisterLookups() {
       const orgType = String(document.getElementById('r-org-type')?.value || 'college').toLowerCase();
       const allowed = REGISTER_ROLE_OPTIONS[orgType] || REGISTER_ROLE_OPTIONS.college;
       const validRoleIds = new Set(allowed.map(r => String(r.value)));
-      roleEl.innerHTML = '<option value="">Select roleâ€¦</option>' +
+      roleEl.innerHTML = '<option value="">Select role...</option>' +
         masterData.roles
           .filter(r => validRoleIds.has(String(r.role_id || '')))
           .map(r => `<option value="${r.role_id}">${r.name || r.role_id}</option>`)
@@ -1103,11 +1114,12 @@ async function handleRegister() {
   const pass   = document.getElementById('r-password').value;
   const dob    = document.getElementById('r-dob').value;
   const mobile = document.getElementById('r-mobile').value.trim();
-  const dept   = document.getElementById('r-dept').value;
+  const category = document.getElementById('r-category').value.trim();
+  const subcategory = document.getElementById('r-subcategory').value.trim();
   const role   = document.getElementById('r-role').value;
   const inst   = document.getElementById('r-institute').value.trim();
   const orgType = document.getElementById('r-org-type').value;
-  if(!name||!email||!pass||!dept||!role){toast('Name, email, password, department and role are required','error');return;}
+  if(!name||!email||!pass||!category||!subcategory||!role){toast('Name, email, password, category, subcategory and role are required','error');return;}
   if(pass.length<8){toast('Password must be at least 8 characters','error');return;}
 
   setLoading('btn-register',true);
@@ -1116,7 +1128,8 @@ async function handleRegister() {
     const d   = await api({
       action:               'register',
       name, email, password:pass, dob, mobile,
-      departmentId:         dept,
+      departmentId:         category,
+      subcategoryId:        subcategory,
       roleId:               role,
       instituteId:          inst||'Siddaganga Institute of Technology',
       organization:         inst||'Siddaganga Institute of Technology',
@@ -1132,7 +1145,7 @@ async function handleRegister() {
         bioBtn.innerHTML = '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10c0 3.31 1.8 6.2 4.47 7.79C7.17 18.52 7 19.24 7 20v2h2v-2c0-.37.1-.72.27-1.03A8.96 8.96 0 0012 19a8.96 8.96 0 002.73-.03c.17.31.27.66.27 1.03v2h2v-2c0-.76-.17-1.48-.47-2.21C19.2 16.2 21 13.31 21 10c0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm0-12c-2.76 0-5 2.24-5 5h2c0-1.65 1.35-3 3-3s3 1.35 3 3h2c0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg> Step 2: Register Biometric';
       }
       const hint = document.getElementById('bio-hint');
-      if (hint) hint.textContent='Account saved. Tap "Step 2: Register Biometric" next.';
+  if (hint) hint.textContent='Account saved. Tap "Step 2: Register Biometric" next.';
     }else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
   setLoading('btn-register',false);
@@ -1170,7 +1183,7 @@ async function handleBiometricRegister() {
     const credId=btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
     const d = await api({ action:'saveBiometric', userId: pending.userId, credentialId: credId });
     if(d.success){
-      toast('✓ Biometric registered successfully','success');
+    toast('✓ Biometric registered successfully','success');
       const hint = document.getElementById('bio-hint');
       if (hint) hint.textContent='✓ Biometric saved — ready to use';
       const bioBtn = document.getElementById('btn-bio-reg');
@@ -1186,9 +1199,9 @@ async function handleBiometricRegister() {
   setLoading('btn-bio-reg',false);
 }
 
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// Section
 // TEACHER LOGIN & DASHBOARD
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// Section
 async function handleTeacherLogin() {
   const email=document.getElementById('t-email').value.trim();
   const pass=document.getElementById('t-password').value;
@@ -1222,7 +1235,7 @@ async function checkActiveSess(){
     if(d.active){
       let secs=d.secondsLeft; liveSessionId=d.session.session_id;
       el.innerHTML=`<div class="sess-card">
-        <div class="sess-subj">Ã°Å¸Å¸Â¢ ${d.session.subject} Ã¢â‚¬â€ LIVE</div>
+        <div class="sess-subj">📢 ${d.session.subject} — LIVE</div>
         <div class="sess-meta">Closes in <span id="t-timer" style="font-weight:700;color:var(--success)">${fmtTime(secs)}</span></div>
         <button onclick="closeSess('${d.session.session_id}')" class="btn btn-danger" style="margin-top:9px;padding:8px">Stop Session</button>
       </div>`;
@@ -1241,7 +1254,7 @@ async function openSession(){
   try{
     const d=await api({action:'createSession',userId:teacherData.userId,teacherName:teacherData.name,
                        roleId:teacherData.roleId,subject:subj,windowMinutes:win});
-    if(d.success){toast('Ã¢Å“â€œ Session opened','success');document.getElementById('t-subject').value='';checkActiveSess();}
+    if(d.success){toast('✓ Session opened','success');document.getElementById('t-subject').value='';checkActiveSess();}
     else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
   setLoading('btn-open-sess',false);
@@ -1252,7 +1265,7 @@ async function closeSess(sid){
   catch(e){toast('Error','error');}
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Live dashboard Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 async function refreshLive(silent=false){
   const listEl=document.getElementById('live-list');
   const infoEl=document.getElementById('live-info');
@@ -1261,7 +1274,7 @@ async function refreshLive(silent=false){
   const refEl=document.getElementById('live-refresh');
   const notifEl=document.getElementById('live-notifs');
   try{const chk=await api({action:'getActiveSession'});if(chk.active)liveSessionId=chk.session.session_id;}catch(e){}
-  if(!liveSessionId){infoEl.className='no-session';infoEl.style.display='block';infoEl.textContent='No active session Ã¢â‚¬â€ open one from Session tab';statEl.style.display='none';toolEl.style.display='none';refEl.style.display='none';listEl.innerHTML='';notifEl.style.display='none';notifEl.innerHTML='';liveNotifBooted=false;lastNotifId='';return;}
+    if(!liveSessionId){infoEl.className='no-session';infoEl.style.display='block';infoEl.textContent='No active session — open one from Session tab';statEl.style.display='none';toolEl.style.display='none';refEl.style.display='none';listEl.innerHTML='';notifEl.style.display='none';notifEl.innerHTML='';liveNotifBooted=false;lastNotifId='';return;}
   try{
     const d=await api({action:'getDashboard',sessionId:liveSessionId});
     if(!d.success){toast(d.message,'error');return;}
@@ -1315,26 +1328,26 @@ function renderLiveList(){
   if(!liveData)return;
   const el=document.getElementById('live-list');
   const list=liveTab==='present'?liveData.present:liveData.absent;
-  if(!list||!list.length){el.innerHTML=`<div style="text-align:center;color:var(--muted);padding:16px;font-size:12px">${liveTab==='present'?'No one marked yet':'Everyone present! Ã°Å¸Å½â€°'}</div>`;return;}
+  if(!list||!list.length){el.innerHTML=`<div style="text-align:center;color:var(--muted);padding:16px;font-size:12px">${liveTab==='present'?'No one marked yet':'Everyone present! 🎉'}</div>`;return;}
   el.innerHTML=list.map((s,i)=>liveTab==='present'
-    ?`<div class="att-item"><div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} Ã‚Â· ${s.department||'Ã¢â‚¬â€'} Ã‚Â· ${s.entryTime} Ã‚Â· ${s.method}${s.exitTime?' Ã¢â€ â€™ exit '+s.exitTime:''}</div></div><span class="badge">Ã¢Å“â€œ</span></div>`
-    :`<div class="att-item"><div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} Ã‚Â· ${s.department||'Ã¢â‚¬â€'}</div></div><span class="badge absent">Ã¢Å“â€”</span></div>`
+    ?`<div class="att-item"><div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} · ${s.category||s.department||'—'}${s.subcategory?' · '+s.subcategory:''} · ${s.entryTime} · ${s.method}${s.exitTime?' → exit '+s.exitTime:''}</div></div><span class="badge">✓</span></div>`
+    :`<div class="att-item"><div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} · ${s.category||s.department||'—'}${s.subcategory?' · '+s.subcategory:''}</div></div><span class="badge absent">✗</span></div>`
   ).join('');
 }
 
 function exportLive(){
   if(!liveData)return;
-  const rows=[['full_name','email','department_id','entry_time','exit_time','login_method','type_attendance']];
-  liveData.present.forEach(s=>rows.push([s.name,s.email,s.department||'',s.entryTime,s.exitTime||'',s.method,'present']));
-  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.department||'','','','','absent']));
+  const rows=[['full_name','email','category_id','subcategory_id','entry_time','exit_time','login_method','type_attendance']];
+  liveData.present.forEach(s=>rows.push([s.name,s.email,s.category||s.department||'',s.subcategory||'',s.entryTime,s.exitTime||'',s.method,'present']));
+  liveData.absent.forEach(s=>rows.push([s.name,s.email,s.category||s.department||'',s.subcategory||'','','','','absent']));
   dlCSV(rows,'attendance_live.csv');
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ History Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 async function loadHistory(){
   const date=document.getElementById('hist-date').value;
   const el=document.getElementById('hist-list');
-  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">LoadingÃ¢â‚¬Â¦</div>';
+  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">Loading…</div>';
   try{
     const d=await api({action:'getSessions',userId:teacherData.userId});
     let sessions=d.sessions||[];
@@ -1345,7 +1358,7 @@ async function loadHistory(){
     el.innerHTML=sessions.map(s=>`
       <div class="att-item clickable" style="flex-direction:column;align-items:stretch" onclick="toggleSessDet('${s.sessionId}','${(s.subject||'').replace(/'/g,"\\'")}')">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div class="iname">${s.subject}</div><div class="imeta">${s.date} Ã‚Â· ${s.startTime}Ã¢â‚¬â€œ${s.endTime}</div></div>
+          <div><div class="iname">${s.subject}</div><div class="imeta">${s.date} · ${s.startTime}–${s.endTime}</div></div>
           <div style="text-align:right"><span class="badge ${s.status==='open'?'':'closed'}">${s.presentCount||0} present</span><div style="font-size:9.5px;margin-top:2px;color:var(--muted)">${s.status}</div></div>
         </div>
         <div id="sd-${s.sessionId}" style="display:none;margin-top:9px;border-top:1px solid var(--border);padding-top:9px"></div>
@@ -1356,19 +1369,19 @@ async function loadHistory(){
 async function toggleSessDet(sid,subj){
   const el=document.getElementById('sd-'+sid);if(!el)return;
   if(el.style.display==='block'){el.style.display='none';return;}
-  el.style.display='block';el.innerHTML='<div style="color:var(--muted);font-size:11px">LoadingÃ¢â‚¬Â¦</div>';
+  el.style.display='block';el.innerHTML='<div style="color:var(--muted);font-size:11px">Loading…</div>';
   try{
     const d=await api({action:'getDashboard',sessionId:sid});
     if(!d.success){el.innerHTML='<div style="color:var(--danger);font-size:11px">'+d.message+'</div>';return;}
     el.innerHTML=`
       <div style="display:flex;gap:10px;margin-bottom:7px;font-size:11px">
-        <span style="color:var(--success)">Ã¢Å“â€œ ${d.presentCount}</span>
-        <span style="color:var(--danger)">Ã¢Å“â€” ${d.absentCount}</span>
-        <span style="color:var(--muted)">${d.total} total Ã‚Â· ${d.total?Math.round(d.presentCount/d.total*100):0}%</span>
+        <span style="color:var(--success)">✓ ${d.presentCount}</span>
+        <span style="color:var(--danger)">✗ ${d.absentCount}</span>
+        <span style="color:var(--muted)">${d.total} total · ${d.total?Math.round(d.presentCount/d.total*100):0}%</span>
       </div>
-      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.entryTime}${s.exitTime?' Ã¢â€ â€™ '+s.exitTime:''} Ã‚Â· ${s.method}</span></div>`).join('')}
+      ${d.present.map(s=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${s.name} <span style="color:var(--muted)">${s.entryTime}${s.exitTime?' → '+s.exitTime:''} · ${s.method}</span></div>`).join('')}
       ${!d.present.length?'<div style="font-size:11px;color:var(--muted)">No students marked</div>':''}
-      <button onclick="event.stopPropagation();exportSession('${sid}','${subj}')" class="export-btn" style="float:none;margin-top:9px">Ã¢â€ â€œ Export CSV</button>`;
+      <button onclick="event.stopPropagation();exportSession('${sid}','${subj}')" class="export-btn" style="float:none;margin-top:9px">↓ Export CSV</button>`;
   }catch(e){el.innerHTML='<div style="color:var(--danger);font-size:11px">Error</div>';}
 }
 
@@ -1389,10 +1402,10 @@ async function exportHistory(){
   }catch(e){toast('Export failed','error');}
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Students roster Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 async function loadStudents(){
   const el=document.getElementById('stud-list');
-  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">LoadingÃ¢â‚¬Â¦</div>';
+  el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">Loading…</div>';
   try{
     const d=await api({action:'getStudents'});
     allStudents=d.students||[];
@@ -1403,7 +1416,7 @@ async function loadStudents(){
 
 function filterStudents(){
   const q=document.getElementById('student-search').value.toLowerCase();
-  const f=allStudents.filter(s=>(s.name||'').toLowerCase().includes(q)||(s.email||'').toLowerCase().includes(q)||(s.department||'').toLowerCase().includes(q));
+  const f=allStudents.filter(s=>(s.name||'').toLowerCase().includes(q)||(s.email||'').toLowerCase().includes(q)||(s.category||s.department||'').toLowerCase().includes(q)||(s.subcategory||'').toLowerCase().includes(q));
   document.getElementById('stud-count').textContent=f.length+' of '+allStudents.length+' students';
   renderStudents(f);
 }
@@ -1413,17 +1426,17 @@ function renderStudents(list){
   if(!list.length){el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">No students found</div>';return;}
   el.innerHTML=list.map((s,i)=>`
     <div class="att-item">
-      <div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} Ã‚Â· dept: ${s.department||'Ã¢â‚¬â€'}</div></div>
+      <div><div class="iname">${i+1}. ${s.name}</div><div class="imeta">${s.email} · category: ${s.category||s.department||'—'}${s.subcategory?' · '+s.subcategory:''}</div></div>
       <div style="text-align:right;font-size:10px;line-height:1.8">
-        <span style="color:${s.hasBio?'var(--success)':'var(--muted)'}">${s.hasBio?'Ã°Å¸â€Â bio':'Ã°Å¸â€Â none'}</span><br>
-        <span style="color:${s.hasDevice?'var(--success)':'var(--muted)'}">${s.hasDevice?'Ã°Å¸â€œÂ± bound':'Ã°Å¸â€œÂ± none'}</span>
+        <span style="color:${s.hasBio?'var(--success)':'var(--muted)'}">${s.hasBio?'🔐 bio':'🔐 none'}</span><br>
+        <span style="color:${s.hasDevice?'var(--success)':'var(--muted)'}">${s.hasDevice?'📱 bound':'📱 none'}</span>
       </div>
     </div>`).join('');
 }
 
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-// ADMIN Ã¢â‚¬â€ lookup table management
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// Section
+// Section
+// Section
 
 // Departments
 async function addDepartment(){
@@ -1431,11 +1444,11 @@ async function addDepartment(){
   const name=document.getElementById('ad-name').value.trim();
   const incharge=document.getElementById('ad-incharge').value.trim();
   const email=document.getElementById('ad-email').value.trim();
-  if(!id||!name){toast('department_id and name are required','error');return;}
+  if(!id||!name){toast('category_id and name are required','error');return;}
   try{
     // Write directly to Departments sheet via a dedicated action
     const d=await api({action:'addDepartment',departmentId:id,name,inCharge:incharge,email});
-    if(d.success){toast('Ã¢Å“â€œ Department added','success');document.getElementById('ad-id').value='';document.getElementById('ad-name').value='';loadDepts();}
+    if(d.success){toast('✓ Category added','success');document.getElementById('ad-id').value='';document.getElementById('ad-name').value='';loadDepts();}
     else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
 }
@@ -1445,21 +1458,40 @@ async function loadDepts(){
   try{
     const d=await api({action:'getDepartments'});
     const rows=d.data||[];
-    el.innerHTML=rows.length?rows.map(r=>`<div class="att-item"><div><div class="iname">${r.department_id} Ã¢â‚¬â€ ${r.name}</div><div class="imeta">in_charge: ${r.in_charge||'Ã¢â‚¬â€'} Ã‚Â· ${r.email||'Ã¢â‚¬â€'}</div></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No departments yet</div>';
+    el.innerHTML=rows.length?rows.map(r=>`<div class="att-item"><div><div class="iname">${r.department_id} — ${r.name}</div><div class="imeta">in_charge: ${r.in_charge||'—'} · ${r.email||'—'}</div></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No categories yet</div>';
   }catch(e){}
 }
 
 // Attendance Locations
 async function addLocation(){
-  const id=document.getElementById('al-id').value.trim();
   const name=document.getElementById('al-name').value.trim();
+  const address=document.getElementById('al-address').value.trim();
   const lat=document.getElementById('al-lat').value.trim();
   const lng=document.getElementById('al-lng').value.trim();
-  if(!id||!name||!lat||!lng){toast('All location fields are required','error');return;}
+  const radius=document.getElementById('al-radius').value.trim() || '200';
+  const reuseLocationId=document.getElementById('al-reuse').value.trim();
+  if(!name||!lat||!lng){toast('Location name, latitude and longitude are required','error');return;}
   try{
-    const d=await api({action:'addAttendanceLocation',locationId:id,name,latitude:parseFloat(lat),longitude:parseFloat(lng)});
-    if(d.success){toast('Ã¢Å“â€œ Location added','success');document.getElementById('al-id').value='';document.getElementById('al-name').value='';loadLocs();}
-    else toast(d.message,'error');
+    const payload={action:'addAttendanceLocation',name,address,latitude:parseFloat(lat),longitude:parseFloat(lng),geofenceRadius:parseInt(radius)||200,reuseLocationId};
+    const d=await api(payload);
+    if(d.success){
+      toast(d.reused ? 'Existing location reused' : 'Location added','success');
+      document.getElementById('al-name').value='';
+      document.getElementById('al-address').value='';
+      document.getElementById('al-lat').value='';
+      document.getElementById('al-lng').value='';
+      document.getElementById('al-radius').value='200';
+      document.getElementById('al-reuse').value='';
+      loadLocs();
+      return;
+    }
+    if(d.duplicateWarning&&d.nearbyLocations&&d.nearbyLocations.length){
+      const reuse=window.confirm(`A location already exists within 20 meters: ${d.nearbyLocations[0].name||d.nearbyLocations[0].attendance_location_id}. Reuse it?`);
+      const follow=await api(reuse ? {...payload,reuseLocationId:d.nearbyLocations[0].attendance_location_id} : {...payload,confirmDuplicate:true});
+      if(follow.success){toast('Location saved','success');loadLocs();} else toast(follow.message,'error');
+      return;
+    }
+    toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -1468,24 +1500,25 @@ async function loadLocs(){
   try{
     const d=await api({action:'getLocations'});
     const rows=d.data||[];
-    el.innerHTML=rows.length?rows.map(r=>`<div class="att-item"><div><div class="iname">${r.attendance_location_id} Ã¢â‚¬â€ ${r.name}</div><div class="imeta">lat: ${r.latitude} Ã‚Â· lng: ${r.longitude}</div></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No locations yet</div>';
+    el.innerHTML=rows.length?rows.map(r=>`<div class="att-item"><div><div class="iname">${r.attendance_location_id} — ${r.name}</div><div class="imeta">${r.address||'-'} · lat: ${r.latitude} · lng: ${r.longitude} · radius: ${r.geofence_radius||200}m</div></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No locations yet</div>';
   }catch(e){}
 }
 
-// User Ã¢â€ â€™ Location map
+// User → Location map
 async function addUserLocMap(){
-  const uid=document.getElementById('ulm-uid').value.trim();
+  const category=document.getElementById('ulm-category').value.trim();
+  const subcategory=document.getElementById('ulm-subcategory').value.trim();
   const lid=document.getElementById('ulm-lid').value.trim();
   const dist=document.getElementById('ulm-dist').value.trim();
-  if(!uid||!lid){toast('user_id and attendance_location_id are required','error');return;}
+  if(!category||!subcategory||!lid){toast('category, subcategory and attendance location are required','error');return;}
   try{
-    const d=await api({action:'addUserLocMap',userId:uid,locationId:lid,allowedDistance:parseInt(dist)||200});
-    if(d.success){toast('Ã¢Å“â€œ Mapping added','success');document.getElementById('ulm-uid').value='';}
+    const d=await api({action:'addCategoryLocationMap',categoryId:category,subcategoryId:subcategory,locationId:lid,allowedDistance:parseInt(dist)||200});
+    if(d.success){toast('✓ Mapping added','success');document.getElementById('ulm-category').value='';document.getElementById('ulm-subcategory').value='';}
     else toast(d.message,'error');
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ CSV download Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 function dlCSV(rows, filename, csvStr){
   const c=csvStr||rows.map(r=>r.map(x=>'"'+(String(x||'')).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a');
@@ -1493,7 +1526,7 @@ function dlCSV(rows, filename, csvStr){
   a.download=filename;a.click();
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Init Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Section
 applyTenantToRegisterForm();
 // Restore session state (if student already marked today)
 try{
@@ -1518,10 +1551,10 @@ function chkOnline(){offBar.classList.toggle('show',!navigator.onLine);}
 window.addEventListener('online',chkOnline);window.addEventListener('offline',chkOnline);chkOnline();
 </script>
 
-<!-- Ã¢â€â‚¬Ã¢â€â‚¬ Add admin write actions to router (add to Code.gs route) Ã¢â€â‚¬Ã¢â€â‚¬ -->
+<!-- Section -->
 <!-- These are called from the Admin tab forms -->
 
-<!-- Ã¢â€â‚¬Ã¢â€â‚¬ PWA service worker + install prompt Ã¢â€â‚¬Ã¢â€â‚¬ -->
+<!-- Section -->
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
@@ -1533,7 +1566,7 @@ window.addEventListener('beforeinstallprompt',e=>{
 });
 document.getElementById('pwa-install-btn').addEventListener('click',async()=>{
   if(!dip)return;document.getElementById('pwa-banner').classList.remove('show');dip.prompt();
-  const{outcome}=await dip.userChoice;dip=null;if(outcome==='accepted')toast('Ã¢Å“â€œ BioAttend installed!','success');
+  const{outcome}=await dip.userChoice;dip=null;if(outcome==='accepted')toast('✓ BioAttend installed!','success');
 });
 document.getElementById('pwa-dismiss').addEventListener('click',()=>{
   document.getElementById('pwa-banner').classList.remove('show');

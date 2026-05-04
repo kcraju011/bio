@@ -16,7 +16,6 @@ const EXPECTED_TENANTS = {
 };
 
 
-// â”€â”€ FALLBACK TENANTS (OFFLINE MODE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const FALLBACK_GUIDS = new Set(['1', '2']);
 
 const FALLBACK_TENANTS = {
@@ -61,7 +60,7 @@ const FALLBACK_TENANTS = {
 
 };
 
-// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 let TENANT_API    = DEFAULT_TENANT_API;
 let tenantState   = {
   guid: '',
@@ -73,7 +72,7 @@ let tenantState   = {
   attendanceLocations: []
 };
 
-// â”€â”€ API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 function readGuidFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return String(params.get('q') || '').trim();
@@ -390,7 +389,7 @@ async function api(payload) {
   return response;
 }
 
-// â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//  Toast
 function toast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'show ' + type;
@@ -399,7 +398,7 @@ function toast(msg, type = '') {
 
 function setLoading(id, on) {
   const b = document.getElementById(id); if (!b) return;
-  if (on) { b._h = b.innerHTML; b.innerHTML = '<span class="spin"></span> Please waitâ€¦'; b.disabled = true; }
+  if (on) { b._h = b.innerHTML; b.innerHTML = '<span class="spin"></span> Please wait…'; b.disabled = true; }
   else { b.innerHTML = b._h || b.innerHTML; b.disabled = false; }
 }
 
@@ -593,5 +592,5 @@ async function bootTenant() {
   }
 }
 
-// â”€â”€ Tab navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Tab navigation
 

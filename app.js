@@ -577,7 +577,7 @@ function setFieldState(fieldId, message) {
 
 function clearRegisterErrors() {
   ['field-r-name', 'field-r-dob', 'field-r-email', 'field-r-mobile', 'field-r-emp-id',
-    'field-r-institute', 'field-r-org-type', 'field-r-role', 'field-r-dept',
+    'field-r-institute', 'field-r-org-type', 'field-r-role', 'field-r-category', 'field-r-subcategory',
     'field-r-study-level', 'field-r-designation', 'field-r-password', 'field-r-confirm-password'
   ].forEach(id => setFieldState(id, ''));
 }
@@ -618,11 +618,11 @@ function renderRoleOptions(options, placeholder) {
 }
 
 function renderDepartmentOptions(options, placeholder) {
-  const deptEl = document.getElementById('r-dept');
+  const deptEl = document.getElementById('r-category');
   if (!deptEl) return;
   // Use a select if options available, else keep as text input
   if (deptEl.tagName === 'SELECT') {
-    deptEl.innerHTML = `<option value="">${placeholder || 'Select department…'}</option>` +
+    deptEl.innerHTML = `<option value="">${placeholder || 'Select category…'}</option>` +
       options.map(opt => {
         const value = opt.department_id || opt.value || '';
         const label = opt.name || opt.label || value;
@@ -744,7 +744,8 @@ function validateRegisterStep(step) {
 
   if (current === 2) {
     const role = getRegisterValue('r-role');
-    const dept = getRegisterValue('r-dept');
+    const category = getRegisterValue('r-category');
+    const subcategory = getRegisterValue('r-subcategory');
     const roleKey = getRegisterRoleKey();
     const studyLevel = getRegisterValue('r-study-level');
     const designation = getRegisterValue('r-designation');
@@ -757,9 +758,11 @@ function validateRegisterStep(step) {
     else setFieldState('field-r-org-type', '');
     if (!role) { setFieldState('field-r-role', 'Select a role.'); valid = false; }
     else setFieldState('field-r-role', '');
-    if (!dept) { setFieldState('field-r-dept', 'Department is required.'); valid = false; }
-    else if (!isValidDepartmentValue(dept)) { setFieldState('field-r-dept', 'Enter a valid department.'); valid = false; }
-    else setFieldState('field-r-dept', '');
+    if (!category) { setFieldState('field-r-category', 'Category is required.'); valid = false; }
+    else if (!isValidDepartmentValue(category)) { setFieldState('field-r-category', 'Enter a valid category.'); valid = false; }
+    else setFieldState('field-r-category', '');
+    if (!subcategory) { setFieldState('field-r-subcategory', 'Subcategory is required.'); valid = false; }
+    else setFieldState('field-r-subcategory', '');
 
     if (roleKey === 'student' && !studyLevel) { setFieldState('field-r-study-level', 'Select your semester.'); valid = false; }
     else setFieldState('field-r-study-level', '');
@@ -804,8 +807,8 @@ async function loadRegisterLookups() {
 
     updateRegisterFormByRole();
     if (departments.length) {
-      const deptEl = document.getElementById('r-dept');
-      if (deptEl && deptEl.tagName === 'SELECT') renderDepartmentOptions(departments, 'Select department…');
+      const deptEl = document.getElementById('r-category');
+      if (deptEl && deptEl.tagName === 'SELECT') renderDepartmentOptions(departments, 'Select category…');
     }
   } catch (e) {
     console.warn('Could not load register lookups:', e);
@@ -866,7 +869,8 @@ async function handleRegisterV2() {
   const pass = document.getElementById('r-password').value;
   const dob = getRegisterValue('r-dob');
   const mobile = getRegisterValue('r-mobile');
-  const dept = getRegisterValue('r-dept');
+  const category = getRegisterValue('r-category');
+  const subcategory = getRegisterValue('r-subcategory');
   const role = document.getElementById('r-role').value;
   const inst = String(window.TENANT?.institution?.name || tenantState.institution?.name || 'Siddaganga Institute of Technology').trim();
   const orgType = String(window.TENANT?.orgType || tenantState.orgType || 'college').trim();
@@ -895,7 +899,8 @@ async function handleRegisterV2() {
       name, email,
       password: pass,
       dob, mobile,
-      departmentId: dept,
+      departmentId: category,
+      subcategoryId: subcategory,
       roleId: role,
       instituteId: inst,
       orgType,
@@ -1167,7 +1172,7 @@ function renderLiveList() {
     return `<div class="att-item">
       <div style="flex:1">
         <div class="iname">${i + 1}. ${s.name}</div>
-        <div class="imeta">${s.email} · ${s.department || '—'} · ${s.entryTime || ''}${s.exitTime ? ' → exit ' + s.exitTime : ''}</div>
+        <div class="imeta">${s.email} · ${s.category || s.department || '—'}${s.subcategory ? ' · ' + s.subcategory : ''} · ${s.entryTime || ''}${s.exitTime ? ' → exit ' + s.exitTime : ''}</div>
       </div>
       ${statusBadge}
     </div>`;
@@ -1176,9 +1181,9 @@ function renderLiveList() {
 
 function exportLive() {
   if (!liveData) return;
-  const rows = [['full_name', 'email', 'department_id', 'entry_time', 'exit_time', 'login_method', 'type_attendance']];
-  (liveData.activeUsers || []).forEach(s => rows.push([s.name, s.email, s.department || '', s.entryTime, s.exitTime || '', '', 'present']));
-  (liveData.offlineUsers || []).forEach(s => rows.push([s.name, s.email, s.department || '', '', '', '', 'absent']));
+  const rows = [['full_name', 'email', 'category_id', 'subcategory_id', 'entry_time', 'exit_time', 'login_method', 'type_attendance']];
+  (liveData.activeUsers || []).forEach(s => rows.push([s.name, s.email, s.category || s.department || '', s.subcategory || '', s.entryTime, s.exitTime || '', '', 'present']));
+  (liveData.offlineUsers || []).forEach(s => rows.push([s.name, s.email, s.category || s.department || '', s.subcategory || '', '', '', '', 'absent']));
   dlCSV(rows, 'attendance_live.csv');
 }
 
@@ -1261,7 +1266,7 @@ async function loadStudents() {
 
 function filterStudents() {
   const q = document.getElementById('student-search')?.value.toLowerCase() || '';
-  const f = allStudents.filter(s => (s.name || '').toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q) || (s.department || '').toLowerCase().includes(q));
+  const f = allStudents.filter(s => (s.name || '').toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q) || (s.category || s.department || '').toLowerCase().includes(q) || (s.subcategory || '').toLowerCase().includes(q));
   const cnt = document.getElementById('stud-count');
   if (cnt) cnt.textContent = f.length + ' of ' + allStudents.length + ' students';
   renderStudents(f);
@@ -1273,7 +1278,7 @@ function renderStudents(list) {
   if (!list.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:14px">No students found</div>'; return; }
   el.innerHTML = list.map((s, i) => `
     <div class="att-item">
-      <div><div class="iname">${i + 1}. ${s.name}</div><div class="imeta">${s.email} · dept: ${s.department || '—'}</div></div>
+      <div><div class="iname">${i + 1}. ${s.name}</div><div class="imeta">${s.email} · category: ${s.category || s.department || '—'}${s.subcategory ? ' · ' + s.subcategory : ''}</div></div>
       <div style="text-align:right;font-size:10px;line-height:1.8">
         <span style="color:${s.hasBio ? 'var(--success)' : 'var(--muted)'}">${s.hasBio ? '🔐 bio' : '🔐 none'}</span><br>
         <span style="color:${s.hasDevice ? 'var(--success)' : 'var(--muted)'}">${s.hasDevice ? '📱 bound' : '📱 none'}</span>
@@ -1305,11 +1310,11 @@ async function addDepartment() {
   const name = document.getElementById('ad-name')?.value.trim();
   const incharge = document.getElementById('ad-incharge')?.value.trim();
   const email = document.getElementById('ad-email')?.value.trim();
-  if (!id || !name) { toast('department_id and name are required', 'error'); return; }
+  if (!id || !name) { toast('category_id and name are required', 'error'); return; }
   try {
     const d = await api({ action: 'addDepartment', departmentId: id, name, inCharge: incharge, email });
     if (d.success) {
-      toast('✓ Department added', 'success');
+      toast('✓ Category added', 'success');
       const eid = document.getElementById('ad-id'), ename = document.getElementById('ad-name');
       if (eid) eid.value = ''; if (ename) ename.value = '';
       loadDepts();
@@ -1325,24 +1330,44 @@ async function loadDepts() {
     const rows = d.data || [];
     el.innerHTML = rows.length
       ? rows.map(r => `<div class="att-item"><div><div class="iname">${r.department_id} — ${r.name}</div><div class="imeta">in_charge: ${r.in_charge || '—'} · ${r.email || '—'}</div></div></div>`).join('')
-      : '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No departments yet</div>';
+      : '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No categories yet</div>';
   } catch (e) {}
 }
 
 async function addLocation() {
-  const id = document.getElementById('al-id')?.value.trim();
   const name = document.getElementById('al-name')?.value.trim();
+  const address = document.getElementById('al-address')?.value.trim() || '';
   const lat = document.getElementById('al-lat')?.value.trim();
   const lng = document.getElementById('al-lng')?.value.trim();
-  if (!id || !name || !lat || !lng) { toast('All location fields are required', 'error'); return; }
+  const radius = document.getElementById('al-radius')?.value.trim() || '200';
+  const reuseLocationId = document.getElementById('al-reuse')?.value.trim() || '';
+  if (!name || !lat || !lng) { toast('Location name, latitude and longitude are required', 'error'); return; }
   try {
-    const d = await api({ action: 'addAttendanceLocation', locationId: id, name, latitude: parseFloat(lat), longitude: parseFloat(lng) });
+    const payload = {
+      action: 'addAttendanceLocation',
+      name,
+      address,
+      latitude: parseFloat(lat),
+      longitude: parseFloat(lng),
+      geofenceRadius: parseInt(radius) || 200,
+      reuseLocationId
+    };
+    const d = await api(payload);
     if (d.success) {
-      toast('✓ Location added', 'success');
-      const eid = document.getElementById('al-id'), ename = document.getElementById('al-name');
-      if (eid) eid.value = ''; if (ename) ename.value = '';
-      loadLocs();
+      toast(d.reused ? 'Existing location reused' : 'Location added', 'success');
+      const fields = ['al-name','al-address','al-lat','al-lng','al-radius','al-reuse'];
+      fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = id === 'al-radius' ? '200' : ''; });
+      await loadLocs();
     } else toast(d.message, 'error');
+    if (d.duplicateWarning && d.nearbyLocations && d.nearbyLocations.length) {
+      const reuse = window.confirm(`A location already exists within 20 meters: ${d.nearbyLocations[0].name || d.nearbyLocations[0].attendance_location_id}. Reuse it?`);
+      const confirmPayload = reuse
+        ? { ...payload, reuseLocationId: d.nearbyLocations[0].attendance_location_id }
+        : { ...payload, confirmDuplicate: true };
+      const follow = await api(confirmPayload);
+      if (follow.success) { toast('Location saved', 'success'); await loadLocs(); }
+      else toast(follow.message, 'error');
+    }
   } catch (e) { toast('Error: ' + e.message, 'error'); }
 }
 
@@ -1353,19 +1378,20 @@ async function loadLocs() {
     const d = await api({ action: 'getLocations' });
     const rows = d.data || [];
     el.innerHTML = rows.length
-      ? rows.map(r => `<div class="att-item"><div><div class="iname">${r.attendance_location_id} — ${r.name}</div><div class="imeta">lat: ${r.latitude} · lng: ${r.longitude}</div></div></div>`).join('')
+      ? rows.map(r => `<div class="att-item"><div><div class="iname">${r.attendance_location_id} — ${r.name}</div><div class="imeta">${r.address || '-'} · lat: ${r.latitude} · lng: ${r.longitude} · radius: ${r.geofence_radius || 200}m</div></div></div>`).join('')
       : '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No locations yet</div>';
   } catch (e) {}
 }
 
 async function addUserLocMap() {
-  const uid = document.getElementById('ulm-uid')?.value.trim();
-  const lid = document.getElementById('ulm-lid')?.value.trim();
-  const dist = document.getElementById('ulm-dist')?.value.trim();
-  if (!uid || !lid) { toast('user_id and attendance_location_id are required', 'error'); return; }
+  const category = document.getElementById('ulm-category')?.value.trim() || document.getElementById('admin-map-category')?.value.trim();
+  const subcategory = document.getElementById('ulm-subcategory')?.value.trim() || document.getElementById('admin-map-subcategory')?.value.trim();
+  const lid = document.getElementById('ulm-lid')?.value.trim() || document.getElementById('admin-map-location')?.value.trim();
+  const dist = document.getElementById('ulm-dist')?.value.trim() || document.getElementById('admin-map-distance')?.value.trim();
+  if (!category || !subcategory || !lid) { toast('category, subcategory and attendance location are required', 'error'); return; }
   try {
-    const d = await api({ action: 'addUserLocMap', userId: uid, locationId: lid, allowedDistance: parseInt(dist) || 200 });
-    if (d.success) { toast('✓ Mapping added', 'success'); const el = document.getElementById('ulm-uid'); if (el) el.value = ''; }
+    const d = await api({ action: 'addCategoryLocationMap', categoryId: category, subcategoryId: subcategory, locationId: lid, allowedDistance: parseInt(dist) || 200 });
+    if (d.success) { toast('✓ Mapping added', 'success'); }
     else toast(d.message, 'error');
   } catch (e) { toast('Error: ' + e.message, 'error'); }
 }

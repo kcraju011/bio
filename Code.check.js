@@ -1069,7 +1069,7 @@ function markExit(b) {
 
     // Read all cols needed
     // Cols: 1=att_id, 2=user_id, 4=type, 5=entry_time, 6=exit_time, 7=date, 9=lat, 10=lng
-    var data = sheet.getRange(2, 1, lastRow - 1, attendanceColumnCount()).getValues();
+    var data = sheet.getRange(2, 1, lastRow - 1, 13).getValues();
 
     for (var i = 0; i < data.length; i++) {
       var row = data[i];
