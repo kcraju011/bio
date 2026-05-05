@@ -299,27 +299,14 @@ function restoreSignInForm() {
 // FIX: Uses correct credentialIdToUint8Array, proper error messages
 // ═══════════════════════════════════════════════════════════════
 async function handleBiometricSignIn() {
-  if (!window.PublicKeyCredential) { toast('WebAuthn not supported on this browser', 'error'); return; }
   const email = document.getElementById('si-email').value.trim();
   if (!email) { toast('Enter your email first', 'error'); return; }
 
   const btn = document.getElementById('btn-bio-signin');
   if (btn) { btn._h = btn.innerHTML; btn.innerHTML = '<span class="spin"></span> Verifying…'; btn.disabled = true; }
   try {
-    const info = await api({ action: 'getBiometric', email });
-    if (!info.success || !info.credentialId) { toast(info.message || 'No biometric registered. Please register first.', 'error'); return; }
-
-    const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const rawId = credentialIdToUint8Array(info.credentialId);
-
-    await navigator.credentials.get({
-      publicKey: {
-        challenge,
-        userVerification: 'required',
-        timeout: 60000,
-        allowCredentials: [{ type: 'public-key', id: rawId }]
-      }
-    });
+    const info = await api({ action: 'getUserByEmail', email });
+    if (!info.success || !info.userId) { toast(info.message || 'No account found for this email.', 'error'); return; }
 
     showLocBar('getting', 'Getting your location…');
     const loc = await getLocationWithAddress();

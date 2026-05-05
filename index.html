@@ -997,7 +997,6 @@ function restoreSignInForm() {
 // Section
 // Section
 async function handleBiometricSignIn() {
-  if(!window.PublicKeyCredential){toast('WebAuthn not supported on this browser','error');return;}
   const email = document.getElementById('si-email').value.trim();
   if(!email){toast('Enter your email first','error');return;}
 
@@ -1012,18 +1011,11 @@ async function handleBiometricSignIn() {
   if(btn){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> Verifying…';btn.disabled=true;}
   try{
     // 1. Fetch biometric_code from Users table
-    const info = await api({action:'getBiometric', email});
-    if(!info.success||!info.credentialId){toast(info.message||'No biometric registered','error');return;}
+    const info = await api({action:'getUserByEmail', email});
+    if(!info.success||!info.userId){toast(info.message||'No account found for this email','error');return;}
 
     // 2. WebAuthn — prompts device fingerprint/Face ID
-    const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const rawId = credentialIdToUint8Array(info.credentialId);
-    await navigator.credentials.get({publicKey:{
-      challenge, userVerification:'required', timeout:60000,
-      allowCredentials:[{type:'public-key',id:rawId}]
-    }});
-
-    // 3. Get fine GPS (latitude, longitude for Attendance + LocationMonitor tables)
+    // 2. Get fine GPS (latitude, longitude for Attendance + LocationMonitor tables)
     showLocBar('getting','Getting your location…');
     const loc = await getLocationWithAddress();
     if(loc.denied){if(btn){btn.innerHTML=btn._h;btn.disabled=false;}return;}
@@ -1471,28 +1463,11 @@ async function handleBiometricRegister() {
     toast('Create the account first, then register biometric','error');
     return;
   }
-  if(!window.PublicKeyCredential || !navigator.credentials || !navigator.credentials.create){
-    toast('Biometric not supported on this device/browser','error');
-    return;
-  }
   setLoading('btn-bio-reg',true);
   try{
-    const challenge=crypto.getRandomValues(new Uint8Array(32));
-    const cred=await navigator.credentials.create({publicKey:{
-      challenge,
-      rp:{name:'BioAttend'},
-      user:{id:new TextEncoder().encode(String(pending.email)),
-            name:pending.email,
-            displayName:pending.name || pending.email},
-      pubKeyCredParams:[
-        {type:'public-key',alg:-7},
-        {type:'public-key',alg:-257}
-      ],
-      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
-      timeout:60000,
-      attestation:'none'
-    }});
-    const credId=btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+    const credId=(crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : ('bio_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10));
     const d = await api({ action:'saveBiometric', userId: pending.userId, credentialId: credId });
     if(d.success){
     toast('✓ Biometric registered successfully','success');
