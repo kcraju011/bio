@@ -1936,10 +1936,14 @@ document.getElementById('pwa-install-btn').addEventListener('click',async()=>{
   if(!dip)return;document.getElementById('pwa-banner').classList.remove('show');dip.prompt();
   const{outcome}=await dip.userChoice;dip=null;if(outcome==='accepted')toast('✓ BioAttend installed!','success');
 });
-document.getElementById('pwa-dismiss').addEventListener('click',()=>{
-  document.getElementById('pwa-banner').classList.remove('show');
-  try{localStorage.setItem('pwa_d','1');}catch(e){}
-});
+const pwaDismissBtn=document.getElementById('pwa-dismiss');
+if(pwaDismissBtn){
+  pwaDismissBtn.addEventListener('click',()=>{
+    const banner=document.getElementById('pwa-banner');
+    if(banner)banner.classList.remove('show');
+    try{localStorage.setItem('pwa_d','1');}catch(e){}
+  });
+}
 </script>
 
 <script src="tenant.js"></script>
