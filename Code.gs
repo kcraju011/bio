@@ -1842,7 +1842,10 @@ function addCategoryLocationMap(b) {
 function createWorkLocationRequest(b) {
   try {
     var userId = String(b.userId || '').trim();
-    var requestDate = normDate(b.requestDate || b.date || '', tz());
+    var requestDateRaw = String(b.requestDate || b.date || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(requestDateRaw))
+      return { success: false, message: 'requestDate required' };
+    var requestDate = normDate(requestDateRaw, tz());
     var locationName = toCleanText(b.locationName || b.name || '', 120);
     var address = toCleanText(b.address || '', 240);
     var reason = toCleanText(b.reason || '', 240);

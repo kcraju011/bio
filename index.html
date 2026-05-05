@@ -1043,6 +1043,9 @@ async function handleBiometricSignIn() {
     if(att.success){
       toast('✓ '+att.message,'success');
       showAttendanceCard({...att, method:'biometric'}, info.userId);
+      window.__workReqUserId = info.userId;
+      window.__workReqUserName = info.name || email;
+      loadMyWorkRequests(info.userId);
     } else if(att.code==='TOO_FAR'){
       showLocBar('fail',`${att.distance}m from campus — must be within ${att.allowed}m`);
       toast(`📍 Too far (${att.distance}m). Move closer and try again`,'error');
@@ -1130,6 +1133,197 @@ async function toggleMyAtt() {
 // Section
 // Section
 // Section
+function fillWorkRequestLocation() {
+  const btn = document.getElementById('btn-wr-current');
+  const statusEl = document.getElementById('work-request-status');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Getting location…'; }
+  if (statusEl) statusEl.textContent = '';
+  return getLocationWithAddress().then(loc => {
+    if (!loc) throw new Error('Could not get location');
+    if (loc.denied) return;
+    const latEl = document.getElementById('wr-lat');
+    const lngEl = document.getElementById('wr-lng');
+    const addrEl = document.getElementById('wr-address');
+    if (latEl && loc.latitude !== undefined && loc.latitude !== null) latEl.value = Number(loc.latitude).toFixed(6);
+    if (lngEl && loc.longitude !== undefined && loc.longitude !== null) lngEl.value = Number(loc.longitude).toFixed(6);
+    if (addrEl && loc.address && !addrEl.value) addrEl.value = loc.address;
+    if (statusEl && loc.latitude !== undefined && loc.latitude !== null) {
+      statusEl.innerHTML = '<span style="color:var(--success)">Location captured — accuracy ±' + Math.round(loc.accuracy || 0) + 'm</span>';
+    }
+  }).catch(e => {
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">Could not get location: ' + e.message + '</span>';
+    toast('Could not get location: ' + e.message, 'error');
+  }).finally(() => {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> Use my current location';
+    }
+  });
+}
+
+async function authenticateBiometricForEmail(email) {
+  if (!window.PublicKeyCredential) throw new Error('WebAuthn not supported on this browser');
+  const info = await api({ action: 'getBiometric', email });
+  if (!info.success || !info.credentialId) throw new Error(info.message || 'No biometric registered');
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+  const rawId = credentialIdToUint8Array(info.credentialId);
+  await navigator.credentials.get({
+    publicKey: {
+      challenge,
+      userVerification: 'required',
+      timeout: 60000,
+      allowCredentials: [{ type: 'public-key', id: rawId }]
+    }
+  });
+  return info;
+}
+
+async function handleWorkLocationRequest() {
+  const email = document.getElementById('wr-email').value.trim();
+  const requestDate = document.getElementById('wr-date').value || new Date().toISOString().slice(0, 10);
+  const locationName = document.getElementById('wr-name').value.trim();
+  const address = document.getElementById('wr-address').value.trim();
+  const lat = document.getElementById('wr-lat').value.trim();
+  const lng = document.getElementById('wr-lng').value.trim();
+  const radius = document.getElementById('wr-radius').value.trim() || '200';
+  const reason = document.getElementById('wr-reason').value.trim();
+  const statusEl = document.getElementById('work-request-status');
+  if (!email || !requestDate || !locationName || !lat || !lng) {
+    toast('Email, date, location name, latitude and longitude are required', 'error');
+    return;
+  }
+  setLoading('btn-wr-submit', true);
+  if (statusEl) statusEl.textContent = 'Verifying identity…';
+  try {
+    const info = await authenticateBiometricForEmail(email);
+    const d = await api({
+      action: 'createWorkLocationRequest',
+      userId: info.userId,
+      requestDate,
+      locationName,
+      address,
+      latitude: parseFloat(lat),
+      longitude: parseFloat(lng),
+      allowedDistance: parseInt(radius, 10) || 200,
+      reason
+    });
+    if (!d.success) {
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">' + d.message + '</span>';
+      toast(d.message || 'Unable to submit request', 'error');
+      return;
+    }
+    window.__workReqUserId = info.userId;
+    window.__workReqUserName = info.name || email;
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--success)">Request submitted. Waiting for admin approval.</span>';
+    toast('✓ Work location request submitted', 'success');
+    const nameEl = document.getElementById('wr-name');
+    const addrEl = document.getElementById('wr-address');
+    const latEl = document.getElementById('wr-lat');
+    const lngEl = document.getElementById('wr-lng');
+    const reasonEl = document.getElementById('wr-reason');
+    if (nameEl) nameEl.value = '';
+    if (addrEl) addrEl.value = '';
+    if (latEl) latEl.value = '';
+    if (lngEl) lngEl.value = '';
+    if (reasonEl) reasonEl.value = '';
+    loadMyWorkRequests(info.userId);
+  } catch (e) {
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">' + e.message + '</span>';
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    setLoading('btn-wr-submit', false);
+  }
+}
+
+async function loadMyWorkRequests(userId) {
+  const el = document.getElementById('my-work-request-list');
+  if (!el) return;
+  const uid = String(userId || window.__workReqUserId || sessionStorage.getItem('ba_uid') || '').trim();
+  if (!uid) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:12px">Submit a request to view it here</div>';
+    return;
+  }
+  el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:12px">Loading…</div>';
+  try {
+    const d = await api({ action: 'getWorkLocationRequests', userId: uid });
+    const rows = d.data || [];
+    if (!rows.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:12px">No requests yet</div>';
+      return;
+    }
+    el.innerHTML = rows.map(r => `
+      <div class="att-item" style="flex-direction:column;align-items:stretch">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <div>
+            <div class="iname">${r.request_date || ''} · ${r.location_name || ''}</div>
+            <div class="imeta">${r.address || '-'} · lat: ${r.latitude} · lng: ${r.longitude} · radius: ${r.allowed_distance || 200}m</div>
+          </div>
+          <span class="badge ${String(r.status || '').toLowerCase() === 'approved' ? '' : String(r.status || '').toLowerCase() === 'rejected' ? 'absent' : 'closed'}">${String(r.status || 'pending').toUpperCase()}</span>
+        </div>
+        ${r.reason ? `<div style="font-size:10.5px;color:var(--muted);margin-top:6px">Reason: ${r.reason}</div>` : ''}
+      </div>
+    `).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="text-align:center;color:var(--danger);font-size:12px;padding:12px">Error: ' + e.message + '</div>';
+  }
+}
+
+async function loadWorkRequests() {
+  const el = document.getElementById('workreq-list');
+  const countEl = document.getElementById('workreq-count');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:12px">Loading…</div>';
+  try {
+    const d = await api({ action: 'getWorkLocationRequests' });
+    const rows = d.data || [];
+    if (countEl) countEl.textContent = rows.length + ' requests';
+    if (!rows.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:12px">No requests yet</div>';
+      return;
+    }
+    el.innerHTML = rows.map(r => `
+      <div class="att-item" style="flex-direction:column;align-items:stretch">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <div>
+            <div class="iname">${r.full_name || ''} · ${r.request_date || ''}</div>
+            <div class="imeta">${r.location_name || ''} · ${r.address || '-'} · lat: ${r.latitude} · lng: ${r.longitude} · radius: ${r.allowed_distance || 200}m</div>
+          </div>
+          <span class="badge ${String(r.status || '').toLowerCase() === 'approved' ? '' : String(r.status || '').toLowerCase() === 'rejected' ? 'absent' : 'closed'}">${String(r.status || 'pending').toUpperCase()}</span>
+        </div>
+        ${r.reason ? `<div style="font-size:10.5px;color:var(--muted);margin-top:6px">Reason: ${r.reason}</div>` : ''}
+        ${String(r.status || '').toLowerCase() === 'pending' ? `
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button type="button" class="btn btn-success" style="margin:0" onclick="approveWorkRequest('${r.request_id}')">Approve</button>
+            <button type="button" class="btn btn-danger" style="margin:0" onclick="rejectWorkRequest('${r.request_id}')">Reject</button>
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="text-align:center;color:var(--danger);font-size:12px;padding:12px">Error: ' + e.message + '</div>';
+  }
+}
+
+async function approveWorkRequest(requestId) {
+  const admin = window.__adminIdentity || {};
+  try {
+    const d = await api({ action: 'approveWorkLocationRequest', requestId, approvedBy: admin.email || document.getElementById('admin-email')?.value.trim() || '' });
+    if (!d.success) { toast(d.message || 'Unable to approve', 'error'); return; }
+    toast('✓ Request approved', 'success');
+    loadWorkRequests();
+  } catch (e) { toast('Error: ' + e.message, 'error'); }
+}
+
+async function rejectWorkRequest(requestId) {
+  const admin = window.__adminIdentity || {};
+  try {
+    const d = await api({ action: 'rejectWorkLocationRequest', requestId, approvedBy: admin.email || document.getElementById('admin-email')?.value.trim() || '' });
+    if (!d.success) { toast(d.message || 'Unable to reject', 'error'); return; }
+    toast('Request rejected', 'success');
+    loadWorkRequests();
+  } catch (e) { toast('Error: ' + e.message, 'error'); }
+}
+
 const REGISTER_ROLE_OPTIONS = {
   school: [
     { value: 'student', label: 'Student' },
@@ -1668,7 +1862,9 @@ async function handleAdminLogin() {
     if (gate) gate.style.display = 'none';
     if (content) content.style.display = 'block';
     if (label) label.textContent = 'Signed in as ' + (d.name || email);
+    window.__adminIdentity = { email, name: d.name || email };
     loadDepts();
+    loadWorkRequests();
     toast('✓ Admin access granted', 'success');
   } catch (e) {
     toast('Error: ' + e.message, 'error');
@@ -1686,6 +1882,7 @@ function adminLogout() {
   if (content) content.style.display = 'none';
   if (email) email.value = '';
   if (pass) pass.value = '';
+  window.__adminIdentity = null;
   toast('Admin signed out', 'success');
 }
 
