@@ -1292,6 +1292,7 @@ async function approveWorkRequest(requestId) {
     if (!d.success) { toast(d.message || 'Unable to approve', 'error'); return; }
     toast('✓ Request approved', 'success');
     loadWorkRequests();
+    switchAdmin('workreq');
   } catch (e) { toast('Error: ' + e.message, 'error'); }
 }
 
