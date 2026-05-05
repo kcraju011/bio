@@ -193,6 +193,7 @@ function route(b) {
     case 'getDashboard':          return getDashboard(b);
     case 'getUsers':              return getUsers(b);
     case 'getStudents':           return getStudents(b);
+    case 'getUserByEmail':        return getUserByEmailAction(b);
 
     // ── Lookup tables (read)
     case 'getDepartments':        return getDepartments();
@@ -1629,6 +1630,24 @@ function getUsers(b) {
 
 function getStudents(b) {
   return getUsers({ roleId: 'student' });
+}
+
+function getUserByEmailAction(b) {
+  try {
+    var email = String(b && b.email || '').trim();
+    if (!email) return { success: false, message: 'email required' };
+    var user = getUserByEmail(email);
+    if (!user) return { success: false, message: 'No account found for this email' };
+    return {
+      success: true,
+      userId: user.user_id,
+      name: user.full_name,
+      roleId: user.role_id,
+      subcategoryId: user.subcategory_id || ''
+    };
+  } catch (err) {
+    return { success: false, message: 'getUserByEmail: ' + err };
+  }
 }
 
 // ============================================================

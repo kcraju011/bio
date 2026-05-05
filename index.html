@@ -1161,20 +1161,9 @@ function fillWorkRequestLocation() {
   });
 }
 
-async function authenticateBiometricForEmail(email) {
-  if (!window.PublicKeyCredential) throw new Error('WebAuthn not supported on this browser');
-  const info = await api({ action: 'getBiometric', email });
-  if (!info.success || !info.credentialId) throw new Error(info.message || 'No biometric registered');
-  const challenge = crypto.getRandomValues(new Uint8Array(32));
-  const rawId = credentialIdToUint8Array(info.credentialId);
-  await navigator.credentials.get({
-    publicKey: {
-      challenge,
-      userVerification: 'required',
-      timeout: 60000,
-      allowCredentials: [{ type: 'public-key', id: rawId }]
-    }
-  });
+async function resolveWorkRequestUser(email) {
+  const info = await api({ action: 'getUserByEmail', email });
+  if (!info.success || !info.userId) throw new Error(info.message || 'No account found for this email');
   return info;
 }
 
@@ -1193,9 +1182,9 @@ async function handleWorkLocationRequest() {
     return;
   }
   setLoading('btn-wr-submit', true);
-  if (statusEl) statusEl.textContent = 'Verifying identity…';
+  if (statusEl) statusEl.textContent = 'Submitting request…';
   try {
-    const info = await authenticateBiometricForEmail(email);
+    const info = await resolveWorkRequestUser(email);
     const d = await api({
       action: 'createWorkLocationRequest',
       userId: info.userId,
