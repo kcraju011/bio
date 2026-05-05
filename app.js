@@ -738,7 +738,7 @@ function validateRegisterStep(step) {
     else setFieldState('field-r-mobile', '');
 
     if (!memberId) { setFieldState('field-r-emp-id', 'Student / Employee ID is required.'); valid = false; }
-    else if (!/^[A-Za-z0-9][A-Za-z0-9_.-]{2,39}$/.test(memberId)) { setFieldState('field-r-emp-id', 'Use 3–40 letters, numbers, dots, dashes, or underscores.'); valid = false; }
+    else if (!/^\d+$/.test(memberId)) { setFieldState('field-r-emp-id', 'Use numeric digits only.'); valid = false; }
     else setFieldState('field-r-emp-id', '');
   }
 
@@ -1342,6 +1342,7 @@ async function addLocation() {
   const radius = document.getElementById('al-radius')?.value.trim() || '200';
   const reuseLocationId = document.getElementById('al-reuse')?.value.trim() || '';
   if (!name || !lat || !lng) { toast('Location name, latitude and longitude are required', 'error'); return; }
+  if (reuseLocationId && !/^\d+$/.test(reuseLocationId)) { toast('Location ID must be numeric', 'error'); return; }
   try {
     const payload = {
       action: 'addAttendanceLocation',
@@ -1389,6 +1390,7 @@ async function addUserLocMap() {
   const lid = document.getElementById('ulm-lid')?.value.trim() || document.getElementById('admin-map-location')?.value.trim();
   const dist = document.getElementById('ulm-dist')?.value.trim() || document.getElementById('admin-map-distance')?.value.trim();
   if (!category || !subcategory || !lid) { toast('category, subcategory and attendance location are required', 'error'); return; }
+  if (!/^\d+$/.test(lid)) { toast('attendance location id must be numeric', 'error'); return; }
   try {
     const d = await api({ action: 'addCategoryLocationMap', categoryId: category, subcategoryId: subcategory, locationId: lid, allowedDistance: parseInt(dist) || 200 });
     if (d.success) { toast('✓ Mapping added', 'success'); }

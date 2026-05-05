@@ -26,6 +26,7 @@ var SH = {
   ATT_LOCATIONS: 'AttendanceLocations',
   USER_LOC_MAP : 'UserAttendanceLocationMap',
   CATEGORY_LOC_MAP: 'CategoryLocationMap',
+  WORK_LOC_REQUESTS: 'WorkLocationRequests',
   SESSIONS     : 'Sessions',
   USER_INDEX   : 'UserIndex'
 };
@@ -69,6 +70,13 @@ var HEADERS = {
   CategoryLocationMap: [
     'category_location_map_id', 'category_id', 'subcategory_id',
     'attendance_location_id', 'allowed_distance', 'tenant_id', 'status'
+  ],
+  WorkLocationRequests: [
+    'request_id', 'user_id', 'full_name', 'request_date',
+    'location_name', 'address', 'latitude', 'longitude',
+    'allowed_distance', 'reason', 'status',
+    'approved_by', 'approved_at', 'rejected_by', 'rejected_at',
+    'tenant_id', 'created_at', 'updated_at'
   ],
   Sessions: [
     'session_id', 'teacher_id', 'teacher_name', 'subject',
@@ -194,12 +202,16 @@ function route(b) {
     case 'getAttendanceLocations': return getLocations();
     case 'getUserLocMap':         return getUserLocMap(b);
     case 'getCategoryLocationMap': return getCategoryLocationMap(b);
+    case 'getWorkLocationRequests': return getWorkLocationRequests(b);
 
     // ── Admin write actions (called from Admin tab UI)
     case 'addDepartment':         return addDepartment(b);
     case 'addAttendanceLocation': return addAttendanceLocation(b);
     case 'addUserLocMap':         return addUserLocMap(b);
     case 'addCategoryLocationMap': return addCategoryLocationMap(b);
+    case 'createWorkLocationRequest': return createWorkLocationRequest(b);
+    case 'approveWorkLocationRequest': return approveWorkLocationRequest(b);
+    case 'rejectWorkLocationRequest': return rejectWorkLocationRequest(b);
 
     // ── Admin (run from editor only)
     case 'setupSheets':           return setupSheets();
@@ -408,6 +420,12 @@ function addToUserIndex(userId, email) {
 
 function genId(prefix) {
   return (prefix || 'id') + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+}
+
+function genNumericId() {
+  var ts = Utilities.formatDate(new Date(), tz(), 'yyyyMMddHHmmssSSS');
+  var suffix = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  return ts + suffix;
 }
 
 function hashPw(pw) {
@@ -688,9 +706,72 @@ function resolveMappedAttendanceLocation(user, tenantId) {
   };
 }
 
-function resolveUserTrackingLocation(userId) {
+function getWorkLocationRequestForDate(userId, requestDate, tenantId, status) {
+  var rows = getRows(getSheet(SH.WORK_LOC_REQUESTS));
+  var uid = String(userId || '').trim();
+  var day = String(requestDate || '').trim();
+  var targetStatus = String(status || '').trim().toLowerCase();
+  var tenant = tenantIdOf(tenantId);
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    if (String(row.user_id || '').trim() !== uid) continue;
+    if (normDate(row.request_date, tz()) !== day) continue;
+    if (!rowMatchesTenant(row.tenant_id, tenant)) continue;
+    if (targetStatus && String(row.status || '').toLowerCase() !== targetStatus) continue;
+    return row;
+  }
+  return null;
+}
+
+function resolveApprovedWorkLocation(userId, requestDate, tenantId) {
+  var day = normDate(requestDate || new Date(), tz());
+  var request = getWorkLocationRequestForDate(userId, day, tenantId, 'approved');
+  if (!request) return null;
+  var lat = parseNumber(request.latitude);
+  var lng = parseNumber(request.longitude);
+  var radius = parseInt(request.allowed_distance || DEFAULT_RADIUS, 10) || DEFAULT_RADIUS;
+  return {
+    categoryId: userCategoryOf(getUserById(userId)),
+    subcategoryId: userSubcategoryOf(getUserById(userId)),
+    attendanceLocationId: String(request.request_id || ''),
+    allowedDistance: radius,
+    anchorLat: lat === null ? DEFAULT_LAT : lat,
+    anchorLng: lng === null ? DEFAULT_LNG : lng,
+    location: {
+      attendance_location_id: String(request.request_id || ''),
+      name: String(request.location_name || 'Temporary Work Location'),
+      address: String(request.address || ''),
+      latitude: lat === null ? DEFAULT_LAT : lat,
+      longitude: lng === null ? DEFAULT_LNG : lng,
+      geofence_radius: radius
+    },
+    mapping: request,
+    source: 'work_request'
+  };
+}
+
+function resolveEffectiveAttendanceLocation(user, tenantId, requestDate) {
+  var day = normDate(requestDate || new Date(), tz());
+  var approved = user ? resolveApprovedWorkLocation(user.user_id, day, tenantId) : null;
+  if (approved) return approved;
+  var mapped = user ? resolveMappedAttendanceLocation(user, tenantId) : null;
+  if (mapped) return mapped;
+  var geofence = getTenantGeofence(tenantId);
+  return {
+    categoryId: userCategoryOf(user),
+    subcategoryId: userSubcategoryOf(user),
+    attendanceLocationId: '1',
+    allowedDistance: geofence.radius,
+    anchorLat: geofence.latitude,
+    anchorLng: geofence.longitude,
+    location: null,
+    mapping: null
+  };
+}
+
+function resolveUserTrackingLocation(userId, requestDate) {
   var user = getUserById(userId);
-  var resolved = user ? resolveMappedAttendanceLocation(user, currentGuid()) : null;
+  var resolved = user ? resolveEffectiveAttendanceLocation(user, currentGuid(), requestDate || new Date()) : null;
   if (resolved) return resolved;
   var geofence = getTenantGeofence(currentGuid());
   return {
@@ -723,7 +804,7 @@ function registerUser(b) {
     var lock = LockService.getScriptLock();
     lock.waitLock(6000);
     try {
-      var userId = genId('u');
+      var userId = genNumericId();
       var instituteId = String(b.instituteId || b.organization || b.organizationName || 'Siddaganga Institute of Technology').trim();
       var departmentId = String(b.departmentId || b.department || '').trim();
       var subcategoryId = String(b.subcategoryId || b.subcategory || '').trim();
@@ -798,6 +879,7 @@ function markEntry(b) {
     var t      = tz();
     var user   = getUserById(b.userId);
     if (!user) return { success: false, message: 'User not found' };
+    var dateStrNew = Utilities.formatDate(now, t, 'yyyy-MM-dd');
 
     var lat = parseNumber(b.latitude);
     var lng = parseNumber(b.longitude);
@@ -805,7 +887,7 @@ function markEntry(b) {
       return { success: false, message: 'GPS location is required to mark attendance' };
     }
 
-    var resolved = resolveMappedAttendanceLocation(user, currentGuid()) || resolveUserTrackingLocation(b.userId);
+    var resolved = resolveEffectiveAttendanceLocation(user, currentGuid(), dateStrNew);
     var locId = resolved.attendanceLocationId || '1';
     var allowedDist = parseInt(resolved.allowedDistance || b.allowedDistance || b.allowed_distance || DEFAULT_RADIUS, 10) || DEFAULT_RADIUS;
     var anchorLat = parseNumber(resolved.anchorLat) || DEFAULT_LAT;
@@ -823,7 +905,6 @@ function markEntry(b) {
 
     // ── A. Resolve allowed distance for this user ──
     var attSheetNew = getSheet(SH.ATTENDANCE);
-    var dateStrNew = Utilities.formatDate(now, t, 'yyyy-MM-dd');
     var existingRowsNew = attSheetNew.getLastRow() >= 2
       ? attSheetNew.getRange(2, 1, attSheetNew.getLastRow() - 1, attSheetNew.getLastColumn()).getValues()
       : [];
@@ -869,7 +950,7 @@ function markEntry(b) {
     }
     var requestedLocId = String(b.attendanceLocationId || b.attendance_location_id || '').trim();
     var allowedDist = parseInt(b.allowedDistance || b.allowed_distance || (userLocMap ? userLocMap.allowed_distance : DEFAULT_RADIUS), 10) || DEFAULT_RADIUS;
-    var locId       = requestedLocId || (userLocMap ? userLocMap.attendance_location_id : 'LOC001');
+    var locId       = requestedLocId || (userLocMap ? userLocMap.attendance_location_id : '1');
 
     // ── B. Resolve anchor coordinates for this location ──
     var anchorLat = DEFAULT_LAT, anchorLng = DEFAULT_LNG;
@@ -1003,7 +1084,7 @@ function markExit(b) {
     var timeStrNew = Utilities.formatDate(nowNew, tNew, 'HH:mm:ss');
     var latNew = parseNumber(b.latitude);
     var lngNew = parseNumber(b.longitude);
-    var resolvedNew = resolveMappedAttendanceLocation(user, currentGuid()) || resolveUserTrackingLocation(b.userId);
+    var resolvedNew = resolveEffectiveAttendanceLocation(user, currentGuid(), dateStrNew);
     var xdistNew = (latNew !== null && lngNew !== null)
       ? haversine(latNew, lngNew, resolvedNew.anchorLat, resolvedNew.anchorLng)
       : '';
@@ -1090,7 +1171,7 @@ function markExit(b) {
 
       var xlat = b.latitude  ? parseFloat(b.latitude)  : '';
       var xlng = b.longitude ? parseFloat(b.longitude) : '';
-      var track = resolveUserTrackingLocation(b.userId);
+      var track = resolveUserTrackingLocation(b.userId, dateStrNew);
       var xdist = (xlat !== '' && xlng !== '')
         ? haversine(xlat, xlng, track.anchorLat, track.anchorLng) : '';
 
@@ -1155,11 +1236,12 @@ function trackStudentLocation(b) {
 
     var user = getUserById(b.userId);
     if (!user) return { success: false, message: 'User not found' };
-
-    var resolved = resolveMappedAttendanceLocation(user, currentGuid()) || resolveUserTrackingLocation(b.userId);
     var latNew = parseNumber(b.latitude);
     var lngNew = parseNumber(b.longitude);
     var nowNew = new Date();
+    var tNew = tz();
+    var dateStrNew = Utilities.formatDate(nowNew, tNew, 'yyyy-MM-dd');
+    var resolved = resolveEffectiveAttendanceLocation(user, currentGuid(), dateStrNew);
     var distNew = (latNew !== null && lngNew !== null)
       ? haversine(latNew, lngNew, resolved.anchorLat, resolved.anchorLng)
       : 0;
@@ -1722,7 +1804,8 @@ function addAttendanceLocation(b) {
       };
     }
     var rows = getRows(getSheet(SH.ATT_LOCATIONS));
-    var locId = String(b.locationId || b.attendance_location_id || genId('loc')).trim();
+    var locId = String(b.locationId || b.attendance_location_id || genNumericId()).trim();
+    if (!/^\d+$/.test(locId)) return { success: false, message: 'attendance_location_id must be numeric' };
     for (var i = 0; i < rows.length; i++) {
       if (String(rows[i].attendance_location_id) === String(locId))
         return { success: false, message: 'attendance_location_id already exists' };
@@ -1755,6 +1838,136 @@ function addCategoryLocationMap(b) {
     return { success: true, mapId: mapId, message: 'Mapping added' };
   } catch(err) { return { success: false, message: 'addCategoryLocationMap: ' + err }; }
 }
+
+function createWorkLocationRequest(b) {
+  try {
+    var userId = String(b.userId || '').trim();
+    var requestDate = normDate(b.requestDate || b.date || '', tz());
+    var locationName = toCleanText(b.locationName || b.name || '', 120);
+    var address = toCleanText(b.address || '', 240);
+    var reason = toCleanText(b.reason || '', 240);
+    var lat = parseNumber(b.latitude);
+    var lng = parseNumber(b.longitude);
+    var allowedDistance = parseInt(b.allowedDistance || b.allowed_distance || b.radius || DEFAULT_RADIUS, 10) || DEFAULT_RADIUS;
+    if (!userId) return { success: false, message: 'userId required' };
+    if (!requestDate) return { success: false, message: 'requestDate required' };
+    if (!locationName) return { success: false, message: 'locationName required' };
+    if (lat === null || lng === null) return { success: false, message: 'valid latitude and longitude required' };
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return { success: false, message: 'latitude/longitude out of range' };
+    var user = getUserById(userId);
+    if (!user) return { success: false, message: 'User not found' };
+    if (getWorkLocationRequestForDate(userId, requestDate, currentGuid())) {
+      return { success: false, message: 'Only one request is allowed per user per day' };
+    }
+
+    var lock = LockService.getScriptLock();
+    lock.waitLock(6000);
+    try {
+      if (getWorkLocationRequestForDate(userId, requestDate, currentGuid())) {
+        return { success: false, message: 'Only one request is allowed per user per day' };
+      }
+      var now = new Date();
+      var reqId = genNumericId();
+      getSheet(SH.WORK_LOC_REQUESTS).appendRow([
+        reqId,
+        userId,
+        String(user.full_name || ''),
+        requestDate,
+        locationName,
+        address,
+        lat,
+        lng,
+        allowedDistance,
+        reason,
+        'pending',
+        '',
+        '',
+        '',
+        '',
+        currentGuid(),
+        now.toISOString(),
+        now.toISOString()
+      ]);
+      invalidate(SH.WORK_LOC_REQUESTS);
+      appendAuditLog('create_work_location_request', userId, normalizeRoleValue(user.role_id), userId, {
+        requestId: reqId,
+        requestDate: requestDate,
+        locationName: locationName,
+        latitude: lat,
+        longitude: lng,
+        allowedDistance: allowedDistance
+      });
+      return { success: true, requestId: reqId, status: 'pending', message: 'Work location request submitted' };
+    } finally { lock.releaseLock(); }
+  } catch (err) { return { success: false, message: 'createWorkLocationRequest: ' + err }; }
+}
+
+function getWorkLocationRequests(b) {
+  try {
+    var rows = getRows(getSheet(SH.WORK_LOC_REQUESTS));
+    var userId = String(b && b.userId || '').trim();
+    var status = String(b && (b.status || b.requestStatus) || '').trim().toLowerCase();
+    var requestDate = String(b && (b.requestDate || b.date) || '').trim();
+    if (userId) rows = rows.filter(function(r) { return String(r.user_id || '').trim() === userId; });
+    if (status) rows = rows.filter(function(r) { return String(r.status || '').toLowerCase() === status; });
+    if (requestDate) rows = rows.filter(function(r) { return normDate(r.request_date, tz()) === requestDate; });
+    rows.sort(function(a, b) {
+      var ad = String(a.request_date || '');
+      var bd = String(b.request_date || '');
+      if (ad === bd) return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+      return bd.localeCompare(ad);
+    });
+    return { success: true, data: rows };
+  } catch (err) { return { success: false, message: 'getWorkLocationRequests: ' + err }; }
+}
+
+function findWorkRequestRowById(requestId) {
+  var sheet = getSheet(SH.WORK_LOC_REQUESTS);
+  var last = sheet.getLastRow();
+  if (last < 2) return null;
+  var data = sheet.getRange(2, 1, last - 1, sheet.getLastColumn()).getValues();
+  for (var i = 0; i < data.length; i++) {
+    if (String(data[i][0]).trim() === String(requestId).trim()) {
+      return { rowNum: i + 2, row: data[i] };
+    }
+  }
+  return null;
+}
+
+function updateWorkRequestStatus(b, newStatus) {
+  try {
+    var requestId = String(b.requestId || '').trim();
+    if (!requestId) return { success: false, message: 'requestId required' };
+    var found = findWorkRequestRowById(requestId);
+    if (!found) return { success: false, message: 'Request not found' };
+    var currentStatus = String(found.row[10] || '').toLowerCase();
+    if (currentStatus === newStatus) return { success: true, requestId: requestId, status: newStatus, message: 'Request already ' + newStatus };
+
+    var now = new Date().toISOString();
+    var adminName = toCleanText(b.approvedBy || b.adminEmail || b.approver || '', 160);
+    var sheet = getSheet(SH.WORK_LOC_REQUESTS);
+    var lock = LockService.getScriptLock();
+    lock.waitLock(6000);
+    try {
+      var fresh = sheet.getRange(found.rowNum, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var freshStatus = String(fresh[10] || '').toLowerCase();
+      if (freshStatus === newStatus) return { success: true, requestId: requestId, status: newStatus, message: 'Request already ' + newStatus };
+      sheet.getRange(found.rowNum, 11).setValue(newStatus);
+      sheet.getRange(found.rowNum, 12, 1, 4).setValues([[
+        newStatus === 'approved' ? adminName : '',
+        newStatus === 'approved' ? now : '',
+        newStatus === 'rejected' ? adminName : '',
+        newStatus === 'rejected' ? now : ''
+      ]]);
+      sheet.getRange(found.rowNum, 18).setValue(now);
+      invalidate(SH.WORK_LOC_REQUESTS);
+      return { success: true, requestId: requestId, status: newStatus, message: 'Request ' + newStatus };
+    } finally { lock.releaseLock(); }
+  } catch (err) { return { success: false, message: 'updateWorkRequestStatus: ' + err }; }
+}
+
+function approveWorkLocationRequest(b) { return updateWorkRequestStatus(b, 'approved'); }
+function rejectWorkLocationRequest(b) { return updateWorkRequestStatus(b, 'rejected'); }
 
 function getDepartments() { return getLookup(SH.DEPARTMENTS); }
 function getRoles() { return getLookup(SH.ROLES); }
@@ -1814,10 +2027,12 @@ function setupSheets() {
     var locSheet = getSheet(SH.ATT_LOCATIONS);
     if (locSheet.getLastRow() < 2) {
       var tenantId = currentGuid();
-      locSheet.appendRow(['LOC001', 'SIT Campus Main Block', 'Main administrative block', 13.32603, 77.12621, 200, tenantId]);
-      locSheet.appendRow(['LOC002', 'SIT Campus CS Lab Block', 'Computer science lab block', 13.32620, 77.12650, 200, tenantId]);
-      locSheet.appendRow(['LOC003', 'SIT Campus Seminar Hall', 'Seminar hall', 13.32580, 77.12600, 200, tenantId]);
+      locSheet.appendRow(['1', 'SIT Campus Main Block', 'Main administrative block', 13.32603, 77.12621, 200, tenantId]);
+      locSheet.appendRow(['2', 'SIT Campus CS Lab Block', 'Computer science lab block', 13.32620, 77.12650, 200, tenantId]);
+      locSheet.appendRow(['3', 'SIT Campus Seminar Hall', 'Seminar hall', 13.32580, 77.12600, 200, tenantId]);
     }
+
+    getSheet(SH.WORK_LOC_REQUESTS);
 
     return {
       success: true,
